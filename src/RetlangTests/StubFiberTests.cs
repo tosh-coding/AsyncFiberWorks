@@ -13,7 +13,7 @@ namespace RetlangTests
         [Test]
         public void StubFiberPendingTasksShouldAllowEnqueueOfCommandsWhenExecutingAllPending()
         {
-            var sut = new StubFiber { ExecutePendingImmediately = false };
+            var sut = new StubFiber();
 
             var fired1 = new object();
             var fired2 = new object();
@@ -77,7 +77,7 @@ namespace RetlangTests
         {
             var msgs = new List<int>();
 
-            var sut = new StubFiber { ExecutePendingImmediately = true };
+            var sut = new StubFiber();
             var channel = new Channel<int>();
             const int count = 4;
 
@@ -93,6 +93,7 @@ namespace RetlangTests
                                          });
 
             channel.Publish(0);
+            sut.ExecuteAllPendingUntilEmpty();
 
             Assert.AreEqual(count, msgs.Count);
             for (var i = 0; i < msgs.Count; i++)
@@ -114,13 +115,13 @@ namespace RetlangTests
 
             Assert.AreEqual(1, sut.NumSubscriptions);
             Assert.AreEqual(1, sut.NumScheduledActions);
-            Assert.AreEqual(1, sut.Pending.Count);
+            Assert.AreEqual(1, sut.NumPendingActions);
 
             sut.Dispose();
 
             Assert.AreEqual(0, sut.NumSubscriptions);
             Assert.AreEqual(0, sut.NumScheduledActions);
-            Assert.AreEqual(0, sut.Pending.Count);
+            Assert.AreEqual(0, sut.NumPendingActions);
         }
     }
 }

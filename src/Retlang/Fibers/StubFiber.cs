@@ -5,11 +5,7 @@ namespace Retlang.Fibers
 {
     /// <summary>
     /// StubFiber does not use a backing thread or a thread pool for execution. Actions are added to pending
-    /// lists for execution. These actions can be executed synchronously by the calling thread. This class
-    /// is not thread safe and should not be used in production code. 
-    /// 
-    /// The class is typically used for testing asynchronous code to make it completely synchronous and
-    /// deterministic.
+    /// lists for execution. These actions can be executed synchronously by the calling thread.
     /// </summary>
     public class StubFiber : FiberWithDisposableList
     {
@@ -48,19 +44,12 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// All pending actions.
+        /// Number of pending actions.
         /// </summary>
-        public List<Action> Pending
+        public int NumPendingActions
         {
-            get { return _stubFiberSlim.Pending; }
+            get { return _stubFiberSlim.NumPendingActions; }
         }
-
-        /// <summary>
-        /// If true events will be executed immediately rather than added to the pending list.
-        /// </summary>
-        public bool ExecutePendingImmediately {
-            get { return _stubFiberSlim.ExecutePendingImmediately; }
-            set { _stubFiberSlim.ExecutePendingImmediately = value; } }
 
         /// <summary>
         /// Execute all actions in the pending list.  If any of the executed actions enqueue more actions, execute those as well.

@@ -1,21 +1,16 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Retlang.Fibers
 {
     /// <summary>
-    /// StubFiber does not use a backing thread or a thread pool for execution. Actions are added to pending
-    /// lists for execution. These actions can be executed synchronously by the calling thread. This class
-    /// is not thread safe and should not be used in production code. 
-    /// 
-    /// The class is typically used for testing asynchronous code to make it completely synchronous and
-    /// deterministic.
+    /// StubFiberSlim does not use a backing thread or a thread pool for execution. Actions are added to pending
+    /// lists for execution. These actions can be executed synchronously by the calling thread.
     /// </summary>
     public class StubFiberSlim : IFiberSlim
     {
-        private readonly List<Action> _pending = new List<Action>();
-
-        private bool _root = true;
+        private readonly BlockingCollection<Action> _pending = new BlockingCollection<Action>();
 
         /// <summary>
         /// Construct new instance.
@@ -30,11 +25,12 @@ namespace Retlang.Fibers
         {}
 
         /// <summary>
-        /// Clears all subscriptions, scheduled, and pending actions.
+        /// Clears all pending actions.
         /// </summary>
         public void Dispose()
         {
-            _pending.Clear();
+            while (_pending.TryTake(out _))
+            {}
         }
 
         /// <summary>
@@ -43,47 +39,24 @@ namespace Retlang.Fibers
         /// <param name="action"></param>
         public void Enqueue(Action action)
         {
-            if (_root && ExecutePendingImmediately)
-            {
-                try
-                {
-                    _root = false;
-                    action();
-                    ExecuteAllPendingUntilEmpty();
-                }
-                finally
-                {
-                    _root = true;
-                }
-            }
-            else
-            {
-                _pending.Add(action);
-            }
+            _pending.Add(action);
         }
 
         /// <summary>
-        /// All pending actions.
+        /// Number of pending actions.
         /// </summary>
-        public List<Action> Pending
+        public int NumPendingActions
         {
-            get { return _pending; }
+            get { return _pending.Count; }
         }
-
-        /// <summary>
-        /// If true events will be executed immediately rather than added to the pending list.
-        /// </summary>
-        public bool ExecutePendingImmediately { get; set; }
 
         /// <summary>
         /// Execute all actions in the pending list.  If any of the executed actions enqueue more actions, execute those as well.
         /// </summary>
         public void ExecuteAllPendingUntilEmpty()
         {
-            while (_pending.Count > 0)
+            while (_pending.TryTake(out var toExecute))
             {
-                var toExecute = _pending[0];
-                _pending.RemoveAt(0);
                 toExecute();
             }
         }
@@ -93,11 +66,16 @@ namespace Retlang.Fibers
         /// </summary>
         public void ExecuteAllPending()
         {
-            var copy = _pending.ToArray();
-            _pending.Clear();
-            foreach (var pending in copy)
+            int count = _pending.Count;
+            while (_pending.TryTake(out var toExecute))
             {
-                pending();
+                toExecute();
+
+                count -= 1;
+                if (count <= 0)
+                {
+                    break;
+                }
             }
         }
     }
