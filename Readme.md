@@ -1,3 +1,7 @@
+This is forked project from https://code.google.com/archive/p/retlang/
+
+---
+
 Retlang is a high performance C# threading library (see [Jetlang](http://code.google.com/p/jetlang/) for a version in Java).  The library is intended for use in [message based concurrency](http://en.wikipedia.org/wiki/Message_passing) similar to [event based actors in Scala](http://lamp.epfl.ch/~phaller/doc/haller07actorsunify.pdf).  The library does not provide remote messaging capabilities. It is designed specifically for high performance in-memory messaging.
 
 # Features #
@@ -14,6 +18,16 @@ All messages to a particular [IFiber](http://code.google.com/p/retlang/source/br
 
 Retlang relies upon four abstractions: [IFiber](http://code.google.com/p/retlang/source/browse/trunk/src/Retlang/Fibers/IFiber.cs),
 [IQueue](http://code.google.com/p/retlang/source/browse/trunk/src/Retlang/Core/IQueue.cs),  [IExecutor](http://code.google.com/p/retlang/source/browse/trunk/src/Retlang/Core/IExecutor.cs), and [IChannel](http://code.google.com/p/retlang/source/browse/trunk/src/Retlang/Channels/IChannel.cs).  An [IFiber](http://code.google.com/p/retlang/source/browse/trunk/src/Retlang/Fibers/IFiber.cs) is an abstraction for the [context of execution](http://en.wikipedia.org/wiki/Context_switch) (in most cases a thread).  An [IQueue](http://code.google.com/p/retlang/source/browse/trunk/src/Retlang/Core/IQueue.cs) is an abstraction for the data structure that holds the actions until the IFiber is ready for more actions.  The default implementation, [DefaultQueue](http://code.google.com/p/retlang/source/browse/trunk/src/Retlang/Core/DefaultQueue.cs), is an unbounded storage that uses standard locking to notify when it has actions to execute.  An [IExecutor](http://code.google.com/p/retlang/source/browse/trunk/src/Retlang/Core/IExecutor.cs) performs the actual execution.  It is useful as an injection point to achieve fault tolerance, performance profiling, etc.  The default implementation, [DefaultExecutor](http://code.google.com/p/retlang/source/browse/trunk/src/Retlang/Core/DefaultExecutor.cs), simply executes actions.  An [IChannel](http://code.google.com/p/retlang/source/browse/trunk/src/Retlang/Channels/IChannel.cs) is an abstraction for the conduit through which two or more [IFibers](http://code.google.com/p/retlang/source/browse/trunk/src/Retlang/Fibers/IFiber.cs) communicate (pass messages).
+
+## Changes after forking ##
+
+* Remove stubs of subscription and scheduling. For simplicity.
+* Separate IFiberSlim from IFiber. The concrete classes of IFiberSlim are simple fibers.
+
+## Schedule ##
+
+* Make StubFiber thread-safe.
+* Add fiber.SwitchTo method.
 
 # Quick Start #
 
