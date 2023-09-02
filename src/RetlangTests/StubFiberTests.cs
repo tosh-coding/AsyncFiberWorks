@@ -100,13 +100,13 @@ namespace RetlangTests
             sut.Schedule(() => { }, 1000);
             channel.Publish(2);
 
-            Assert.AreEqual(1, sut.Subscriptions.Count);
+            Assert.AreEqual(1, sut.NumSubscriptions);
             Assert.AreEqual(1, sut.Scheduled.Count);
             Assert.AreEqual(1, sut.Pending.Count);
 
             sut.Dispose();
 
-            Assert.AreEqual(0, sut.Subscriptions.Count);
+            Assert.AreEqual(0, sut.NumSubscriptions);
             Assert.AreEqual(0, sut.Scheduled.Count);
             Assert.AreEqual(0, sut.Pending.Count);
         }

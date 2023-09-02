@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Retlang.Core;
 
 namespace Retlang.Fibers
 {
@@ -14,7 +15,7 @@ namespace Retlang.Fibers
     /// </summary>
     public class StubFiber : IFiber
     {
-        private readonly List<IDisposable> _subscriptions = new List<IDisposable>();
+        private readonly Subscriptions _subscriptions = new Subscriptions();
         private readonly List<Action> _pending = new List<Action>();
         private readonly List<StubScheduledAction> _scheduled = new List<StubScheduledAction>();
 
@@ -32,7 +33,7 @@ namespace Retlang.Fibers
         public void Dispose()
         {
             _scheduled.ToList().ForEach(x => x.Dispose());
-            _subscriptions.ToList().ForEach(x => x.Dispose());
+            _subscriptions.Dispose();
             _pending.Clear();
         }
 
@@ -113,14 +114,6 @@ namespace Retlang.Fibers
             var toAdd = new StubScheduledAction(action, firstInMs, regularInMs, _scheduled);
             _scheduled.Add(toAdd);
             return toAdd;
-        }
-
-        /// <summary>
-        /// All subscriptions.
-        /// </summary>
-        public List<IDisposable> Subscriptions
-        {
-            get { return _subscriptions; }
         }
 
         /// <summary>
