@@ -125,7 +125,6 @@
     <Compile Include="Fibers\IFiber.cs" />
     <Compile Include="Fibers\PoolFiber.cs" />
     <Compile Include="Fibers\StubFiber.cs" />
-    <Compile Include="Fibers\StubScheduledAction.cs" />
     <Compile Include="Fibers\ThreadFiber.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

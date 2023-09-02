@@ -9,6 +9,7 @@ namespace Retlang.Core
     ///</summary>
     public class Scheduler : ISchedulerRegistry, IScheduler, IDisposable
     {
+        private long _pendingCounter = 0;
         private volatile bool _running = true;
         private readonly IExecutionContext _executionContext;
         private List<IDisposable> _pending = new List<IDisposable>();
@@ -56,7 +57,13 @@ namespace Retlang.Core
         ///<param name="toRemove"></param>
         public void Remove(IDisposable toRemove)
         {
-            _executionContext.Enqueue(() => _pending.Remove(toRemove));
+            _executionContext.Enqueue(() =>
+            {
+                if (_pending.Remove(toRemove))
+                {
+                    Interlocked.Decrement(ref _pendingCounter);
+                }
+            });
         }
 
         ///<summary>
@@ -71,13 +78,14 @@ namespace Retlang.Core
         private void AddPending(TimerAction pending)
         {
             Action addAction = delegate
-                                     {
-                                         if (_running)
-                                         {
-                                             _pending.Add(pending);
-                                             pending.Schedule(this);
-                                         }
-                                     };
+            {
+                if (_running)
+                {
+                    _pending.Add(pending);
+                    Interlocked.Increment(ref _pendingCounter);
+                    pending.Schedule(this);
+                }
+            };
             _executionContext.Enqueue(addAction);
         }
 
@@ -88,9 +96,21 @@ namespace Retlang.Core
         {
             _running = false;
             var old = Interlocked.Exchange(ref _pending, new List<IDisposable>());
+            Interlocked.Add(ref _pendingCounter, -old.Count);
             foreach (var timer in old)
             {
                 timer.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Number of pending timers.
+        /// </summary>
+        public int Count
+        {
+            get
+            {
+                return (int)Interlocked.Read(ref _pendingCounter);
             }
         }
     }

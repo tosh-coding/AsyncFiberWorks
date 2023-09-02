@@ -17,9 +17,17 @@ namespace Retlang.Fibers
     {
         private readonly Subscriptions _subscriptions = new Subscriptions();
         private readonly List<Action> _pending = new List<Action>();
-        private readonly List<StubScheduledAction> _scheduled = new List<StubScheduledAction>();
+        private readonly Scheduler _scheduler;
 
         private bool _root = true;
+
+        /// <summary>
+        /// Construct new instance.
+        /// </summary>
+        public StubFiber()
+        {
+            _scheduler = new Scheduler(this);
+        }
 
         /// <summary>
         /// No Op
@@ -32,7 +40,7 @@ namespace Retlang.Fibers
         /// </summary>
         public void Dispose()
         {
-            _scheduled.ToList().ForEach(x => x.Dispose());
+            _scheduler.Dispose();
             _subscriptions.Dispose();
             _pending.Clear();
         }
@@ -90,6 +98,14 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
+        /// Number of scheduled actions.
+        /// </summary>
+        public int NumScheduledActions
+        {
+            get { return _scheduler.Count; }
+        }
+
+        /// <summary>
         /// Adds a scheduled action to the list. 
         /// </summary>
         /// <param name="action"></param>
@@ -97,9 +113,7 @@ namespace Retlang.Fibers
         /// <returns></returns>
         public IDisposable Schedule(Action action, long firstInMs)
         {
-            var toAdd = new StubScheduledAction(action, firstInMs, _scheduled);
-            _scheduled.Add(toAdd);
-            return toAdd;
+            return _scheduler.Schedule(action, firstInMs);
         }
 
         /// <summary>
@@ -111,9 +125,7 @@ namespace Retlang.Fibers
         /// <returns></returns>
         public IDisposable ScheduleOnInterval(Action action, long firstInMs, long regularInMs)
         {
-            var toAdd = new StubScheduledAction(action, firstInMs, regularInMs, _scheduled);
-            _scheduled.Add(toAdd);
-            return toAdd;
+            return _scheduler.ScheduleOnInterval(action, firstInMs, regularInMs);
         }
 
         /// <summary>
@@ -122,14 +134,6 @@ namespace Retlang.Fibers
         public List<Action> Pending
         {
             get { return _pending; }
-        }
-
-        /// <summary>
-        /// All scheduled actions.
-        /// </summary>
-        public List<StubScheduledAction> Scheduled
-        {
-            get { return _scheduled; }
         }
 
         /// <summary>
@@ -160,17 +164,6 @@ namespace Retlang.Fibers
             foreach (var pending in copy)
             {
                 pending();
-            }
-        }
-
-        /// <summary>
-        /// Execute all actions in the scheduled list.
-        /// </summary>
-        public void ExecuteAllScheduled()
-        {
-            foreach (var scheduled in _scheduled.ToArray())
-            {
-                scheduled.Execute();
             }
         }
     }

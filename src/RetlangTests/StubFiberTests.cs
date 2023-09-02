@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using NUnit.Framework;
 using Retlang.Channels;
 using Retlang.Fibers;
@@ -44,19 +45,29 @@ namespace RetlangTests
             var scheduleOnIntervalFired = 0;
 
             sut.Schedule(() => scheduleFired++, 100);
-            var intervalSub = sut.ScheduleOnInterval(() => scheduleOnIntervalFired++, 100, 100);
+            var intervalSub = sut.ScheduleOnInterval(() => scheduleOnIntervalFired++, 100, 500);
 
-            sut.ExecuteAllScheduled();
+            // add to the pending list.
+            Thread.Sleep(200);
+            sut.ExecuteAllPending();
+
+            // Both firstInMs have passed.
+            Thread.Sleep(200);
+            sut.ExecuteAllPending();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(1, scheduleOnIntervalFired);
 
-            sut.ExecuteAllScheduled();
+            // The regularInMs has passed.
+            Thread.Sleep(600);
+            sut.ExecuteAllPending();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(2, scheduleOnIntervalFired);
 
             intervalSub.Dispose();
 
-            sut.ExecuteAllScheduled();
+            // The regularInMs has passed after dispose.
+            Thread.Sleep(600);
+            sut.ExecuteAllPending();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(2, scheduleOnIntervalFired);
         }
@@ -96,18 +107,19 @@ namespace RetlangTests
             var sut = new StubFiber();
             var channel = new Channel<int>();
 
-            channel.Subscribe(sut, x => { });
             sut.Schedule(() => { }, 1000);
+            sut.ExecuteAllPending();
+            channel.Subscribe(sut, x => { });
             channel.Publish(2);
 
             Assert.AreEqual(1, sut.NumSubscriptions);
-            Assert.AreEqual(1, sut.Scheduled.Count);
+            Assert.AreEqual(1, sut.NumScheduledActions);
             Assert.AreEqual(1, sut.Pending.Count);
 
             sut.Dispose();
 
             Assert.AreEqual(0, sut.NumSubscriptions);
-            Assert.AreEqual(0, sut.Scheduled.Count);
+            Assert.AreEqual(0, sut.NumScheduledActions);
             Assert.AreEqual(0, sut.Pending.Count);
         }
     }
