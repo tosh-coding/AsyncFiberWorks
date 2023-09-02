@@ -118,13 +118,19 @@
     <Compile Include="Core\TimerAction.cs" />
     <Compile Include="Fibers\DispatcherAdapter.cs" />
     <Compile Include="Fibers\FormAdapter.cs" />
+    <Compile Include="Fibers\GuiFiber.cs" />
     <Compile Include="Fibers\GuiFiberSlim.cs" />
     <Compile Include="Fibers\DispatcherFiber.cs" />
     <Compile Include="Fibers\ExecutionState.cs" />
     <Compile Include="Fibers\FormFiber.cs" />
     <Compile Include="Fibers\IFiber.cs" />
+    <Compile Include="Fibers\IFiberSlim.cs" />
+    <Compile Include="Fibers\FiberWithDisposableList.cs" />
+    <Compile Include="Fibers\PoolFiber.cs" />
     <Compile Include="Fibers\PoolFiberSlim.cs" />
+    <Compile Include="Fibers\StubFiber.cs" />
     <Compile Include="Fibers\StubFiberSlim.cs" />
+    <Compile Include="Fibers\ThreadFiber.cs" />
     <Compile Include="Fibers\ThreadFiberSlim.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -9,12 +9,10 @@ namespace Retlang.Fibers
     ///<summary>
     /// Allows interaction with Windows Forms.  Transparently moves actions onto the Form's thread.
     ///</summary>
-    public class GuiFiber : IFiber
+    public class GuiFiberSlim : IFiberSlim
     {
-        private readonly Subscriptions _subscriptions = new Subscriptions();
         private readonly object _lock = new object();
         private readonly IExecutionContext _executionContext;
-        private readonly Scheduler _timer;
         private readonly IExecutor _executor;
         private readonly List<Action> _queue = new List<Action>();
 
@@ -23,9 +21,8 @@ namespace Retlang.Fibers
         /// <summary>
         /// Creates an instance.
         /// </summary>
-        public GuiFiber(IExecutionContext executionContext, IExecutor executor)
+        public GuiFiberSlim(IExecutionContext executionContext, IExecutor executor)
         {
-            _timer = new Scheduler(this);
             _executionContext = executionContext;
             _executor = executor;
         }
@@ -56,51 +53,8 @@ namespace Retlang.Fibers
             _executionContext.Enqueue(() => _executor.Execute(action));
         }
 
-        ///<summary>
-        /// Register subscription to be unsubcribed from when the fiber is disposed.
-        ///</summary>
-        ///<param name="toAdd"></param>
-        public void RegisterSubscription(IDisposable toAdd)
-        {
-            _subscriptions.Add(toAdd);
-        }
-
-        ///<summary>
-        /// Deregister a subscription.
-        ///</summary>
-        ///<param name="toRemove"></param>
-        ///<returns></returns>
-        public bool DeregisterSubscription(IDisposable toRemove)
-        {
-            return _subscriptions.Remove(toRemove);
-        }
-
-        ///<summary>
-        /// Number of subscriptions.
-        ///</summary>
-        public int NumSubscriptions
-        {
-            get { return _subscriptions.Count; }
-        }
-
         /// <summary>
-        /// <see cref="IScheduler.Schedule(Action,long)"/>
-        /// </summary>
-        public IDisposable Schedule(Action action, long firstInMs)
-        {
-            return _timer.Schedule(action, firstInMs);
-        }
-
-        /// <summary>
-        /// <see cref="IScheduler.ScheduleOnInterval(Action,long,long)"/>
-        /// </summary>
-        public IDisposable ScheduleOnInterval(Action action, long firstInMs, long regularInMs)
-        {
-            return _timer.ScheduleOnInterval(action, firstInMs, regularInMs);
-        }
-
-        /// <summary>
-        /// <see cref="IFiber.Start()"/>
+        /// <see cref="IFiberSlim.Start()"/>
         /// </summary>
         public void Start()
         {
@@ -134,9 +88,7 @@ namespace Retlang.Fibers
         /// </summary>
         public void Stop()
         {
-            _timer.Dispose();
             _started = ExecutionState.Stopped;
-            _subscriptions.Dispose();
         }
     }
 }

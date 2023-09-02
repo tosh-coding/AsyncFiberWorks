@@ -5,6 +5,7 @@ namespace Retlang.Fibers
 {
     /// <summary>
     /// Enqueues pending actions for the context of execution (thread, pool of threads, message pump, etc.)
+    /// Subscription and scheduling functions have been added.
     /// </summary>
     public interface IFiber : ISubscriptionRegistry, IExecutionContext, IScheduler, IDisposable
     {

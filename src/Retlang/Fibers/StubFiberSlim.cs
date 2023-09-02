@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Retlang.Core;
 
 namespace Retlang.Fibers
 {
@@ -13,21 +11,17 @@ namespace Retlang.Fibers
     /// The class is typically used for testing asynchronous code to make it completely synchronous and
     /// deterministic.
     /// </summary>
-    public class StubFiber : IFiber
+    public class StubFiberSlim : IFiberSlim
     {
-        private readonly Subscriptions _subscriptions = new Subscriptions();
         private readonly List<Action> _pending = new List<Action>();
-        private readonly Scheduler _scheduler;
 
         private bool _root = true;
 
         /// <summary>
         /// Construct new instance.
         /// </summary>
-        public StubFiber()
-        {
-            _scheduler = new Scheduler(this);
-        }
+        public StubFiberSlim()
+        {}
 
         /// <summary>
         /// No Op
@@ -40,8 +34,6 @@ namespace Retlang.Fibers
         /// </summary>
         public void Dispose()
         {
-            _scheduler.Dispose();
-            _subscriptions.Dispose();
             _pending.Clear();
         }
 
@@ -68,64 +60,6 @@ namespace Retlang.Fibers
             {
                 _pending.Add(action);
             }
-        }
-
-        ///<summary>
-        /// Register subscription to be unsubcribed from when the fiber is disposed.
-        ///</summary>
-        ///<param name="toAdd"></param>
-        public void RegisterSubscription(IDisposable toAdd)
-        {
-            _subscriptions.Add(toAdd);
-        }
-
-        ///<summary>
-        /// Deregister a subscription.
-        ///</summary>
-        ///<param name="toRemove"></param>
-        ///<returns></returns>
-        public bool DeregisterSubscription(IDisposable toRemove)
-        {
-            return _subscriptions.Remove(toRemove);
-        }
-
-        ///<summary>
-        /// Number of subscriptions.
-        ///</summary>
-        public int NumSubscriptions
-        {
-            get { return _subscriptions.Count; }
-        }
-
-        /// <summary>
-        /// Number of scheduled actions.
-        /// </summary>
-        public int NumScheduledActions
-        {
-            get { return _scheduler.Count; }
-        }
-
-        /// <summary>
-        /// Adds a scheduled action to the list. 
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="firstInMs"></param>
-        /// <returns></returns>
-        public IDisposable Schedule(Action action, long firstInMs)
-        {
-            return _scheduler.Schedule(action, firstInMs);
-        }
-
-        /// <summary>
-        /// Adds scheduled action to list.
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="firstInMs"></param>
-        /// <param name="regularInMs"></param>
-        /// <returns></returns>
-        public IDisposable ScheduleOnInterval(Action action, long firstInMs, long regularInMs)
-        {
-            return _scheduler.ScheduleOnInterval(action, firstInMs, regularInMs);
         }
 
         /// <summary>
