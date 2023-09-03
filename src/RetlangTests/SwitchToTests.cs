@@ -58,7 +58,7 @@ namespace RetlangTests
             var t = SwitchToFiberSlimAsync(stubFiber, ctsStubFiberExecution);
             try
             {
-                stubFiber.ExecuteUntilCancelled(ctsStubFiberExecution.Token);
+                stubFiber.ExecuteUntilCanceled(ctsStubFiberExecution.Token);
             }
             catch (OperationCanceledException)
             {
@@ -175,7 +175,7 @@ namespace RetlangTests
             var t = SwitchToFiberAsync(stubFiber, ctsStubFiberExecution);
             try
             {
-                stubFiber.ExecuteUntilCancelled(ctsStubFiberExecution.Token);
+                stubFiber.ExecuteUntilCanceled(ctsStubFiberExecution.Token);
             }
             catch (OperationCanceledException)
             {

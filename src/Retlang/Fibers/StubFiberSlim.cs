@@ -80,11 +80,11 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// Execute actions until cancelled.
+        /// Execute actions until canceled.
         /// </summary>
         /// <param name="cancellationToken"></param>
-        /// <exception cref="OperationCanceledException">Cancelled.</exception>
-        public void ExecuteUntilCancelled(CancellationToken cancellationToken)
+        /// <exception cref="OperationCanceledException">Canceled.</exception>
+        public void ExecuteUntilCanceled(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
