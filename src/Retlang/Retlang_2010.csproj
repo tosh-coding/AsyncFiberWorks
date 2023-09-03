@@ -116,6 +116,7 @@
     <Compile Include="Core\Lists.cs" />
     <Compile Include="Core\SingleEvent.cs" />
     <Compile Include="Core\TimerAction.cs" />
+    <Compile Include="Core\UserThreadPool.cs" />
     <Compile Include="Fibers\DispatcherAdapter.cs" />
     <Compile Include="Fibers\FormAdapter.cs" />
     <Compile Include="Fibers\GuiFiber.cs" />
@@ -169,6 +170,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
