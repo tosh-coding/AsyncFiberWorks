@@ -99,3 +99,23 @@ Four implementations of [IFiberSlims](https://github.com/github-tosh/RetlangFibe
   * _[PoolFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/PoolFiberSlim.cs)_ - an [IFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs) backed by the .NET thread pool.  Separated from PoolFiber.
   * _[GuiFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/GuiFiberSlim.cs)_ - an [IFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs).  Separated from GuiFiber.
   * _[StubFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/StubFiberSlim.cs)_ - an [IFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs). Useful for execution in the main thread.  Executes all actions on the caller thread.
+
+# TODO #
+
+  * /ReleasingRetlang.md
+  * /src/Retlang_2010.sln
+  * *.csproj
+    * ProjectName
+    * ProjectGuid
+  * /src/doc_gen.bat
+  * /src/Retlang/bin/
+  * */Properties/AssemblyInfo.cs
+    * AssemblyTitle
+    * AssemblyProduct
+    * AssemblyCopyright
+    * Guid
+    * AssemblyVersion
+    * AssemblyFileVersion
+    * InternalsVisibleTo
+  * namespace Retlang
+  * *.snk
