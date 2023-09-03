@@ -89,3 +89,13 @@ The main [IChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/mas
   * _[SubscribeToLast](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/ISubscriber.cs#L50)_ - callback is executed on the interval provided with the most recent message received since the last interval.
 
 Further documentation can be found baked-in, in the [unit tests](https://github.com/github-tosh/RetlangFiberSwitcher/tree/master/src/RetlangTests), in the [user group](http://groups.google.com/group/retlang-dev), ~~or visually [here](http://dl.dropbox.com/u/2053101/Retlang%20and%20Jetlang.mov) (courtesy of [Mike Roberts](http://mikebroberts.com/))~~ (404 not found).
+
+# Quick Start of RetlangFiberSwitcher #
+
+## FiberSlims ##
+Four implementations of [IFiberSlims](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs) was added in RetlangFiberSwitcher. They are simpler than [IFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiber.cs) derived classes, but sufficient to use SwitchTo.
+
+  * _[ThreadFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/ThreadFiberSlim.cs)_ - an [IFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs) backed by a dedicated thread.  Separated from ThreadFiber.
+  * _[PoolFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/PoolFiberSlim.cs)_ - an [IFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs) backed by the .NET thread pool.  Separated from PoolFiber.
+  * _[GuiFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/GuiFiberSlim.cs)_ - an [IFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs).  Separated from GuiFiber.
+  * _[StubFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/StubFiberSlim.cs)_ - an [IFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs). Useful for execution in the main thread.  Executes all actions on the caller thread.
