@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.Threading;
 
 namespace Retlang.Fibers
 {
@@ -76,6 +76,20 @@ namespace Retlang.Fibers
                 {
                     break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Execute actions until cancelled.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="OperationCanceledException">Cancelled.</exception>
+        public void ExecuteUntilCancelled(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var toExecute = _pending.Take(cancellationToken);
+                toExecute();
             }
         }
     }

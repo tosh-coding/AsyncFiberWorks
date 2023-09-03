@@ -86,6 +86,7 @@
     <Compile Include="QueueChannelTests.cs" />
     <Compile Include="RequestReplyChannelTests.cs" />
     <Compile Include="StubFiberTests.cs" />
+    <Compile Include="SwitchToTests.cs" />
     <Compile Include="ThreadPoolTests.cs" />
     <Compile Include="TimerActionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Threading;
 
 namespace Retlang.Fibers
 {
@@ -65,6 +65,16 @@ namespace Retlang.Fibers
         public void ExecuteAllPending()
         {
             _stubFiberSlim.ExecuteAllPending();
+        }
+
+        /// <summary>
+        /// Execute actions until cancelled.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="OperationCanceledException">Cancelled.</exception>
+        public void ExecuteUntilCancelled(CancellationToken cancellationToken)
+        {
+            _stubFiberSlim.ExecuteUntilCancelled(cancellationToken);
         }
     }
 }
