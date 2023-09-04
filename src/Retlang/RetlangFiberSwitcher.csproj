@@ -5,7 +5,7 @@
     <RootNamespace>Retlang</RootNamespace>
     <AssemblyName>RetlangFiberSwitcher</AssemblyName>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>Retlang.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>RetlangFiberSwitcher.snk</AssemblyOriginatorKeyFile>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -83,7 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>RetlangFiberSwitcherTests, PublicKey=00240000048000009400000006020000002400005253413100040000010001001ffdca16214e1bf7e3787e0c61e98c65c649a4d36cc9b6e77cfa526ba71787a4d8ff66227948a712197c6b3a595c512ed8f4db09669ac5fa0424dd3d311b6c1b0806c90d17a58f21758b8329cfe59f503c410aeea5a1cf0d618d6a8cf4d5fae50e43d3c241626e8cbcdcb81076631894d5a38175d37e615af7942460b20abceb</_Parameter1>
+      <_Parameter1>RetlangFiberSwitcherTests, PublicKey=0024000004800000940000000602000000240000525341310004000001000100ddb15926e9fa1c6fda270730b8f56b827cfb75da5cae7b35d9de1f6b129d50368a89a9c049f351017543395dc60007546180884533342bd64a804e21fa300b88b04ff15f8eeba44ecc17033bee3d5dd8f263116fb0b325f25aaebca3e8daad2e6dcef78b281aeafe404a51ccbf4c503a4ee96602981e03e47d9752a05a4b33ca</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
 </Project>

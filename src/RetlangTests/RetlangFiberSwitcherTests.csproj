@@ -6,7 +6,7 @@
     <AssemblyName>RetlangFiberSwitcherTests</AssemblyName>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>RetlangTests.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>RetlangFiberSwitcherTests.snk</AssemblyOriginatorKeyFile>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
