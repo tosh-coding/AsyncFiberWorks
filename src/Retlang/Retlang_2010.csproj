@@ -1,23 +1,11 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{65ABCF4F-88F0-46EF-A6CF-71850019262E}</ProjectGuid>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Retlang</RootNamespace>
     <AssemblyName>Retlang</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Retlang.snk</AssemblyOriginatorKeyFile>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <UpgradeBackupLocation>
-    </UpgradeBackupLocation>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -33,107 +21,24 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile />
+    <AssemblyTitle>Retlang</AssemblyTitle>
+    <Description>*</Description>
+    <Configuration>*</Configuration>
+    <Company>*</Company>
+    <Product>Retlang</Product>
+    <Copyright>Michael Rettig Copyright © 2007</Copyright>
+    <AssemblyVersion>1.0.6.0</AssemblyVersion>
+    <FileVersion>1.0.6.0</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\Retlang.xml</DocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Channels\BaseSubscription.cs" />
-    <Compile Include="Channels\BatchSubscriber.cs" />
-    <Compile Include="Channels\Channel.cs" />
-    <Compile Include="Channels\ChannelRequest.cs" />
-    <Compile Include="Channels\ChannelSubscription.cs" />
-    <Compile Include="Channels\IChannel.cs" />
-    <Compile Include="Channels\IProducerThreadSubscriber.cs" />
-    <Compile Include="Channels\IPublisher.cs" />
-    <Compile Include="Channels\IQueueChannel.cs" />
-    <Compile Include="Channels\IReply.cs" />
-    <Compile Include="Channels\IReplySubscriber.cs" />
-    <Compile Include="Channels\IRequest.cs" />
-    <Compile Include="Channels\IRequestPublisher.cs" />
-    <Compile Include="Channels\IRequestReplyChannel.cs" />
-    <Compile Include="Channels\ISnapshotChannel.cs" />
-    <Compile Include="Channels\ISubscribable.cs" />
-    <Compile Include="Channels\ISubscriber.cs" />
-    <Compile Include="Channels\KeyedBatchSubscriber.cs" />
-    <Compile Include="Channels\LastSubscriber.cs" />
-    <Compile Include="Channels\QueueChannel.cs" />
-    <Compile Include="Channels\QueueConsumer.cs" />
-    <Compile Include="Channels\RequestReplyChannel.cs" />
-    <Compile Include="Channels\SnapshotChannel.cs" />
-    <Compile Include="Channels\Unsubscriber.cs" />
-    <Compile Include="Core\DefaultQueue.cs" />
-    <Compile Include="Core\DefaultExecutor.cs" />
-    <Compile Include="Core\BoundedQueue.cs" />
-    <Compile Include="Core\Scheduler.cs" />
-    <Compile Include="Core\DefaultThreadPool.cs" />
-    <Compile Include="Core\ISubscriptionRegistry.cs" />
-    <Compile Include="Core\BusyWaitQueue.cs" />
-    <Compile Include="Core\Subscriptions.cs" />
-    <Compile Include="Core\IExecutor.cs" />
-    <Compile Include="Core\IQueue.cs" />
-    <Compile Include="Core\IExecutionContext.cs" />
-    <Compile Include="Core\ISchedulerRegistry.cs" />
-    <Compile Include="Core\IPendingEvent.cs" />
-    <Compile Include="Core\IScheduler.cs" />
-    <Compile Include="Core\IThreadPool.cs" />
-    <Compile Include="Core\PendingAction.cs" />
-    <Compile Include="Core\QueueFullException.cs" />
-    <Compile Include="Core\RecurringEvent.cs" />
-    <Compile Include="Core\Lists.cs" />
-    <Compile Include="Core\SingleEvent.cs" />
-    <Compile Include="Core\ThreadPoolNotifyCompletion.cs" />
-    <Compile Include="Core\ThreadPoolSwitcher.cs" />
-    <Compile Include="Core\TimerAction.cs" />
-    <Compile Include="Core\UserThreadPool.cs" />
-    <Compile Include="Fibers\FiberNotifyCompletion.cs" />
-    <Compile Include="Fibers\FiberSlimNotifyCompletion.cs" />
-    <Compile Include="Fibers\FiberSwitcher.cs" />
-    <Compile Include="Fibers\ExecutionState.cs" />
-    <Compile Include="Fibers\IFiber.cs" />
-    <Compile Include="Fibers\IFiberSlim.cs" />
-    <Compile Include="Fibers\FiberWithDisposableList.cs" />
-    <Compile Include="Fibers\PoolFiber.cs" />
-    <Compile Include="Fibers\PoolFiberSlim.cs" />
-    <Compile Include="Fibers\StubFiber.cs" />
-    <Compile Include="Fibers\StubFiberSlim.cs" />
-    <Compile Include="Fibers\ThreadFiber.cs" />
-    <Compile Include="Fibers\ThreadFiberSlim.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Retlang.snk" />
-  </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
@@ -166,13 +71,19 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.InteropServices.ComVisibleAttribute">
+      <_Parameter1>false</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.InteropServices.GuidAttribute">
+    <_Parameter1>13a9e572-0292-43c6-b0fa-7377c06d4669</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>RetlangTests, PublicKey=00240000048000009400000006020000002400005253413100040000010001001ffdca16214e1bf7e3787e0c61e98c65c649a4d36cc9b6e77cfa526ba71787a4d8ff66227948a712197c6b3a595c512ed8f4db09669ac5fa0424dd3d311b6c1b0806c90d17a58f21758b8329cfe59f503c410aeea5a1cf0d618d6a8cf4d5fae50e43d3c241626e8cbcdcb81076631894d5a38175d37e615af7942460b20abceb</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 </Project>

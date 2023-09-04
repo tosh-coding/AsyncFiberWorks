@@ -1,7 +1,7 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Retlang_2010", "Retlang\Retlang_2010.csproj", "{65ABCF4F-88F0-46EF-A6CF-71850019262E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Retlang_2010", "Retlang\Retlang_2010.csproj", "{65ABCF4F-88F0-46EF-A6CF-71850019262E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetlangTests_2010", "RetlangTests\RetlangTests_2010.csproj", "{B8E66C01-A2BE-46D5-A985-53A5D3A6FC4C}"
 EndProject
