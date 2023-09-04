@@ -34,7 +34,7 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Retlang\Retlang_2010.csproj" />
+    <ProjectReference Include="..\Retlang\RetlangFiberSwitcher.csproj" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
