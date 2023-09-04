@@ -86,7 +86,7 @@
   </ItemGroup>
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.InteropServices.GuidAttribute">
-    <_Parameter1>7dbc8f26-9b4e-499f-a515-86fa092a38fb</_Parameter1>
+    <_Parameter1>5a38c82f-eaf9-40f8-9791-3a6be985cd3d</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
   <ItemGroup>
