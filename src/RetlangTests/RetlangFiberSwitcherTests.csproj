@@ -3,7 +3,7 @@
     <TargetFramework>net462</TargetFramework>
     <OutputType>Library</OutputType>
     <RootNamespace>RetlangTests</RootNamespace>
-    <AssemblyName>RetlangTests</AssemblyName>
+    <AssemblyName>RetlangFiberSwitcherTests</AssemblyName>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>RetlangTests.snk</AssemblyOriginatorKeyFile>
@@ -22,11 +22,11 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <AssemblyTitle>RetlangTests</AssemblyTitle>
+    <AssemblyTitle>RetlangFiberSwitcherTests</AssemblyTitle>
     <Description>*</Description>
     <Configuration>*</Configuration>
     <Company>*</Company>
-    <Product>RetlangTests</Product>
+    <Product>RetlangFiberSwitcherTests</Product>
     <Copyright>Copyright ©  2007</Copyright>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>

@@ -103,19 +103,8 @@ Three implementations of [IFiberSlims](https://github.com/github-tosh/RetlangFib
 # TODO #
 
   * /ReleasingRetlang.md
-  * /src/Retlang_2010.sln
   * *.csproj
-    * ProjectName
-    * ProjectGuid
+    * RootNamespace
+    * System.Runtime.InteropServices.GuidAttribute
   * /src/doc_gen.bat
-  * /src/Retlang/bin/
-  * */Properties/AssemblyInfo.cs
-    * AssemblyTitle
-    * AssemblyProduct
-    * AssemblyCopyright
-    * Guid
-    * AssemblyVersion
-    * AssemblyFileVersion
-    * InternalsVisibleTo
-  * namespace Retlang
   * *.snk
