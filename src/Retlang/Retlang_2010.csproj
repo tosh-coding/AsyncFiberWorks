@@ -66,9 +66,6 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="WindowsBase">
-      <RequiredTargetFramework>3.0</RequiredTargetFramework>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Channels\BaseSubscription.cs" />
@@ -119,16 +116,10 @@
     <Compile Include="Core\ThreadPoolSwitcher.cs" />
     <Compile Include="Core\TimerAction.cs" />
     <Compile Include="Core\UserThreadPool.cs" />
-    <Compile Include="Fibers\DispatcherAdapter.cs" />
     <Compile Include="Fibers\FiberNotifyCompletion.cs" />
     <Compile Include="Fibers\FiberSlimNotifyCompletion.cs" />
     <Compile Include="Fibers\FiberSwitcher.cs" />
-    <Compile Include="Fibers\FormAdapter.cs" />
-    <Compile Include="Fibers\GuiFiber.cs" />
-    <Compile Include="Fibers\GuiFiberSlim.cs" />
-    <Compile Include="Fibers\DispatcherFiber.cs" />
     <Compile Include="Fibers\ExecutionState.cs" />
-    <Compile Include="Fibers\FormFiber.cs" />
     <Compile Include="Fibers\IFiber.cs" />
     <Compile Include="Fibers\IFiberSlim.cs" />
     <Compile Include="Fibers\FiberWithDisposableList.cs" />

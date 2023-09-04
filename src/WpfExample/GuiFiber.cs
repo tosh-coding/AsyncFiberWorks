@@ -1,7 +1,8 @@
 ﻿using System;
 using Retlang.Core;
+using Retlang.Fibers;
 
-namespace Retlang.Fibers
+namespace WpfExample
 {
     ///<summary>
     /// Allows interaction with Windows Forms.  Transparently moves actions onto the Form's thread.

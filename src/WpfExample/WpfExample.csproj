@@ -92,6 +92,12 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DispatcherAdapter.cs" />
+    <Compile Include="DispatcherFiber.cs" />
+    <Compile Include="FormAdapter.cs" />
+    <Compile Include="FormFiber.cs" />
+    <Compile Include="GuiFiber.cs" />
+    <Compile Include="GuiFiberSlim.cs" />
     <Compile Include="Window1.xaml.cs">
       <DependentUpon>Window1.xaml</DependentUpon>
       <SubType>Code</SubType>
