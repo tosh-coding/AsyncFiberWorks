@@ -102,9 +102,7 @@ Three implementations of [IFiberSlims](https://github.com/github-tosh/RetlangFib
 
 # TODO #
 
-  * /ReleasingRetlang.md
   * *.csproj
     * RootNamespace
     * System.Runtime.InteropServices.GuidAttribute
-  * /src/doc_gen.bat
   * *.snk
