@@ -28,9 +28,9 @@ namespace RetlangTests
         {
             var mocks = new MockRepository();
 
-            var action = mocks.CreateMock<Action>();
+            var action = mocks.StrictMock<Action>();
             var timer = new TimerAction(action, 2, 3);
-            var registry = mocks.CreateMock<ISchedulerRegistry>();
+            var registry = mocks.StrictMock<ISchedulerRegistry>();
             registry.Enqueue(timer.ExecuteOnFiberThread);
 
             mocks.ReplayAll();
@@ -42,9 +42,9 @@ namespace RetlangTests
         public void CallbackFromIntervalTimerWithCancel()
         {
             var mocks = new MockRepository();
-            var action = mocks.CreateMock<Action>();
+            var action = mocks.StrictMock<Action>();
             var timer = new TimerAction(action, 2, 3);
-            var registry = mocks.CreateMock<ISchedulerRegistry>();
+            var registry = mocks.StrictMock<ISchedulerRegistry>();
 
             registry.Remove(timer);
 
@@ -58,9 +58,9 @@ namespace RetlangTests
         public void CallbackFromTimerWithCancel()
         {
             var mocks = new MockRepository();
-            var action = mocks.CreateMock<Action>();
+            var action = mocks.StrictMock<Action>();
             var timer = new TimerAction(action, 2, Timeout.Infinite);
-            var registry = mocks.CreateMock<ISchedulerRegistry>();
+            var registry = mocks.StrictMock<ISchedulerRegistry>();
 
             registry.Remove(timer);
             registry.Enqueue(timer.ExecuteOnFiberThread);

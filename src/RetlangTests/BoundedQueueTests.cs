@@ -13,7 +13,7 @@ namespace RetlangTests
         public void NoExceptionHandling()
         {
             var repo = new MockRepository();
-            var action = repo.CreateMock<Action>();
+            var action = repo.StrictMock<Action>();
             var failure = new Exception();
             action();
             LastCall.Throw(failure);
@@ -39,9 +39,9 @@ namespace RetlangTests
         public void ShouldOnlyExecuteActionsQueuedWhileNotStopped()
         {
             var mockery = new MockRepository();
-            var action1 = mockery.CreateMock<Action>();
-            var action2 = mockery.CreateMock<Action>();
-            var action3 = mockery.CreateMock<Action>();
+            var action1 = mockery.StrictMock<Action>();
+            var action2 = mockery.StrictMock<Action>();
+            var action3 = mockery.StrictMock<Action>();
 
             using (mockery.Record())
             {
