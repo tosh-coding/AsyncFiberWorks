@@ -19,6 +19,16 @@ namespace Retlang.Fibers
         {}
 
         /// <summary>
+        /// Create a new instance and call the Start method.
+        /// </summary>
+        public static StubFiberSlim StartNew()
+        {
+            var fiber = new StubFiberSlim();
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
         /// No Op
         /// </summary>
         public void Start()

@@ -29,6 +29,19 @@ namespace WpfExample
         }
 
         /// <summary>
+        /// Create a new instance and call the Start method.
+        /// </summary>
+        /// <param name="executionContext"></param>
+        /// <param name="executor"></param>
+        /// <returns></returns>
+        public static GuiFiberSlim StartNew(IExecutionContext executionContext, IExecutor executor)
+        {
+            var fiber = new GuiFiberSlim(executionContext, executor);
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
         /// Enqueue a single action.
         /// </summary>
         /// <param name="action"></param>
