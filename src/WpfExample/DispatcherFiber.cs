@@ -66,5 +66,82 @@ namespace WpfExample
             : this(Dispatcher.CurrentDispatcher, new DefaultExecutor())
         {
         }
+
+        /// <summary>
+        /// Constructs a Fiber that executes on dispatcher thread, and call the Start method.
+        /// </summary>
+        /// <param name="dispatcher"></param>
+        /// <param name="priority"></param>
+        /// <param name="executor"></param>
+        /// <returns></returns>
+        public static DispatcherFiber StartNew(Dispatcher dispatcher, DispatcherPriority priority, IExecutor executor)
+        {
+            var fiber = new DispatcherFiber(dispatcher, priority, executor);
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
+        /// Constructs a Fiber that executes on dispatcher thread, and call the Start method.
+        /// </summary>
+        /// <param name="dispatcher"></param>
+        /// <param name="executor"></param>
+        /// <returns></returns>
+        public static DispatcherFiber StartNew(Dispatcher dispatcher, IExecutor executor)
+        {
+            var fiber = new DispatcherFiber(dispatcher, executor);
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
+        /// Constructs a Fiber that executes on dispatcher thread, and call the Start method.
+        /// </summary>
+        /// <param name="dispatcher"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static DispatcherFiber StartNew(Dispatcher dispatcher, DispatcherPriority priority)
+        {
+            var fiber = new DispatcherFiber(dispatcher, priority);
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
+        /// Constructs a Fiber that executes on dispatcher thread, and call the Start method.
+        /// </summary>
+        /// <param name="dispatcher"></param>
+        /// <returns></returns>
+        public static DispatcherFiber StartNew(Dispatcher dispatcher)
+        {
+            var fiber = new DispatcherFiber(dispatcher);
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
+        /// Constructs a Fiber that executes on dispatcher thread of the
+        /// current dispatcher, and call the Start method.
+        /// </summary>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static DispatcherFiber StartNew(DispatcherPriority priority)
+        {
+            var fiber = new DispatcherFiber(priority);
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
+        /// Constructs a Fiber that executes on dispatcher thread of the
+        /// current dispatcher.
+        /// </summary>
+        /// <returns></returns>
+        public static DispatcherFiber StartNew()
+        {
+            var fiber = new DispatcherFiber();
+            fiber.Start();
+            return fiber;
+        }
     }
 }

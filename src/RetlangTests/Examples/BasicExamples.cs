@@ -148,8 +148,7 @@ namespace RetlangTests.Examples
         [Test]
         public void ShouldIncreasePoolFiberSubscriberCountByOne()
         {
-            var fiber = new PoolFiber();
-            fiber.Start();
+            var fiber = PoolFiber.StartNew();
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, fiber.NumSubscriptions);
@@ -167,8 +166,7 @@ namespace RetlangTests.Examples
         [Test]
         public void ShouldIncreaseThreadFiberSubscriberCountByOne()
         {
-            var fiber = new ThreadFiber();
-            fiber.Start();
+            var fiber = ThreadFiber.StartNew();
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, fiber.NumSubscriptions);
@@ -186,8 +184,7 @@ namespace RetlangTests.Examples
         [Test]
         public void ShouldIncreaseStubFiberSubscriberCountByOne()
         {
-            var fiber = new StubFiber();
-            fiber.Start();
+            var fiber = StubFiber.StartNew();
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, fiber.NumSubscriptions);
@@ -205,8 +202,7 @@ namespace RetlangTests.Examples
         [Test]
         public void UnsubscriptionShouldRemoveSubscriber()
         {
-            var fiber = new PoolFiber();
-            fiber.Start();
+            var fiber = PoolFiber.StartNew();
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, fiber.NumSubscriptions);

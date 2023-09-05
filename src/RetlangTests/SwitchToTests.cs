@@ -157,8 +157,7 @@ namespace RetlangTests
         [Test]
         public void SwitchToFiber()
         {
-            var stubFiber = new StubFiber();
-            stubFiber.Start();
+            var stubFiber = StubFiber.StartNew();
             var ctsStubFiberExecution = new CancellationTokenSource();
             var t = SwitchToFiberAsync(stubFiber, ctsStubFiberExecution);
             try
@@ -179,20 +178,13 @@ namespace RetlangTests
             var userThreadPoolA = UserThreadPool.StartNew();
             var userThreadPoolB = UserThreadPool.StartNew();
 
-            var threadFiber = new ThreadFiber();
-            threadFiber.Start();
-            var dotnetPoolFiber1 = new PoolFiber(defaultThreadPool, new DefaultExecutor());
-            dotnetPoolFiber1.Start();
-            var dotnetPoolFiber2 = new PoolFiber();
-            dotnetPoolFiber2.Start();
-            var userPoolFiberA1 = new PoolFiber(userThreadPoolA, new DefaultExecutor());
-            userPoolFiberA1.Start();
-            var userPoolFiberA2 = new PoolFiber(userThreadPoolA, new DefaultExecutor());
-            userPoolFiberA2.Start();
-            var userPoolFiberB1 = new PoolFiber(userThreadPoolB, new DefaultExecutor());
-            userPoolFiberB1.Start();
-            var userPoolFiberB2 = new PoolFiber(userThreadPoolB, new DefaultExecutor());
-            userPoolFiberB2.Start();
+            var threadFiber = ThreadFiber.StartNew();
+            var dotnetPoolFiber1 = PoolFiber.StartNew(defaultThreadPool, new DefaultExecutor());
+            var dotnetPoolFiber2 = PoolFiber.StartNew();
+            var userPoolFiberA1 = PoolFiber.StartNew(userThreadPoolA, new DefaultExecutor());
+            var userPoolFiberA2 = PoolFiber.StartNew(userThreadPoolA, new DefaultExecutor());
+            var userPoolFiberB1 = PoolFiber.StartNew(userThreadPoolB, new DefaultExecutor());
+            var userPoolFiberB2 = PoolFiber.StartNew(userThreadPoolB, new DefaultExecutor());
 
             var idListOfStub = new HashSet<int>();
             var idListOfThread = new HashSet<int>();

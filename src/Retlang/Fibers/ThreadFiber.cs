@@ -55,6 +55,56 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
+        /// Create a thread fiber with the default queue, and call the Start method.
+        /// </summary>
+        /// <returns></returns>
+        public static ThreadFiber StartNew()
+        {
+            var fiber = new ThreadFiber();
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
+        /// Creates a thread fiber with a specified queue, and call the Start method.
+        /// </summary>
+        /// <param name="queue"></param>
+        /// <returns></returns>
+        public static ThreadFiber StartNew(IQueue queue)
+        {
+            var fiber = new ThreadFiber(queue);
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
+        /// Creates a thread fiber with a specified name, and call the Start method.
+        /// </summary>
+        /// <param name="threadName"></param>
+        /// <returns></returns>
+        public static ThreadFiber StartNew(string threadName)
+        {
+            var fiber = new ThreadFiber(threadName);
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
+        /// Creates a thread fiber and call the Start method.
+        /// </summary>
+        /// <param name="queue"></param>
+        /// <param name="threadName"></param>
+        /// <param name="isBackground"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static ThreadFiber StartNew(IQueue queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        {
+            var fiber = new ThreadFiber(queue, threadName, isBackground, priority);
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
         /// <see cref="IFiber"/>
         /// </summary>
         public Thread Thread

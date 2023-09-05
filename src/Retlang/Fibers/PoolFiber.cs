@@ -46,6 +46,44 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
+        /// Create a pool fiber with the specified thread pool and specified executor,
+        /// and call the Start method.
+        /// </summary>
+        /// <param name="pool"></param>
+        /// <param name="executor"></param>
+        /// <returns></returns>
+        public static PoolFiber StartNew(IThreadPool pool, IExecutor executor)
+        {
+            var fiber = new PoolFiber(pool, executor);
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
+        /// Create a pool fiber with the default thread pool, and call the Start method.
+        /// </summary>
+        /// <param name="executor"></param>
+        /// <returns></returns>
+        public static PoolFiber StartNew(IExecutor executor)
+        {
+            var fiber = new PoolFiber(executor);
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
+        /// Create a pool fiber with the default thread pool and default executor,
+        /// and call the Start method.
+        /// </summary>
+        /// <returns></returns>
+        public static PoolFiber StartNew()
+        {
+            var fiber = new PoolFiber();
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
         /// Start consuming actions.
         /// </summary>
         public override void Start()

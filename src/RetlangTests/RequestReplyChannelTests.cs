@@ -12,8 +12,7 @@ namespace RetlangTests
         [Test]
         public void SynchronousRequestReply()
         {
-            var responder = new PoolFiber();
-            responder.Start();
+            var responder = PoolFiber.StartNew();
             var timeCheck = new RequestReplyChannel<string, DateTime>();
             var now = DateTime.Now;
             Action<IRequest<string, DateTime>> onRequest = req => req.SendReply(now);
@@ -27,8 +26,7 @@ namespace RetlangTests
         [Test]
         public void SynchronousRequestWithMultipleReplies()
         {
-            IFiber responder = new PoolFiber();
-            responder.Start();
+            IFiber responder = PoolFiber.StartNew();
             var countChannel = new RequestReplyChannel<string, int>();
 
             var allSent = new AutoResetEvent(false);
