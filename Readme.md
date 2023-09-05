@@ -6,14 +6,9 @@ RetlangFiberSwitcher is a C# threading library based upon [Retlang](https://code
 async Task TestAsync()
 {
     // Create thread pools.
-    var dotnetThreadPool = new DefaultThreadPool();
-    dotnetThreadPool.Start();
-
-    var userThreadPool1 = new UserThreadPool();
-    userThreadPool1.Start();
-
-    var userThreadPool2 = new UserThreadPool();
-    userThreadPool2.Start();
+    var dotnetThreadPool = DefaultThreadPool.Instance;
+    var userThreadPool1 = UserThreadPool.StartNew();
+    var userThreadPool2 = UserThreadPool.StartNew();
 
     // Create fibers.
     var threadFiber = new ThreadFiberSlim();

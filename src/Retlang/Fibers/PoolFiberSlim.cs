@@ -35,7 +35,7 @@ namespace Retlang.Fibers
         /// Create a pool fiber with the default thread pool.
         /// </summary>
         public PoolFiberSlim(IExecutor executor) 
-            : this(new DefaultThreadPool(), executor)
+            : this(DefaultThreadPool.Instance, executor)
         {
         }
 
@@ -43,7 +43,7 @@ namespace Retlang.Fibers
         /// Create a pool fiber with the default thread pool and default executor.
         /// </summary>
         public PoolFiberSlim() 
-            : this(new DefaultThreadPool(), new DefaultExecutor())
+            : this(DefaultThreadPool.Instance, new DefaultExecutor())
         {
         }
 

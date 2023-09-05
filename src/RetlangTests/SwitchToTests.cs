@@ -23,10 +23,8 @@ namespace RetlangTests
             await Task.Yield();
 
             var defaultThreadPool = new DefaultThreadPool();
-            var userThreadPoolA = new UserThreadPool();
-            userThreadPoolA.Start();
-            var userThreadPoolB = new UserThreadPool();
-            userThreadPoolB.Start();
+            var userThreadPoolA = UserThreadPool.StartNew();
+            var userThreadPoolB = UserThreadPool.StartNew();
 
             var idListOfDefault = new HashSet<int>();
             var idListOfUserA = new HashSet<int>();
@@ -71,10 +69,8 @@ namespace RetlangTests
             await Task.Yield();
 
             var defaultThreadPool = new DefaultThreadPool();
-            var userThreadPoolA = new UserThreadPool();
-            userThreadPoolA.Start();
-            var userThreadPoolB = new UserThreadPool();
-            userThreadPoolB.Start();
+            var userThreadPoolA = UserThreadPool.StartNew();
+            var userThreadPoolB = UserThreadPool.StartNew();
 
             var threadFiber = new ThreadFiberSlim();
             threadFiber.Start();
@@ -188,10 +184,8 @@ namespace RetlangTests
             await Task.Yield();
 
             var defaultThreadPool = new DefaultThreadPool();
-            var userThreadPoolA = new UserThreadPool();
-            userThreadPoolA.Start();
-            var userThreadPoolB = new UserThreadPool();
-            userThreadPoolB.Start();
+            var userThreadPoolA = UserThreadPool.StartNew();
+            var userThreadPoolB = UserThreadPool.StartNew();
 
             var threadFiber = new ThreadFiber();
             threadFiber.Start();

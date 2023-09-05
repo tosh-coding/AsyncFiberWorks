@@ -55,6 +55,21 @@ namespace Retlang.Core
         }
 
         /// <summary>
+        /// Create a new instance and call the Start method.
+        /// </summary>
+        /// <param name="numberOfThread"></param>
+        /// <param name="poolName"></param>
+        /// <param name="isBackground"></param>
+        /// <param name="priority"></param>
+        /// <returns></returns>
+        public static UserThreadPool StartNew(int numberOfThread = 2, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        {
+            var pool = new UserThreadPool(numberOfThread, poolName, isBackground, priority);
+            pool.Start();
+            return pool;
+        }
+
+        /// <summary>
         /// The dedicated worker threads.
         /// </summary>
         public Thread[] ThreadList
