@@ -11,23 +11,24 @@ async Task TestAsync()
     var userThreadPool2 = UserThreadPool.StartNew();
 
     // Create fibers.
-    var threadFiber = new ThreadFiberSlim();
-    threadFiber.Start();
+    var threadFiber = ThreadFiberSlim.StartNew();
+    var poolFiber = PoolFiberSlim.StartNew();
+    var userPoolFiber2 = PoolFiberSlim.StartNew(userThreadPool2, new DefaultExecutor());
 
-    var poolFiber = new PoolFiberSlim();
-    poolFiber.Start();
-
-    var userPoolFiber2 = new PoolFiberSlim(userThreadPool2, new DefaultExecutor());
-    userPoolFiber2.Start();
-
-    // await threadPool.SwitchTo();
+    // Switches to operation on the thread pools.
     await dotnetThreadPool.SwitchTo();
+    // Do something.
     await userThreadPool1.SwitchTo();
+    // Do something.
 
-    // await fiber.SwitchTo();
+    // Switches to operation on the fibers.
     await threadFiber.SwitchTo();
+    // Do something.
     await poolFiber.SwitchTo();
+    // Do something.
     await userPoolFiber2.SwitchTo();
+    // Do something.
+
     ...
 }
 ```
@@ -42,6 +43,8 @@ async Task TestAsync()
 * Add a thread pool implementation.
 * Add SwitchTo methods for await.
 * Functions for WinForms/WPF have been moved to WpfExample.
+* Changed TargetFramework to .NET Standard 2.0.
+* Add StartNew methods for Fibers.
 
 # Description of Retlang (Quote) #
 (Quote from [Retlang page](https://code.google.com/archive/p/retlang/).)
