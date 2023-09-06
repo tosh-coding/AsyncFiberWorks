@@ -7,15 +7,13 @@ namespace Retlang.Fibers
     /// </summary>
     public class PoolFiber : FiberWithDisposableList
     {
-        private readonly PoolFiberSlim _poolFiberSlim;
-
         /// <summary>
         /// Create a pool fiber with the specified thread pool and specified executor.
         /// </summary>
         /// <param name="pool"></param>
         /// <param name="executor"></param>
         public PoolFiber(IThreadPool pool, IExecutor executor)
-            : this(new PoolFiberSlim(pool, executor))
+            : base(new PoolFiberSlim(pool, executor))
         {
         }
 
@@ -23,7 +21,7 @@ namespace Retlang.Fibers
         /// Create a pool fiber with the default thread pool.
         /// </summary>
         public PoolFiber(IExecutor executor) 
-            : this(new PoolFiberSlim(executor))
+            : base(new PoolFiberSlim(executor))
         {
         }
 
@@ -31,18 +29,8 @@ namespace Retlang.Fibers
         /// Create a pool fiber with the default thread pool and default executor.
         /// </summary>
         public PoolFiber() 
-            : this(new PoolFiberSlim())
+            : base(new PoolFiberSlim())
         {
-        }
-
-        /// <summary>
-        /// Create a pool fiber.
-        /// </summary>
-        /// <param name="poolFiberSlim"></param>
-        private PoolFiber(PoolFiberSlim poolFiberSlim)
-            : base(poolFiberSlim)
-        {
-            _poolFiberSlim = poolFiberSlim;
         }
 
         /// <summary>
@@ -92,15 +80,7 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// Stop consuming actions.
-        /// </summary>
-        public void Stop()
-        {
-            _poolFiberSlim.Stop();
-        }
-
-        /// <summary>
-        /// Stops the fiber.
+        /// Clears all subscriptions, scheduled, and pending actions.
         /// </summary>
         public override void Dispose()
         {

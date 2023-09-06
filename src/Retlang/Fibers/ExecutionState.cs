@@ -14,8 +14,8 @@ namespace Retlang.Fibers
         ///</summary>
         Running,
         ///<summary>
-        /// After stopped
+        /// After disposed
         ///</summary>
-        Stopped
+        Disposed
     }
 }

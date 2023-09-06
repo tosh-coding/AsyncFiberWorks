@@ -89,7 +89,7 @@ namespace Retlang.Fibers
         /// <param name="action"></param>
         public void Enqueue(Action action)
         {
-            if (_started == ExecutionState.Stopped)
+            if (_started == ExecutionState.Disposed)
             {
                 return;
             }
@@ -154,25 +154,21 @@ namespace Retlang.Fibers
             {
                 throw new ThreadStateException("Already Started");
             }
+            else if (_started == ExecutionState.Disposed)
+            {
+                throw new ThreadStateException("Already Disposed");
+            }
             _started = ExecutionState.Running;
             //flush any pending events in queue
             Enqueue(() => { });
         }
 
         /// <summary>
-        /// Stop consuming actions.
-        /// </summary>
-        public void Stop()
-        {
-            _started = ExecutionState.Stopped;
-        }
-
-        /// <summary>
-        /// Stops the fiber.
+        /// Destroy the instance.
         /// </summary>
         public void Dispose()
         {
-            Stop();
+            _started = ExecutionState.Disposed;
         }
     }
 }
