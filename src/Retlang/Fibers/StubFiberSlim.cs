@@ -57,12 +57,10 @@ namespace Retlang.Fibers
         {}
 
         /// <summary>
-        /// Clears all pending actions.
+        /// Destroy the instance.
         /// </summary>
         public void Dispose()
         {
-            while (_pending.TryTake(out _))
-            {}
         }
 
         /// <summary>
