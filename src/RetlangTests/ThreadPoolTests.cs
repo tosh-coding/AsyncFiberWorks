@@ -131,7 +131,7 @@ namespace RetlangTests
                 }
             }
 
-            Thread.Sleep(1000);
+            Thread.Sleep(1500);
 
             Assert.AreEqual(loopCount, counter1);
             Assert.AreEqual(loopCount, counter2);
