@@ -9,13 +9,11 @@ namespace WpfExample
     ///</summary>
     public class FormFiber : FiberWithDisposableList
     {
-        private readonly GuiFiberSlim _guiFiberSlim;
-
         /// <summary>
         /// Creates an instance.
         /// </summary>
         public FormFiber(ISynchronizeInvoke invoker, IExecutor executor)
-            : this(new GuiFiberSlim(new FormAdapter(invoker), executor))
+            : base(new PoolFiberSlim(new FormAdapter(invoker), executor))
         {
         }
 
@@ -30,12 +28,6 @@ namespace WpfExample
             var fiber = new FormFiber(invoker, executor);
             fiber.Start();
             return fiber;
-        }
-
-        private FormFiber(GuiFiberSlim guiFiberSlim)
-            : base(guiFiberSlim)
-        {
-            _guiFiberSlim = guiFiberSlim;
         }
 
         /// <summary>

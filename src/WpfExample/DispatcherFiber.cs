@@ -9,8 +9,6 @@ namespace WpfExample
     /// </summary>
     public class DispatcherFiber : FiberWithDisposableList
     {
-        private readonly GuiFiberSlim _guiFiberSlim;
-
         /// <summary>
         /// Constructs a Fiber that executes on dispatcher thread.
         /// </summary>
@@ -18,7 +16,7 @@ namespace WpfExample
         /// <param name="priority">The priority.</param>
         /// <param name="executor">The executor.</param>
         public DispatcherFiber(Dispatcher dispatcher, DispatcherPriority priority, IExecutor executor)
-            : this(new GuiFiberSlim(new DispatcherAdapter(dispatcher, priority), executor))
+            : base(new PoolFiberSlim(new DispatcherAdapter(dispatcher, priority), executor))
         {
         }
 
@@ -68,12 +66,6 @@ namespace WpfExample
         public DispatcherFiber()
             : this(Dispatcher.CurrentDispatcher, new DefaultExecutor())
         {
-        }
-
-        private DispatcherFiber(GuiFiberSlim guiFiberSlim)
-            : base(guiFiberSlim)
-        {
-            _guiFiberSlim = guiFiberSlim;
         }
 
         /// <summary>

@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Threading;
 using System.Windows.Threading;
 using Retlang.Core;
 
 namespace WpfExample
 {
-    internal class DispatcherAdapter : IExecutionContext
+    internal class DispatcherAdapter : IThreadPool
     {
         private readonly Dispatcher _dispatcher;
         private readonly DispatcherPriority _priority;
@@ -15,8 +16,9 @@ namespace WpfExample
             _priority = priority;
         }
 
-        public void Enqueue(Action action)
+        public void Queue(WaitCallback callback)
         {
+            Action action = () => callback(null);
             _dispatcher.BeginInvoke(action, _priority);
         }
     }

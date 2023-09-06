@@ -1,10 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Threading;
 using Retlang.Core;
 
 namespace WpfExample
 {
-    internal class FormAdapter : IExecutionContext
+    internal class FormAdapter : IThreadPool
     {
         private readonly ISynchronizeInvoke _invoker;
 
@@ -13,8 +14,9 @@ namespace WpfExample
             _invoker = invoker;
         }
 
-        public void Enqueue(Action action)
+        public void Queue(WaitCallback callback)
         {
+            Action action = () => callback(null);
             _invoker.BeginInvoke(action, null);
         }
     }
