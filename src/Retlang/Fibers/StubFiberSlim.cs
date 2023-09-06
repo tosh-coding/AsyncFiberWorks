@@ -12,19 +12,40 @@ namespace Retlang.Fibers
     public class StubFiberSlim : IFiberSlim, IConsumingContext
     {
         private readonly BlockingCollection<Action> _pending = new BlockingCollection<Action>();
+        private readonly IExecutor _executor;
 
         /// <summary>
-        /// Construct new instance.
+        /// Create a stub fiber with the default executor.
         /// </summary>
         public StubFiberSlim()
+            : this(new DefaultExecutor())
         {}
 
         /// <summary>
-        /// Create a new instance and call the Start method.
+        /// Create a stub fiber with the specified executor.
+        /// </summary>
+        /// <param name="executor"></param>
+        public StubFiberSlim(IExecutor executor)
+        {
+            _executor = executor;
+        }
+
+        /// <summary>
+        /// Create a stub fiber with the default executor, and call the Start method.
         /// </summary>
         public static StubFiberSlim StartNew()
         {
             var fiber = new StubFiberSlim();
+            fiber.Start();
+            return fiber;
+        }
+
+        /// <summary>
+        /// Create a stub fiber with the specified executor, and call the Start method.
+        /// </summary>
+        public static StubFiberSlim StartNew(IExecutor executor)
+        {
+            var fiber = new StubFiberSlim(executor);
             fiber.Start();
             return fiber;
         }
@@ -68,7 +89,7 @@ namespace Retlang.Fibers
         {
             while (_pending.TryTake(out var toExecute))
             {
-                toExecute();
+                _executor.Execute(toExecute);
             }
         }
 
@@ -80,7 +101,7 @@ namespace Retlang.Fibers
             int count = _pending.Count;
             while (_pending.TryTake(out var toExecute))
             {
-                toExecute();
+                _executor.Execute(toExecute);
 
                 count -= 1;
                 if (count <= 0)
@@ -100,7 +121,7 @@ namespace Retlang.Fibers
             while (!cancellationToken.IsCancellationRequested)
             {
                 var toExecute = _pending.Take(cancellationToken);
-                toExecute();
+                _executor.Execute(toExecute);
             }
         }
     }

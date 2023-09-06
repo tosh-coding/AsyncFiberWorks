@@ -39,7 +39,7 @@ async Task TestAsync()
 
 * Remove stubs of subscription and scheduling. For simplicity.
 * Separate IFiberSlim from IFiber. The concrete classes of IFiberSlim are simple fibers.
-* Make StubFiber thread-safe.
+* StubFiber is now thread-safe and supports IExecutor.
 * Add a thread pool implementation.
 * Add SwitchTo methods for await.
 * Functions for WinForms/WPF have been moved to WpfExample. And GuiFiber was removed.

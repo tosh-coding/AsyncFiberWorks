@@ -13,10 +13,18 @@ namespace Retlang.Fibers
         private readonly StubFiberSlim _stubFiberSlim;
 
         /// <summary>
-        /// Construct new instance.
+        /// Create a stub fiber with the default executor.
         /// </summary>
         public StubFiber()
             : this(new StubFiberSlim())
+        {}
+
+        /// <summary>
+        /// Create a stub fiber with the specified executor.
+        /// </summary>
+        /// <param name="executor"></param>
+        public StubFiber(IExecutor executor)
+            : this(new StubFiberSlim(executor))
         {}
 
         /// <summary>
