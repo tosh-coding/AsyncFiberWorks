@@ -9,6 +9,8 @@ namespace Retlang.Core
     {
         /// <summary>
         /// Enqueue action for execution.
+        /// The action is stored in an internal queue and returns immediately from the call.
+        /// Queued actions are processed in parallel.
         /// </summary>
         /// <param name="callback"></param>
         void Queue(WaitCallback callback);

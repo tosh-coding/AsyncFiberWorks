@@ -4,6 +4,7 @@ namespace Retlang.Core
 {
     /// <summary>
     /// Holds on to actions until the execution context can process them.
+    /// This is for ThreadFiber, and the Run method would be blocked.
     /// </summary>
     public interface IQueue
     {
@@ -15,6 +16,7 @@ namespace Retlang.Core
 
         /// <summary>
         /// Start consuming actions.
+        /// Does not return from the call until it stops.
         /// </summary>
         void Run();
 
