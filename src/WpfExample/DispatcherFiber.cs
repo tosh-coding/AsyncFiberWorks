@@ -1,13 +1,16 @@
 ﻿using System.Windows.Threading;
 using Retlang.Core;
+using Retlang.Fibers;
 
 namespace WpfExample
 {
     /// <summary>
     /// Adapts Dispatcher to a Fiber. Transparently moves actions onto the Dispatcher thread.
     /// </summary>
-    public class DispatcherFiber : GuiFiber
+    public class DispatcherFiber : FiberWithDisposableList
     {
+        private readonly GuiFiberSlim _guiFiberSlim;
+
         /// <summary>
         /// Constructs a Fiber that executes on dispatcher thread.
         /// </summary>
@@ -15,7 +18,7 @@ namespace WpfExample
         /// <param name="priority">The priority.</param>
         /// <param name="executor">The executor.</param>
         public DispatcherFiber(Dispatcher dispatcher, DispatcherPriority priority, IExecutor executor)
-            : base(new DispatcherAdapter(dispatcher, priority), executor)
+            : this(new GuiFiberSlim(new DispatcherAdapter(dispatcher, priority), executor))
         {
         }
 
@@ -65,6 +68,12 @@ namespace WpfExample
         public DispatcherFiber()
             : this(Dispatcher.CurrentDispatcher, new DefaultExecutor())
         {
+        }
+
+        private DispatcherFiber(GuiFiberSlim guiFiberSlim)
+            : base(guiFiberSlim)
+        {
+            _guiFiberSlim = guiFiberSlim;
         }
 
         /// <summary>
@@ -142,6 +151,14 @@ namespace WpfExample
             var fiber = new DispatcherFiber();
             fiber.Start();
             return fiber;
+        }
+
+        /// <summary>
+        /// Stops the fiber.
+        /// </summary>
+        public void Stop()
+        {
+            base.Dispose();
         }
     }
 }
