@@ -37,16 +37,16 @@ async Task TestAsync()
 
 # Changes after Retlang forking #
 
-* Remove stubs of subscription and scheduling. For simplicity.
 * Separate IFiberSlim from IFiber. The concrete classes of IFiberSlim are simple fibers.
 * StubFiber is now thread-safe and supports IExecutor.
-* Add a thread pool implementation.
+  * Remove stubs of subscription and scheduling. Only actions were left. For simplicity.
 * Add SwitchTo methods for await.
+* Add StartNew methods for Fibers.
+* Add a thread pool implementation. [UserThreadPool](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Core/UserThreadPool.cs) class.
 * Functions for WinForms/WPF have been moved to WpfExample. And GuiFiber was removed.
 * Changed TargetFramework to .NET Standard 2.0.
-* Add StartNew methods for Fibers.
 
-# Description of Retlang (Quote) #
+# Introduction of Retlang (Quote) #
 (Quote from [Retlang page](https://code.google.com/archive/p/retlang/).)
 
 Message based concurrency in .NET
@@ -78,7 +78,7 @@ Four implementations of [IFibers](https://github.com/github-tosh/RetlangFiberSwi
   * _[ThreadFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/ThreadFiber.cs)_ - an [IFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiber.cs) backed by a dedicated thread.  Use for frequent or performance-sensitive operations.
   * _[PoolFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/PoolFiber.cs)_ - an [IFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiber.cs) backed by the .NET thread pool.  Note execution is still sequential and only executes on one pool thread at a time.  Use for infrequent, less performance-sensitive executions, or when one desires to not raise the thread count.
   * _[FormFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/FormFiber.cs)/[DispatchFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/DispatcherFiber.cs)_ - an [IFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiber.cs) backed by a [WinForms](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/FormFiber.cs)/[WPF](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/DispatcherFiber.cs) message pump.  The [FormFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/FormFiber.cs)/[DispatchFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/DispatcherFiber.cs) entirely removes the need to call Invoke or BeginInvoke to communicate with a window from a different thread.
-  * _[StubFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/StubFiber.cs)_ - useful for deterministic testing.  Fine grain control is given over execution to make [testing races simple](http://grahamnash.blogspot.com/2010/01/stubfiber-how-to-deterministically-test_16.html).  Executes all actions on the caller thread.
+  * _[StubFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/StubFiber.cs)_ - useful for deterministic testing.  Fine grain control is given over execution to make ~~[testing races simple](http://grahamnash.blogspot.com/2010/01/stubfiber-how-to-deterministically-test_16.html)~~ (404 not found).  Executes all actions on the caller thread.
 
 ## Channels ##
 The main [IChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/IChannel.cs) included in Retlang is simply called [Channel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/Channel.cs).  Below are the main types of subscriptions.
