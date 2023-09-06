@@ -42,7 +42,7 @@ async Task TestAsync()
 * Make StubFiber thread-safe.
 * Add a thread pool implementation.
 * Add SwitchTo methods for await.
-* Functions for WinForms/WPF have been moved to WpfExample.
+* Functions for WinForms/WPF have been moved to WpfExample. And GuiFiber was removed.
 * Changed TargetFramework to .NET Standard 2.0.
 * Add StartNew methods for Fibers.
 
@@ -94,6 +94,7 @@ Further documentation can be found baked-in, in the [unit tests](https://github.
 ## FiberSlims ##
 Three implementations of [IFiberSlims](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs) was added in RetlangFiberSwitcher. They are simpler than [IFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiber.cs) derived classes, but sufficient to use SwitchTo.
 
-  * _[ThreadFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/ThreadFiberSlim.cs)_ - an [IFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs) backed by a dedicated thread.  Separated from ThreadFiber.
-  * _[PoolFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/PoolFiberSlim.cs)_ - an [IFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs) backed by the .NET thread pool.  Separated from PoolFiber.
-  * _[StubFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/StubFiberSlim.cs)_ - an [IFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs). Useful for execution in the main thread.  Executes all actions on the caller thread.
+  * _[ThreadFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/ThreadFiberSlim.cs)_ - an [IFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs) backed by a dedicated thread.  Separated from the ThreadFiber.
+  * _[PoolFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/PoolFiberSlim.cs)_ - an [IFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs) backed by shared threads, e.g., .NET thread pool.  Separated from the PoolFiber.
+  * _[StubFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/StubFiberSlim.cs)_ - an [IFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs) without a specific thread.  Useful for execution from a periodic processing.
+  

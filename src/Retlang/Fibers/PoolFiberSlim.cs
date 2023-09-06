@@ -6,7 +6,7 @@ using Retlang.Core;
 namespace Retlang.Fibers
 {
     /// <summary>
-    /// Fiber that uses a thread pool for execution.
+    /// Fiber implementation backed by shared threads. Mainly thread pool.
     /// </summary>
     public class PoolFiberSlim : IFiberSlim
     {
