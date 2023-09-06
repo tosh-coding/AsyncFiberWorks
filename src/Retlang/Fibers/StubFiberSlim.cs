@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using Retlang.Core;
 
 namespace Retlang.Fibers
 {
@@ -8,7 +9,7 @@ namespace Retlang.Fibers
     /// StubFiberSlim does not use a backing thread or a thread pool for execution. Actions are added to pending
     /// lists for execution. These actions can be executed synchronously by the calling thread.
     /// </summary>
-    public class StubFiberSlim : IFiberSlim
+    public class StubFiberSlim : IFiberSlim, IConsumingContext
     {
         private readonly BlockingCollection<Action> _pending = new BlockingCollection<Action>();
 
