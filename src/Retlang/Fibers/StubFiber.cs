@@ -64,14 +64,6 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// Number of pending actions.
-        /// </summary>
-        public int NumPendingActions
-        {
-            get { return _stubFiberSlim.NumPendingActions; }
-        }
-
-        /// <summary>
         /// Execute all actions in the pending list.  If any of the executed actions enqueue more actions, execute those as well.
         /// </summary>
         public void ExecuteAllPendingUntilEmpty()

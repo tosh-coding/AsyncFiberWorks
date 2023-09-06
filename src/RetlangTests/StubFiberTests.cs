@@ -115,13 +115,11 @@ namespace RetlangTests
 
             Assert.AreEqual(1, sut.NumSubscriptions);
             Assert.AreEqual(1, sut.NumScheduledActions);
-            Assert.AreEqual(1, sut.NumPendingActions);
 
             sut.Dispose();
 
             Assert.AreEqual(0, sut.NumSubscriptions);
             Assert.AreEqual(0, sut.NumScheduledActions);
-            Assert.AreEqual(0, sut.NumPendingActions);
         }
     }
 }
