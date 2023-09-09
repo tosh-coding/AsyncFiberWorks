@@ -3,20 +3,20 @@ using System;
 namespace Retlang.Core
 {
     /// <summary>
-    /// Enqueues actions and 
+    /// Allows for the registration and deregistration of timers.
     /// </summary>
     public interface ISchedulerRegistry
     {
         /// <summary>
-        /// Enqueue action to target fiber.
-        /// </summary>
-        /// <param name="action"></param>
-        void Enqueue(Action action);
-
-        /// <summary>
-        /// Remove timer
+        /// Register a timer. So that it stops together when the fiber is disposed.
         /// </summary>
         /// <param name="timer"></param>
-        void Remove(IDisposable timer);
+        void RegisterSchedule(IDisposable timer);
+
+        /// <summary>
+        /// Deregister a timer.
+        /// </summary>
+        /// <param name="timer"></param>
+        void DeregisterSchedule(IDisposable timer);
     }
 }

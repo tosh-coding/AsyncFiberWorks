@@ -49,16 +49,15 @@ namespace RetlangTests
 
             // add to the pending list.
             Thread.Sleep(200);
-            sut.ExecuteAllPending();
 
             // Both firstInMs have passed.
-            Thread.Sleep(200);
+            Thread.Sleep(300);
             sut.ExecuteAllPending();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(1, scheduleOnIntervalFired);
 
             // The regularInMs has passed.
-            Thread.Sleep(600);
+            Thread.Sleep(400);
             sut.ExecuteAllPending();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(2, scheduleOnIntervalFired);
@@ -66,7 +65,7 @@ namespace RetlangTests
             intervalSub.Dispose();
 
             // The regularInMs has passed after dispose.
-            Thread.Sleep(600);
+            Thread.Sleep(500);
             sut.ExecuteAllPending();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(2, scheduleOnIntervalFired);

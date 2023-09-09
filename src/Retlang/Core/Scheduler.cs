@@ -1,54 +1,38 @@
+using Retlang.Fibers;
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
 
 namespace Retlang.Core
 {
     ///<summary>
     /// Enqueues actions on to context after schedule elapses.  
     ///</summary>
-    public class Scheduler : ISchedulerRegistry, IScheduler, IDisposable
+    public class Scheduler : IDisposable
     {
-        private long _pendingCounter = 0;
+        private readonly object _lock = new object();
         private volatile bool _running = true;
-        private readonly IExecutionContext _executionContext;
         private List<IDisposable> _pending = new List<IDisposable>();
 
-        ///<summary>
-        /// Constructs new instance.
-        ///</summary>
-        public Scheduler(IExecutionContext executionContext)
-        {
-            _executionContext = executionContext;
-        }
-
-        ///<summary>
+        /// <summary>
         /// Enqueues action on to context after timer elapses.  
-        ///</summary>
-        public IDisposable Schedule(Action action, long firstInMs)
+        /// </summary>
+        /// <param name="timerAction"></param>
+        public void Add(IDisposable timerAction)
         {
-            if (firstInMs <= 0)
+            bool added = false;
+            lock (_lock)
             {
-                var pending = new PendingAction(action);
-                _executionContext.Enqueue(pending.Execute);
-                return pending;
+                if (_running)
+                {
+                    _pending.Add(timerAction);
+                    added = true;
+                }
             }
-            else
+            if (!added)
             {
-                var pending = new TimerAction(action, firstInMs, Timeout.Infinite);
-                AddPending(pending);
-                return pending;
+                timerAction.Dispose();
             }
-        }
-
-        ///<summary>
-        /// Enqueues actions on to context after schedule elapses.  
-        ///</summary>
-        public IDisposable ScheduleOnInterval(Action action, long firstInMs, long regularInMs)
-        {
-            var pending = new TimerAction(action, firstInMs, regularInMs);
-            AddPending(pending);
-            return pending;
         }
 
         ///<summary>
@@ -57,36 +41,10 @@ namespace Retlang.Core
         ///<param name="toRemove"></param>
         public void Remove(IDisposable toRemove)
         {
-            _executionContext.Enqueue(() =>
+            lock (_lock)
             {
-                if (_pending.Remove(toRemove))
-                {
-                    Interlocked.Decrement(ref _pendingCounter);
-                }
-            });
-        }
-
-        ///<summary>
-        /// Enqueues actions on to context immediately.
-        ///</summary>
-        ///<param name="action"></param>
-        public void Enqueue(Action action)
-        {
-            _executionContext.Enqueue(action);
-        }
-
-        private void AddPending(TimerAction pending)
-        {
-            Action addAction = delegate
-            {
-                if (_running)
-                {
-                    _pending.Add(pending);
-                    Interlocked.Increment(ref _pendingCounter);
-                    pending.Schedule(this);
-                }
-            };
-            _executionContext.Enqueue(addAction);
+                _pending.Remove(toRemove);
+            }
         }
 
         ///<summary>
@@ -94,9 +52,12 @@ namespace Retlang.Core
         ///</summary>
         public void Dispose()
         {
-            _running = false;
-            var old = Interlocked.Exchange(ref _pending, new List<IDisposable>());
-            Interlocked.Add(ref _pendingCounter, -old.Count);
+            List<IDisposable> old;
+            lock (_lock)
+            {
+                _running = false;
+                old = _pending.ToList();
+            }
             foreach (var timer in old)
             {
                 timer.Dispose();
@@ -110,7 +71,10 @@ namespace Retlang.Core
         {
             get
             {
-                return (int)Interlocked.Read(ref _pendingCounter);
+                lock (_lock)
+                {
+                    return _pending.Count;
+                }
             }
         }
     }

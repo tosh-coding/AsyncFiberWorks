@@ -9,7 +9,7 @@ namespace Retlang.Fibers
     public class FiberWithDisposableList : IFiber
     {
         private readonly Subscriptions _subscriptions = new Subscriptions();
-        private readonly Scheduler _scheduler;
+        private readonly Scheduler _scheduler = new Scheduler();
         private readonly IFiberSlim _fiber;
 
         /// <summary>
@@ -19,7 +19,6 @@ namespace Retlang.Fibers
         public FiberWithDisposableList(IFiberSlim fiber)
         {
             _fiber = fiber;
-            _scheduler = new Scheduler(fiber);
         }
 
         /// <summary>
@@ -67,25 +66,21 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// <see cref="IScheduler.Schedule(Action,long)"/>
+        /// Register a timer. So that it stops together when the fiber is disposed.
         /// </summary>
-        /// <param name="action"></param>
-        /// <param name="firstInMs"></param>
-        /// <returns></returns>
-        public IDisposable Schedule(Action action, long firstInMs)
+        /// <param name="timer"></param>
+        public void RegisterSchedule(IDisposable timer)
         {
-            return _scheduler.Schedule(action, firstInMs);
+            _scheduler.Add(timer);
         }
 
         /// <summary>
-        /// <see cref="IScheduler.ScheduleOnInterval(Action,long,long)"/>
+        /// Deregister a timer.
         /// </summary>
-        /// <param name="action"></param>
-        /// <param name="firstInMs"></param>
-        /// <param name="regularInMs"></param>
-        public IDisposable ScheduleOnInterval(Action action, long firstInMs, long regularInMs)
+        /// <param name="timer"></param>
+        public void DeregisterSchedule(IDisposable timer)
         {
-            return _scheduler.ScheduleOnInterval(action, firstInMs, regularInMs);
+            _scheduler.Remove(timer);
         }
 
         /// <summary>
@@ -103,7 +98,7 @@ namespace Retlang.Fibers
         {
             _scheduler.Dispose();
             _subscriptions.Dispose();
-                _fiber.Dispose();
-            }
+            _fiber.Dispose();
         }
     }
+}

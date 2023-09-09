@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using NUnit.Framework;
 using Retlang.Core;
-using Rhino.Mocks;
+using Retlang.Fibers;
 
 namespace RetlangTests
 {
@@ -12,9 +12,10 @@ namespace RetlangTests
         [Test]
         public void Cancel()
         {
+            var stubFiber = StubFiber.StartNew();
             var executionCount = 0;
             Action action = () => executionCount++;
-            var timer = new TimerAction(action, 1, 2);
+            var timer = new TimerAction(action, 1, 2, stubFiber);
             timer.ExecuteOnFiberThread();
             Assert.AreEqual(1, executionCount);
             timer.Dispose();
@@ -26,47 +27,51 @@ namespace RetlangTests
         [Test]
         public void CallbackFromTimer()
         {
-            var mocks = new MockRepository();
+            var stubFiber = StubFiber.StartNew();
+            long counter = 0;
+            Action action = () => { counter++; };
+            var timer = new TimerAction(action, 2, Timeout.Infinite, stubFiber);
+            timer.Start();
 
-            var action = mocks.StrictMock<Action>();
-            var timer = new TimerAction(action, 2, 3);
-            var registry = mocks.StrictMock<ISchedulerRegistry>();
-            registry.Enqueue(timer.ExecuteOnFiberThread);
-
-            mocks.ReplayAll();
-
-            timer.ExecuteOnTimerThread(registry);
+            Thread.Sleep(20);
+            stubFiber.ExecuteAllPending();
+            Thread.Sleep(140);
+            stubFiber.ExecuteAllPending();
+            Assert.AreEqual(1, counter);
         }
 
         [Test]
         public void CallbackFromIntervalTimerWithCancel()
         {
-            var mocks = new MockRepository();
-            var action = mocks.StrictMock<Action>();
-            var timer = new TimerAction(action, 2, 3);
-            var registry = mocks.StrictMock<ISchedulerRegistry>();
+            var stubFiber = StubFiber.StartNew();
+            long counterOnTimer = 0;
+            Action actionOnTimer = () => { counterOnTimer++; };
+            var timer = new TimerAction(actionOnTimer, 2, 100, stubFiber);
+            timer.Start();
 
-            registry.Remove(timer);
-
-            mocks.ReplayAll();
-
+            Thread.Sleep(20);
+            stubFiber.ExecuteAllPending();
+            Thread.Sleep(140);
+            stubFiber.ExecuteAllPending();
             timer.Dispose();
-            timer.ExecuteOnTimerThread(registry);
+            Thread.Sleep(100);
+            stubFiber.ExecuteAllPending();
+            Assert.AreEqual(2, counterOnTimer);
         }
 
         [Test]
         public void CallbackFromTimerWithCancel()
         {
-            var mocks = new MockRepository();
-            var action = mocks.StrictMock<Action>();
-            var timer = new TimerAction(action, 2, Timeout.Infinite);
-            var registry = mocks.StrictMock<ISchedulerRegistry>();
+            var stubFiber = StubFiber.StartNew();
+            long counterOnTimer = 0;
+            Action actionOnTimer = () => { counterOnTimer++; };
+            var timer = new TimerAction(actionOnTimer, 2, Timeout.Infinite, stubFiber);
+            timer.Start();
 
-            registry.Remove(timer);
-            registry.Enqueue(timer.ExecuteOnFiberThread);
-
-            mocks.ReplayAll();
-            timer.ExecuteOnTimerThread(registry);
+            timer.Dispose();
+            Thread.Sleep(20);
+            stubFiber.ExecuteAllPending();
+            Assert.AreEqual(0, counterOnTimer);
         }
     }
 }

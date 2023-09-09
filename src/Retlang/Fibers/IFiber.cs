@@ -8,7 +8,7 @@ namespace Retlang.Fibers
     /// Subscription and scheduling functions have been added.
     /// Mainly for channels.
     /// </summary>
-    public interface IFiber : ISubscriptionRegistry, IExecutionContext, IScheduler, IDisposable
+    public interface IFiber : ISubscriptionRegistry, IExecutionContext, ISchedulerRegistry, IDisposable
     {
         /// <summary>
         /// Start consuming actions.
