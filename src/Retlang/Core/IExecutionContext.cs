@@ -3,12 +3,12 @@ using System;
 namespace Retlang.Core
 {
     /// <summary>
-    /// Context of execution.
+    /// A fiber for executing asynchronous actions.
     /// </summary>
     public interface IExecutionContext
     {
         /// <summary>
-        /// Enqueue a single action.
+        /// Enqueue action to the fiber for execution.
         /// </summary>
         /// <param name="action"></param>
         void Enqueue(Action action);

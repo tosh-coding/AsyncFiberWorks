@@ -8,9 +8,8 @@ namespace Retlang.Core
     public interface IThreadPool
     {
         /// <summary>
-        /// Enqueue action for execution.
-        /// The action is stored in an internal queue and returns immediately from the call.
-        /// Queued actions are processed in parallel.
+        /// Enqueue action to the thread pool for execution.
+        /// They are shared threads and should not be blocked.
         /// </summary>
         /// <param name="callback"></param>
         void Queue(WaitCallback callback);
