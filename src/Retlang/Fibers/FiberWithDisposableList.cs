@@ -11,17 +11,14 @@ namespace Retlang.Fibers
         private readonly Subscriptions _subscriptions = new Subscriptions();
         private readonly Scheduler _scheduler;
         private readonly IFiberSlim _fiber;
-        private readonly bool _dontDisposeFiber;
 
         /// <summary>
         /// Construct new instance.
         /// </summary>
         /// <param name="fiber"></param>
-        /// <param name="dontDisposeFiber"></param>
-        public FiberWithDisposableList(IFiberSlim fiber, bool dontDisposeFiber = false)
+        public FiberWithDisposableList(IFiberSlim fiber)
         {
             _fiber = fiber;
-            _dontDisposeFiber = dontDisposeFiber;
             _scheduler = new Scheduler(fiber);
         }
 
@@ -106,10 +103,7 @@ namespace Retlang.Fibers
         {
             _scheduler.Dispose();
             _subscriptions.Dispose();
-            if (!_dontDisposeFiber)
-            {
                 _fiber.Dispose();
             }
         }
     }
-}
