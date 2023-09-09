@@ -131,7 +131,16 @@ namespace RetlangTests
                 }
             }
 
-            Thread.Sleep(1500);
+            for (int i = 0; i < 10; i++)
+            {
+                Thread.Sleep(500);
+                if ((Interlocked.Read(ref counter1) == loopCount) &&
+                    (Interlocked.Read(ref counter2) == loopCount) &&
+                    (Interlocked.Read(ref counter3) == loopCount))
+                {
+                    break;
+                }    
+            }
 
             Assert.AreEqual(loopCount, counter1);
             Assert.AreEqual(loopCount, counter2);
