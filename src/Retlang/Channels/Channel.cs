@@ -64,27 +64,19 @@ namespace Retlang.Channels
         }
 
         /// <summary>
-        /// Subscribes to actions on producer threads. Subscriber could be called from multiple threads.
+        /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
+        /// Action may be invoked on multiple threads.
         /// </summary>
         /// <param name="subscriber"></param>
         /// <returns></returns>
         public IDisposable SubscribeOnProducerThreads(IProducerThreadSubscriber<T> subscriber)
         {
-            return SubscribeOnProducerThreads(subscriber.ReceiveOnProducerThread, subscriber.Subscriptions);
-        }
+            Action<T> action = subscriber.ReceiveOnProducerThread;
+            ISubscriptionRegistry subscriptions = subscriber.Subscriptions;
 
-        /// <summary>
-        /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
-        /// Action may be invoked on multiple threads.
-        /// </summary>
-        /// <param name="subscriber"></param>
-        /// <param name="subscriptions"></param>
-        /// <returns></returns>
-        private IDisposable SubscribeOnProducerThreads(Action<T> subscriber, ISubscriptionRegistry subscriptions)
-        {
-            _subscribers += subscriber;
+            _subscribers += action;
 
-            var unsubscriber = new Unsubscriber<T>(subscriber, this, subscriptions);
+            var unsubscriber = new Unsubscriber<T>(action, this, subscriptions);
             subscriptions.RegisterSubscription(unsubscriber);
 
             return unsubscriber;
