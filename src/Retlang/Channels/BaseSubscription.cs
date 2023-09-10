@@ -6,12 +6,13 @@ namespace Retlang.Channels
     /// Base implementation for subscription
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public abstract class BaseSubscription<T> : ISubscribable<T>
+    public abstract class BaseSubscription<T> : IProducerThreadSubscriber<T>
     {
         private Filter<T> _filterOnProducerThread;
 
         /// <summary>
-        /// <see cref="ISubscribable{T}.FilterOnProducerThread"/>
+        /// Filter called from producer threads. Should be thread safe as it may be called from
+        /// multiple threads.
         /// </summary>
         public Filter<T> FilterOnProducerThread
         {
