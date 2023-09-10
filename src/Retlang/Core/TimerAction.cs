@@ -15,7 +15,7 @@ namespace Retlang.Core
         private Timer _timer = null;
         private bool _canceled = false;
 
-        public TimerAction(Action action, long firstIntervalInMs, long intervalInMs, IFiber fiber)
+        public TimerAction(IFiber fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
         {
             if (firstIntervalInMs < 0)
             {
@@ -29,6 +29,14 @@ namespace Retlang.Core
             _firstIntervalInMs = firstIntervalInMs;
             _intervalInMs = intervalInMs;
             _fiber = fiber;
+            fiber.RegisterSchedule(this);
+        }
+
+        public static TimerAction StartNew(IFiber fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
+        {
+            var timerAction = new TimerAction(fiber, action, firstIntervalInMs, intervalInMs);
+            timerAction.Start();
+            return timerAction;
         }
 
         public void Start()

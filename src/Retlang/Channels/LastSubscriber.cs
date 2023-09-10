@@ -50,7 +50,7 @@ namespace Retlang.Channels
             {
                 if (!_flushPending)
                 {
-                    _fiber.Schedule(Flush, _intervalInMs);
+                    TimerAction.StartNew(_fiber, Flush, _intervalInMs);
                     _flushPending = true;
                 }
                 _pending = msg;

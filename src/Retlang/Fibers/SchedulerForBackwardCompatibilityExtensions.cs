@@ -1,13 +1,12 @@
 ﻿using Retlang.Core;
 using System;
-using System.Threading;
 
 namespace Retlang.Fibers
 {
     /// <summary>
     /// Methods for scheduling actions that will be executed in the future.
     /// </summary>
-    public static class SchedulerForIFiberExtensions
+    public static class SchedulerForBackwardCompatibilityExtensions
     {
         /// <summary>
         /// Schedules an action to be executed once.
@@ -18,10 +17,7 @@ namespace Retlang.Fibers
         /// <returns>a handle to cancel the timer.</returns>
         public static IDisposable Schedule(this IFiber fiber, Action action, long firstInMs)
         {
-            var timerAction = new TimerAction(action, firstInMs, Timeout.Infinite, fiber);
-            fiber.RegisterSchedule(timerAction);
-            timerAction.Start();
-            return timerAction;
+            return TimerAction.StartNew(fiber, action, firstInMs);
         }
 
         /// <summary>
@@ -34,10 +30,7 @@ namespace Retlang.Fibers
         /// <returns>a handle to cancel the timer.</returns>
         public static IDisposable ScheduleOnInterval(this IFiber fiber, Action action, long firstInMs, long regularInMs)
         {
-            var timerAction = new TimerAction(action, firstInMs, regularInMs, fiber);
-            fiber.RegisterSchedule(timerAction);
-            timerAction.Start();
-            return timerAction;
+            return TimerAction.StartNew(fiber, action, firstInMs, regularInMs);
         }
     }
 }

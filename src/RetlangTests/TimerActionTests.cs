@@ -10,12 +10,12 @@ namespace RetlangTests
     public class TimerActionTests
     {
         [Test]
-        public void Cancel()
+        public void CancelBeforeStart()
         {
             var stubFiber = StubFiber.StartNew();
             var executionCount = 0;
             Action action = () => executionCount++;
-            var timer = new TimerAction(action, 1, 2, stubFiber);
+            var timer = new TimerAction(stubFiber, action, 1, 2);
             timer.ExecuteOnFiberThread();
             Assert.AreEqual(1, executionCount);
             timer.Dispose();
@@ -30,7 +30,7 @@ namespace RetlangTests
             var stubFiber = StubFiber.StartNew();
             long counter = 0;
             Action action = () => { counter++; };
-            var timer = new TimerAction(action, 2, Timeout.Infinite, stubFiber);
+            var timer = new TimerAction(stubFiber, action, 2);
             timer.Start();
 
             Thread.Sleep(20);
@@ -46,7 +46,7 @@ namespace RetlangTests
             var stubFiber = StubFiber.StartNew();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
-            var timer = new TimerAction(actionOnTimer, 2, 100, stubFiber);
+            var timer = new TimerAction(stubFiber, actionOnTimer, 2, 100);
             timer.Start();
 
             Thread.Sleep(20);
@@ -65,7 +65,7 @@ namespace RetlangTests
             var stubFiber = StubFiber.StartNew();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
-            var timer = new TimerAction(actionOnTimer, 2, Timeout.Infinite, stubFiber);
+            var timer = new TimerAction(stubFiber, actionOnTimer, 2);
             timer.Start();
 
             timer.Dispose();

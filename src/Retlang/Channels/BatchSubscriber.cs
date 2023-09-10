@@ -51,7 +51,7 @@ namespace Retlang.Channels
                 if (_pending == null)
                 {
                     _pending = new List<T>();
-                    _fiber.Schedule(Flush, _intervalInMs);
+                    TimerAction.StartNew(_fiber, Flush, _intervalInMs);
                 }
                 _pending.Add(msg);
             }

@@ -1,20 +1,21 @@
-﻿using System;
+﻿using Retlang.Core;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace Retlang.Fibers
 {
     /// <summary>
-    /// A Implementation of INotifyCompletion for IFiber.
+    /// A Implementation of INotifyCompletion for IExecutionContext.
     /// </summary>
     public class FiberNotifyCompletion : INotifyCompletion
     {
-        private readonly IFiber _fiber;
+        private readonly IExecutionContext _fiber;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="fiber"></param>
-        public FiberNotifyCompletion(IFiber fiber)
+        public FiberNotifyCompletion(IExecutionContext fiber)
         {
             _fiber = fiber;
         }
