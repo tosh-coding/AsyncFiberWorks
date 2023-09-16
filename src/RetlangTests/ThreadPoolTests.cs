@@ -129,22 +129,27 @@ namespace RetlangTests
                     pool2.Enqueue(() => Interlocked.Increment(ref counter2));
                     pool3.Enqueue(() => Interlocked.Increment(ref counter3));
                 }
-            }
 
-            for (int i = 0; i < 10; i++)
-            {
-                Thread.Sleep(500);
-                if ((Interlocked.Read(ref counter1) == loopCount) &&
-                    (Interlocked.Read(ref counter2) == loopCount) &&
-                    (Interlocked.Read(ref counter3) == loopCount))
+                var sw = Stopwatch.StartNew();
+                while (true)
                 {
-                    break;
-                }    
-            }
+                    if ((Interlocked.Read(ref counter1) == loopCount) &&
+                        (Interlocked.Read(ref counter2) == loopCount) &&
+                        (Interlocked.Read(ref counter3) == loopCount))
+                    {
+                        break;
+                    }
+                    if (sw.ElapsedMilliseconds > 10)
+                    {
+                        break;
+                    }
+                    Thread.Sleep(100);
+                }
 
-            Assert.AreEqual(loopCount, counter1);
-            Assert.AreEqual(loopCount, counter2);
-            Assert.AreEqual(loopCount, counter3);
+                Assert.AreEqual(loopCount, counter1);
+                Assert.AreEqual(loopCount, counter2);
+                Assert.AreEqual(loopCount, counter3);
+            }
         }
 
         [Test]
