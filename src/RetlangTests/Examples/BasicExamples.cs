@@ -146,6 +146,72 @@ namespace RetlangTests.Examples
         }
 
         [Test]
+        public void Snapshot()
+        {
+            using (var fiberReply = new PoolFiber())
+            using (var fiberRequest = new PoolFiber())
+            {
+                fiberReply.Start();
+                fiberRequest.Start();
+                var channel = new SnapshotChannel<int>(5000);
+
+                var lockerResponseValue = new object();
+                int currentValue = 0;
+                channel.ReplyToPrimingRequest(fiberReply, () =>
+                {
+                    lock (lockerResponseValue)
+                    {
+                        return currentValue;
+                    }
+                });
+
+                lock (lockerResponseValue)
+                {
+                    currentValue = 1;
+                    channel.Publish(currentValue);
+                }
+                lock (lockerResponseValue)
+                {
+                    currentValue = 2;
+                    channel.Publish(currentValue);
+                }
+
+                var receivedValues = new List<int>();
+                var handleReceive = channel.PrimedSubscribe(fiberRequest, (v) =>
+                {
+                    receivedValues.Add(v);
+                    Console.WriteLine("Received: " + v);
+                });
+
+                lock (lockerResponseValue)
+                {
+                    currentValue = 4;
+                    channel.Publish(currentValue);
+                }
+                lock (lockerResponseValue)
+                {
+                    currentValue = 8;
+                    channel.Publish(currentValue);
+                }
+
+                Thread.Sleep(200);
+                handleReceive.Dispose();
+
+                int[] expectedReceiveValues = new int[]
+                {
+                    2, 4, 8,
+                };
+
+                Assert.AreEqual(expectedReceiveValues.Length, receivedValues.Count);
+
+                for (int i = 0; i < expectedReceiveValues.Length; i++)
+                {
+                    Assert.AreEqual(expectedReceiveValues[i], receivedValues[i]);
+                }
+            }
+        }
+
+        [Test]
         public void ShouldIncreasePoolFiberSubscriberCountByOne()
         {
             var fiber = PoolFiber.StartNew();
