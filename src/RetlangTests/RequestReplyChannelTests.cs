@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using NUnit.Framework;
 using Retlang.Channels;
@@ -19,8 +20,26 @@ namespace RetlangTests
             timeCheck.Subscribe(responder, onRequest);
             var response = timeCheck.SendRequest("hello");
             DateTime result;
-            Assert.IsTrue(response.Receive(10000, out result));
+            Assert.IsTrue(WaitReceiveForTest(response, 10000, out result));
             Assert.AreEqual(result, now);
+        }
+
+        public static bool WaitReceiveForTest<T>(IReply<T> reply, int timeoutInMs, out T result)
+        {
+            var sw = Stopwatch.StartNew();
+            while (true)
+            {
+                if (reply.TryReceive(out result))
+                {
+                    return true;
+                }
+                if (sw.ElapsedMilliseconds >= timeoutInMs)
+                {
+                    return false;
+                }
+                // Blocking should be avoided. Here we use it for simplifying the test code.
+                Thread.Sleep(100);
+            }
         }
 
         [Test]
@@ -44,14 +63,14 @@ namespace RetlangTests
             {
                 for (var i = 0; i < 5; i++)
                 {
-                    Assert.IsTrue(response.Receive(10000, out result));
+                    Assert.IsTrue(WaitReceiveForTest(response, 1000, out result));
                     Assert.AreEqual(result, i);
                 }
                 allSent.WaitOne(10000, false);
             }
-            Assert.IsTrue(response.Receive(30000, out result));
+            Assert.IsTrue(WaitReceiveForTest(response, 3000, out result));
             Assert.AreEqual(5, result);
-            Assert.IsFalse(response.Receive(30000, out result));
+            Assert.IsFalse(WaitReceiveForTest(response, 3000, out result));
         }
     }
 }

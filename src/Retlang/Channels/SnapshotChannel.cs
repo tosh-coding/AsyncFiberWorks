@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Retlang.Fibers;
 
 namespace Retlang.Channels
@@ -27,7 +28,8 @@ namespace Retlang.Channels
         ///</summary>
         ///<param name="fiber">the target executor to receive the message</param>
         ///<param name="receive"></param>
-        public IDisposable PrimedSubscribe(IFiber fiber, Action<T> receive)
+        /// <returns></returns>
+        public async Task<IDisposable> PrimedSubscribe(IFiber fiber, Action<T> receive)
         {
             using (var reply = _requestChannel.SendRequest(new object()))
             {
@@ -36,16 +38,36 @@ namespace Retlang.Channels
                     throw new ArgumentException(typeof (T).Name + " synchronous request has no reply subscriber.");
                 }
 
+                await WaitOnReceive(reply, _timeoutInMs).ConfigureAwait(false);
+
                 T result;
-                if (!reply.Receive(_timeoutInMs, out result))
+                if (!reply.TryReceive(out result))
                 {
                     throw new ArgumentException(typeof (T).Name + " synchronous request timed out in " + _timeoutInMs);
                 }
 
-                receive(result);
+                await fiber.SwitchTo();
+                try
+                {
+                    receive(result);
+                }
+                finally
+                {
+                    await Task.Yield();
+                }
 
                 return _updatesChannel.Subscribe(fiber, receive);
             }
+        }
+
+        private static Task WaitOnReceive(IReply<T> reply, int timeoutInMs)
+        {
+            var tcs = new TaskCompletionSource<byte>();
+            reply.SetCallbackOnReceive(timeoutInMs, null, (_) =>
+            {
+                tcs.SetResult(1);
+            });
+            return tcs.Task;
         }
 
         ///<summary>

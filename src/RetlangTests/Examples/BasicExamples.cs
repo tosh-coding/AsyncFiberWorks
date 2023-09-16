@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Retlang.Channels;
 using Retlang.Fibers;
@@ -140,13 +141,13 @@ namespace RetlangTests.Examples
                 var reply = channel.SendRequest("hello");
 
                 string result;
-                Assert.IsTrue(reply.Receive(10000, out result));
+                Assert.IsTrue(RequestReplyChannelTests.WaitReceiveForTest(reply, 10000, out result));
                 Assert.AreEqual("bye", result);
             }
         }
 
         [Test]
-        public void Snapshot()
+        public async Task Snapshot()
         {
             using (var fiberReply = new PoolFiber())
             using (var fiberRequest = new PoolFiber())
@@ -177,7 +178,7 @@ namespace RetlangTests.Examples
                 }
 
                 var receivedValues = new List<int>();
-                var handleReceive = channel.PrimedSubscribe(fiberRequest, (v) =>
+                var handleReceive = await channel.PrimedSubscribe(fiberRequest, (v) =>
                 {
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);

@@ -100,6 +100,7 @@ There are four channel types.
 * Added SwitchTo methods for await.
 * Added a thread pool implementation: [UserThreadPool](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Core/UserThreadPool.cs).
 * Added IFiberSlim as a simpler fiber. IFiber is mainly for channels.
+* Remove blocking methods.
 * StubFiber is now thread-safe and supports IExecutor. However, some stubs were removed.
 * Changed TargetFramework to .NET Standard 2.0.
 * Functions for WinForms/WPF have been moved to WpfExample. And GuiFiber was removed.

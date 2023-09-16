@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Retlang.Fibers;
 
 namespace Retlang.Channels
@@ -15,7 +16,8 @@ namespace Retlang.Channels
         ///</summary>
         ///<param name="fiber">the target executor to receive the message</param>
         ///<param name="receive"></param>
-        IDisposable PrimedSubscribe(IFiber fiber, Action<T> receive);
+        Task<IDisposable> PrimedSubscribe(IFiber fiber, Action<T> receive);
+
         ///<summary>
         /// Ressponds to the request for an initial snapshot.
         ///</summary>
