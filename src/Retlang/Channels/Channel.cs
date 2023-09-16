@@ -76,15 +76,13 @@ namespace Retlang.Channels
 
             _subscribers += action;
 
-            var unsubscriber = new Unsubscriber<T>(action, this, subscriptions);
+            var unsubscriber = new Unsubscriber((x) => {
+                this._subscribers -= action;
+                subscriptions.DeregisterSubscription(x);
+            });
             subscriptions.RegisterSubscription(unsubscriber);
 
             return unsubscriber;
-        }
-
-        internal void Unsubscribe(Action<T> toUnsubscribe)
-        {
-            _subscribers -= toUnsubscribe;
         }
 
         /// <summary>

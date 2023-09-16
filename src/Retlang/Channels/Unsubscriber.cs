@@ -1,25 +1,19 @@
 using System;
-using Retlang.Core;
 
 namespace Retlang.Channels
 {
-    internal class Unsubscriber<T> : IDisposable
+    internal class Unsubscriber: IDisposable
     {
-        private readonly Action<T> _receiver;
-        private readonly Channel<T> _channel;
-        private readonly ISubscriptionRegistry _subscriptions;
+        private readonly Action<Unsubscriber> _actionUnsubscribe;
 
-        public Unsubscriber(Action<T> receiver, Channel<T> channel, ISubscriptionRegistry subscriptions)
+        public Unsubscriber(Action<Unsubscriber> actionUnsubscribe)
         {
-            _receiver = receiver;
-            _channel = channel;
-            _subscriptions = subscriptions;
+            _actionUnsubscribe = actionUnsubscribe;
         }
 
         public void Dispose()
         {
-            _channel.Unsubscribe(_receiver);
-            _subscriptions.DeregisterSubscription(this);
+            _actionUnsubscribe(this);
         }
     }
 }
