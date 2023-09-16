@@ -12,7 +12,7 @@ namespace Retlang.Channels
     public class SnapshotChannel<T> : ISnapshotChannel<T>
     {
         private readonly int _timeoutInMs;
-        private readonly IChannel<T> _updatesChannel = new Channel<T>();
+        private readonly InternalChannel<T> _updatesChannel = new InternalChannel<T>();
         private readonly RequestReplyChannel<object, T> _requestChannel = new RequestReplyChannel<object, T>();
 
         ///<summary>
@@ -56,7 +56,11 @@ namespace Retlang.Channels
                     await Task.Yield();
                 }
 
-                return _updatesChannel.Subscribe(fiber, receive);
+                Action<T> action = (msg) =>
+                {
+                    fiber.Enqueue(() => receive(msg));
+                };
+                return _updatesChannel.SubscribeOnProducerThreads(fiber, action);
             }
         }
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Retlang.Core;
 using Retlang.Fibers;
 
 namespace Retlang.Channels
@@ -11,7 +10,7 @@ namespace Retlang.Channels
     ///<typeparam name="T"></typeparam>
     public class Channel<T> : IChannel<T>
     {
-        private event Action<T> _subscribers;
+        private readonly InternalChannel<T> _channel = new InternalChannel<T>();
 
         /// <summary>
         /// <see cref="ISubscriber{T}.Subscribe(IFiber,Action{T})"/>
@@ -71,18 +70,7 @@ namespace Retlang.Channels
         /// <returns></returns>
         public IDisposable SubscribeOnProducerThreads(IProducerThreadSubscriber<T> subscriber)
         {
-            Action<T> action = subscriber.ReceiveOnProducerThread;
-            ISubscriptionRegistry subscriptions = subscriber.Subscriptions;
-
-            _subscribers += action;
-
-            var unsubscriber = new Unsubscriber((x) => {
-                this._subscribers -= action;
-                subscriptions.DeregisterSubscription(x);
-            });
-            subscriptions.RegisterSubscription(unsubscriber);
-
-            return unsubscriber;
+            return _channel.SubscribeOnProducerThreads(subscriber.Subscriptions, subscriber.ReceiveOnProducerThread);
         }
 
         /// <summary>
@@ -92,33 +80,20 @@ namespace Retlang.Channels
         /// <returns></returns>
         public bool Publish(T msg)
         {
-            var evnt = _subscribers; // copy reference for thread safety
-            if (evnt != null)
-            {
-                evnt(msg);
-                return true;
-            }
-            return false;
+            return _channel.Publish(msg);
         }
 
         ///<summary>
         /// Number of subscribers
         ///</summary>
-        public int NumSubscribers
-        {
-            get
-            {
-                var evnt = _subscribers; // copy reference for thread safety
-                return evnt == null ? 0 : evnt.GetInvocationList().Length;
-            }
-        }
+        public int NumSubscribers { get { return _channel.NumSubscribers; } }
 
         /// <summary>
         /// Remove all subscribers.
         /// </summary>
         public void ClearSubscribers()
         {
-            _subscribers = null;
+            _channel.ClearSubscribers();
         }
     }
 }

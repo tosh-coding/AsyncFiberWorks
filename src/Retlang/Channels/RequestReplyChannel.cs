@@ -10,7 +10,7 @@ namespace Retlang.Channels
     /// <typeparam name="M"></typeparam>
     public class RequestReplyChannel<R, M>: IRequestReplyChannel<R,M>
     {
-        private readonly Channel<IRequest<R, M>> _requestChannel = new Channel<IRequest<R, M>>();
+        private readonly InternalChannel<IRequest<R, M>> _requestChannel = new InternalChannel<IRequest<R, M>>();
 
         /// <summary>
         /// Subscribe to requests.
@@ -20,7 +20,11 @@ namespace Retlang.Channels
         /// <returns></returns>
         public IDisposable Subscribe(IFiber fiber, Action<IRequest<R, M>> onRequest)
         {
-            return _requestChannel.Subscribe(fiber, onRequest);
+            Action<IRequest<R, M>> action = (msg) =>
+            {
+                fiber.Enqueue(() => onRequest(msg));
+            };
+            return _requestChannel.SubscribeOnProducerThreads(fiber, action);
         }
 
         /// <summary>
