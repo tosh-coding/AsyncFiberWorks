@@ -3,18 +3,18 @@ using Retlang.Core;
 
 namespace Retlang.Channels
 {
-    internal class QueueConsumer<T> : IDisposable
+    internal class QueueConsumer<T>
     {
         private bool _flushPending;
         private readonly IExecutionContext _target;
         private readonly Action<T> _callback;
-        private readonly QueueChannel<T> _channel;
+        private readonly InternalQueue<T> _queue;
 
-        public QueueConsumer(IExecutionContext target, Action<T> callback, QueueChannel<T> channel)
+        public QueueConsumer(IExecutionContext target, Action<T> callback, InternalQueue<T> queue)
         {
             _target = target;
             _callback = callback;
-            _channel = channel;
+            _queue = queue;
         }
 
         public void Signal()
@@ -35,7 +35,7 @@ namespace Retlang.Channels
             try
             {
                 T msg;
-                if (_channel.Pop(out msg))
+                if (_queue.Pop(out msg))
                 {
                     _callback(msg);
                 }
@@ -44,7 +44,7 @@ namespace Retlang.Channels
             {
                 lock (this)
                 {
-                    if (_channel.Count == 0)
+                    if (_queue.Count == 0)
                     {
                         _flushPending = false;
                     }
@@ -54,16 +54,6 @@ namespace Retlang.Channels
                     }
                 }
             }
-        }
-
-        public void Dispose()
-        {
-            _channel.SignalEvent -= Signal;
-        }
-
-        internal void Subscribe()
-        {
-            _channel.SignalEvent += Signal;
         }
     }
 }

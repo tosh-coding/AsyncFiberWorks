@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Retlang.Core;
 
 namespace Retlang.Channels
@@ -10,9 +9,9 @@ namespace Retlang.Channels
     /// <typeparam name="T"></typeparam>
     public class QueueChannel<T>: IQueueChannel<T>
     {
-        private readonly Queue<T> _queue = new Queue<T>();
-        internal event Action SignalEvent;
-  
+        private readonly InternalQueue<T> _queue = new InternalQueue<T>();
+        private event Action _signalEvent;
+
         /// <summary>
         /// Subscribe to executor messages. 
         /// </summary>
@@ -21,34 +20,13 @@ namespace Retlang.Channels
         /// <returns></returns>
         public IDisposable Subscribe(IExecutionContext executionContext, Action<T> onMessage)
         {
-            var consumer = new QueueConsumer<T>(executionContext, onMessage, this);
-            consumer.Subscribe();
-            return consumer;
-        }
-
-        internal bool Pop(out T msg)
-        {
-            lock (_queue)
+            var consumer = new QueueConsumer<T>(executionContext, onMessage, _queue);
+            Action signal = consumer.Signal;
+            _signalEvent += signal;
+            return new Unsubscriber((_) =>
             {
-                if (_queue.Count > 0)
-                {
-                    msg = _queue.Dequeue();
-                    return true;
-                }
-            }
-            msg = default(T);
-            return false;
-        }
-
-        internal int Count
-        {
-            get
-            {
-                lock (_queue)
-                {
-                    return _queue.Count;
-                }
-            }
+                this._signalEvent -= signal;
+            }); 
         }
 
         /// <summary>
@@ -57,11 +35,8 @@ namespace Retlang.Channels
         /// <param name="message"></param>
         public void Publish(T message)
         {
-            lock (_queue)
-            {
-                _queue.Enqueue(message);
-            }
-            var onSignal = SignalEvent;
+            _queue.Enqueue(message);
+            var onSignal = _signalEvent;
             if (onSignal != null)
             {
                 onSignal();
