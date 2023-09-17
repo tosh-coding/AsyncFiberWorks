@@ -17,7 +17,7 @@ namespace Retlang.Channels
             _queue = queue;
         }
 
-        public void Signal()
+        public void Signal(byte dummy)
         {
             lock (this)
             {

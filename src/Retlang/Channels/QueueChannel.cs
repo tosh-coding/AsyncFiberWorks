@@ -1,5 +1,5 @@
 using System;
-using Retlang.Core;
+using Retlang.Fibers;
 
 namespace Retlang.Channels
 {
@@ -10,23 +10,18 @@ namespace Retlang.Channels
     public class QueueChannel<T>: IQueueChannel<T>
     {
         private readonly InternalQueue<T> _queue = new InternalQueue<T>();
-        private event Action _signalEvent;
+        private readonly InternalChannel<byte> _channel = new InternalChannel<byte>();
 
         /// <summary>
         /// Subscribe to executor messages. 
         /// </summary>
-        /// <param name="executionContext"></param>
+        /// <param name="fiber"></param>
         /// <param name="onMessage"></param>
         /// <returns></returns>
-        public IDisposable Subscribe(IExecutionContext executionContext, Action<T> onMessage)
+        public IDisposable Subscribe(IFiber fiber, Action<T> onMessage)
         {
-            var consumer = new QueueConsumer<T>(executionContext, onMessage, _queue);
-            Action signal = consumer.Signal;
-            _signalEvent += signal;
-            return new Unsubscriber((_) =>
-            {
-                this._signalEvent -= signal;
-            }); 
+            var consumer = new QueueConsumer<T>(fiber, onMessage, _queue);
+            return _channel.SubscribeOnProducerThreads(fiber, consumer.Signal);
         }
 
         /// <summary>
@@ -36,11 +31,7 @@ namespace Retlang.Channels
         public void Publish(T message)
         {
             _queue.Enqueue(message);
-            var onSignal = _signalEvent;
-            if (onSignal != null)
-            {
-                onSignal();
-            }
+            _channel.Publish(default);
         }
     }
 }

@@ -1,5 +1,5 @@
 using System;
-using Retlang.Core;
+using Retlang.Fibers;
 
 namespace Retlang.Channels
 {
@@ -13,10 +13,10 @@ namespace Retlang.Channels
         /// <summary>
         /// Subscribe to the context.
         /// </summary>
-        /// <param name="executionContext"></param>
+        /// <param name="fiber"></param>
         /// <param name="onMessage"></param>
         /// <returns></returns>
-        IDisposable Subscribe(IExecutionContext executionContext, Action<T> onMessage);
+        IDisposable Subscribe(IFiber fiber, Action<T> onMessage);
 
         /// <summary>
         /// Pushes a message into the queue. Message will be processed by first available consumer.
