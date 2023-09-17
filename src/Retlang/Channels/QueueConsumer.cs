@@ -8,9 +8,9 @@ namespace Retlang.Channels
         private bool _flushPending;
         private readonly IExecutionContext _target;
         private readonly Action<T> _callback;
-        private readonly InternalQueue<T> _queue;
+        private readonly IMessageQueue<T> _queue;
 
-        public QueueConsumer(IExecutionContext target, Action<T> callback, InternalQueue<T> queue)
+        public QueueConsumer(IExecutionContext target, Action<T> callback, IMessageQueue<T> queue)
         {
             _target = target;
             _callback = callback;
@@ -44,7 +44,7 @@ namespace Retlang.Channels
             {
                 lock (this)
                 {
-                    if (_queue.Count == 0)
+                    if (_queue.IsEmpty)
                     {
                         _flushPending = false;
                     }

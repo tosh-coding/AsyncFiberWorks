@@ -9,8 +9,17 @@ namespace Retlang.Channels
     /// <typeparam name="T"></typeparam>
     public class QueueChannel<T>: IQueueChannel<T>
     {
-        private readonly InternalQueue<T> _queue = new InternalQueue<T>();
+        private readonly IMessageQueue<T> _queue;
         private readonly InternalChannel<byte> _channel = new InternalChannel<byte>();
+
+        public QueueChannel(IMessageQueue<T> queue = null)
+        {
+            if (queue == null)
+            {
+                queue = new InternalQueue<T>();
+            }
+            _queue = queue;
+        }
 
         /// <summary>
         /// Subscribe to executor messages. 

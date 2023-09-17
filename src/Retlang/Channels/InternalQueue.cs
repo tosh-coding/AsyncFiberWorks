@@ -2,11 +2,11 @@
 
 namespace Retlang.Channels
 {
-    internal class InternalQueue<T>
+    internal class InternalQueue<T> : IMessageQueue<T>
     {
         private readonly Queue<T> _queue = new Queue<T>();
 
-        internal void Enqueue(T message)
+        public void Enqueue(T message)
         {
             lock (_queue)
             {
@@ -14,7 +14,7 @@ namespace Retlang.Channels
             }
         }
 
-        internal bool Pop(out T msg)
+        public bool Pop(out T msg)
         {
             lock (_queue)
             {
@@ -28,13 +28,13 @@ namespace Retlang.Channels
             return false;
         }
 
-        internal int Count
+        public bool IsEmpty
         {
             get
             {
                 lock (_queue)
                 {
-                    return _queue.Count;
+                    return _queue.Count <= 0;
                 }
             }
         }
