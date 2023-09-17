@@ -20,7 +20,7 @@ namespace Retlang.Channels
         /// <returns></returns>
         public IDisposable Subscribe(IFiber fiber, Action<T> receive)
         {
-            return SubscribeOnProducerThreads(new ChannelSubscription<T>(fiber, receive));
+            return SubscribeOnProducerThreads(fiber, new ChannelSubscription<T>(fiber, receive));
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace Retlang.Channels
         /// <returns></returns>
         public IDisposable SubscribeToBatch(IFiber fiber, Action<IList<T>> receive, long intervalInMs)
         {
-            return SubscribeOnProducerThreads(new BatchSubscriber<T>(fiber, receive, intervalInMs));
+            return SubscribeOnProducerThreads(fiber, new BatchSubscriber<T>(fiber, receive, intervalInMs));
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Retlang.Channels
         /// <returns></returns>
         public IDisposable SubscribeToKeyedBatch<K>(IFiber fiber, Converter<T, K> keyResolver, Action<IDictionary<K, T>> receive, long intervalInMs)
         {
-            return SubscribeOnProducerThreads(new KeyedBatchSubscriber<K, T>(keyResolver, receive, fiber, intervalInMs));
+            return SubscribeOnProducerThreads(fiber, new KeyedBatchSubscriber<K, T>(keyResolver, receive, fiber, intervalInMs));
         }
 
         /// <summary>
@@ -59,18 +59,19 @@ namespace Retlang.Channels
         /// <returns></returns>
         public IDisposable SubscribeToLast(IFiber fiber, Action<T> receive, long intervalInMs)
         {
-            return SubscribeOnProducerThreads(new LastSubscriber<T>(receive, fiber, intervalInMs));
+            return SubscribeOnProducerThreads(fiber, new LastSubscriber<T>(receive, fiber, intervalInMs));
         }
 
         /// <summary>
         /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
         /// Action may be invoked on multiple threads.
         /// </summary>
+        /// <param name="fiber"></param>
         /// <param name="subscriber"></param>
         /// <returns></returns>
-        public IDisposable SubscribeOnProducerThreads(IProducerThreadSubscriber<T> subscriber)
+        public IDisposable SubscribeOnProducerThreads(IFiber fiber, IProducerThreadSubscriber<T> subscriber)
         {
-            return _channel.SubscribeOnProducerThreads(subscriber.Subscriptions, subscriber.ReceiveOnProducerThread);
+            return _channel.SubscribeOnProducerThreads(fiber, subscriber.ReceiveOnProducerThread);
         }
 
         /// <summary>

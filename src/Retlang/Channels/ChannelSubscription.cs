@@ -27,16 +27,8 @@ namespace Retlang.Channels
             _filter = filter;
         }
 
-        ///<summary>
-        /// Allows for the registration and deregistration of subscriptions
-        ///</summary>
-        public ISubscriptionRegistry Subscriptions
-        {
-            get { return _fiber; }
-        }
-
         /// <summary>
-        /// <see cref="IProducerThreadSubscriberCore{T}.ReceiveOnProducerThread"/>
+        /// <see cref="IProducerThreadSubscriber{T}.ReceiveOnProducerThread"/>
         /// </summary>
         /// <param name="msg"></param>
         public void ReceiveOnProducerThread(T msg)
