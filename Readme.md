@@ -76,7 +76,15 @@ Four implementations of [IFibers](https://github.com/github-tosh/RetlangFiberSwi
   * _[FormFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/FormFiber.cs)/[DispatchFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/DispatcherFiber.cs)_ - an [IFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiber.cs) backed by a [WinForms](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/FormFiber.cs)/[WPF](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/DispatcherFiber.cs) message pump.  The [FormFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/FormFiber.cs)/[DispatchFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/DispatcherFiber.cs) entirely removes the need to call Invoke or BeginInvoke to communicate with a window from a different thread.
   * _[StubFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/StubFiber.cs)_ - useful for deterministic testing.  Fine grain control is given over execution to make ~~[testing races simple](http://grahamnash.blogspot.com/2010/01/stubfiber-how-to-deterministically-test_16.html)~~ (404 not found).  Executes all actions on the caller thread.
 
-## Channels (Quote) ##
+## Channels ##
+There are four channel types.
+
+ * _[Channel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/Channel.cs)_ - Forward published messages to all subscribers. Used for broadcasting.
+ * _[QueueChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/QueueChannel.cs)_ - Forward a published message to only one of the subscribers. Used for load balancing.
+ * _[RequestReplyChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/RequestReplyChannel.cs)_ - Subscribers respond to requests from publishers. Used for request/reply messaging.
+ * _[SnapshotChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/SnapshotChannel.cs)_ - Subscribers are also notified when they start subscribing, and separately thereafter. Used for replication, incremental update notifications and change notifications.
+
+### Subscribing to "Channel" ###
 (Quote from [Retlang page](https://code.google.com/archive/p/retlang/). Broken links were replaced where possible. If not possible, strike-through and "(404 not found)" were added.)
 
 The main [IChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/IChannel.cs) included in Retlang is simply called [Channel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/Channel.cs).  Below are the main types of subscriptions.
@@ -87,21 +95,12 @@ The main [IChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/mas
 
 Further documentation can be found baked-in, in the [unit tests](https://github.com/github-tosh/RetlangFiberSwitcher/tree/master/src/RetlangTests), in the [user group](http://groups.google.com/group/retlang-dev), ~~or visually [here](http://dl.dropbox.com/u/2053101/Retlang%20and%20Jetlang.mov) (courtesy of [Mike Roberts](http://mikebroberts.com/))~~ (404 not found).
 
-## Other Channels ##
-There are four channel types.
-
- * _[Channel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/Channel.cs)_ - An [IChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/IChannel.cs). Forward published messages to all subscribers.
- * _[QueueChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/QueueChannel.cs)_ - An [IQueueChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/IQueueChannel.cs). Forward a published message to only one of the subscribers. Can be load balanced by multiple subscribers. 
- * _[RequestReplyChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/RequestReplyChannel.cs)_ - An [IRequestReplyChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/IRequestReplyChannel.cs). Subscribers respond to requests from publishers.
- * _[SnapshotChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/SnapshotChannel.cs)_ - An [ISnapshotChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/ISnapshotChannel.cs). For replication and incremental update notifications. One of the internal channels is for initial notification and the other for incremental update notification.
-
 # Changes from Retlang #
 
 * Added SwitchTo methods for await.
 * Added a thread pool implementation: [UserThreadPool](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Core/UserThreadPool.cs).
 * Added IFiberSlim as a simpler fiber. IFiber is mainly for channels.
-* Remove blocking methods.
 * StubFiber is now thread-safe and supports IExecutor. However, some stubs were removed.
 * Changed TargetFramework to .NET Standard 2.0.
 * Functions for WinForms/WPF have been moved to WpfExample. And GuiFiber was removed.
-* Existing classes and interfaces have also been changed or removed for simplicity. Therefore, backward compatibility with Retlang is partially broken.
+* Existing classes and interfaces from Retlang have also been changed or removed for simplicity. I don't attach much importance to backward compatibility with Retlang.
