@@ -10,7 +10,7 @@ namespace Retlang.Channels
     /// </summary>
     /// <typeparam name="K"></typeparam>
     /// <typeparam name="T"></typeparam>
-    public class KeyedBatchSubscriber<K, T> : ISubscriberWithFilter<T>
+    public class KeyedBatchSubscriber<K, T> : IProducerThreadSubscriber<T>
     {
         private readonly object _batchLock = new object();
 
@@ -18,7 +18,7 @@ namespace Retlang.Channels
         private readonly Converter<T, K> _keyResolver;
         private readonly IFiber _fiber;
         private readonly long _intervalInMs;
-        private readonly MessageFilter<T> _filter = new MessageFilter<T>();
+        private readonly IMessageFilter<T> _filter;
 
         private Dictionary<K, T> _pending;
 
@@ -29,12 +29,14 @@ namespace Retlang.Channels
         /// <param name="target"></param>
         /// <param name="fiber"></param>
         /// <param name="intervalInMs"></param>
-        public KeyedBatchSubscriber(Converter<T, K> keyResolver, Action<IDictionary<K, T>> target, IFiber fiber, long intervalInMs)
+        /// <param name="filter"></param>
+        public KeyedBatchSubscriber(Converter<T, K> keyResolver, Action<IDictionary<K, T>> target, IFiber fiber, long intervalInMs, IMessageFilter<T> filter = null)
         {
             _keyResolver = keyResolver;
             _fiber = fiber;
             _target = target;
             _intervalInMs = intervalInMs;
+            _filter = filter;
         }
 
         ///<summary>
@@ -46,21 +48,12 @@ namespace Retlang.Channels
         }
 
         /// <summary>
-        /// <see cref="IMessageFilter{T}.FilterOnProducerThread"/>
-        /// </summary>
-        public Filter<T> FilterOnProducerThread
-        {
-            get { return _filter.FilterOnProducerThread; }
-            set { _filter.FilterOnProducerThread = value; }
-        }
-
-        /// <summary>
         /// <see cref="IProducerThreadSubscriberCore{T}.ReceiveOnProducerThread"/>
         /// </summary>
         /// <param name="msg"></param>
         public void ReceiveOnProducerThread(T msg)
         {
-            if (_filter.PassesProducerThreadFilter(msg))
+            if (_filter?.PassesProducerThreadFilter(msg) ?? true)
             {
                 OnMessageOnProducerThread(msg);
             }

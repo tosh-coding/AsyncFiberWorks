@@ -11,6 +11,6 @@
         /// Filter called from producer threads. Should be thread safe as it may be called from
         /// multiple threads.
         /// </summary>
-        Filter<T> FilterOnProducerThread { get; set; }
+        bool PassesProducerThreadFilter(T msg);
     }
 }

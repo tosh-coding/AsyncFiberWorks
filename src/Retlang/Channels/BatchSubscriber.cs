@@ -9,14 +9,14 @@ namespace Retlang.Channels
     /// Batches actions for the consuming thread.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class BatchSubscriber<T> : ISubscriberWithFilter<T>
+    public class BatchSubscriber<T> : IProducerThreadSubscriber<T>
     {
         private readonly object _batchLock = new object();
 
         private readonly IFiber _fiber;
         private readonly Action<IList<T>> _receive;
         private readonly long _intervalInMs;
-        private readonly MessageFilter<T> _filter = new MessageFilter<T>();
+        private readonly IMessageFilter<T> _filter;
 
         private List<T> _pending;
 
@@ -26,11 +26,13 @@ namespace Retlang.Channels
         /// <param name="fiber"></param>
         /// <param name="receive"></param>
         /// <param name="intervalInMs"></param>
-        public BatchSubscriber(IFiber fiber, Action<IList<T>> receive, long intervalInMs)
+        /// <param name="filter"></param>
+        public BatchSubscriber(IFiber fiber, Action<IList<T>> receive, long intervalInMs, IMessageFilter<T> filter = null)
         {
             _fiber = fiber;
             _receive = receive;
             _intervalInMs = intervalInMs;
+            _filter = filter;
         }
 
         ///<summary>
@@ -42,20 +44,12 @@ namespace Retlang.Channels
         }
 
         /// <summary>
-        /// <see cref="IMessageFilter{T}.FilterOnProducerThread"/>
-        /// </summary>
-        public Filter<T> FilterOnProducerThread {
-            get { return _filter.FilterOnProducerThread; }
-            set { _filter.FilterOnProducerThread = value; }
-        }
-
-        /// <summary>
         /// <see cref="IProducerThreadSubscriberCore{T}.ReceiveOnProducerThread"/>
         /// </summary>
         /// <param name="msg"></param>
         public void ReceiveOnProducerThread(T msg)
         {
-            if (_filter.PassesProducerThreadFilter(msg))
+            if (_filter?.PassesProducerThreadFilter(msg) ?? true)
             {
                 OnMessageOnProducerThread(msg);
             }

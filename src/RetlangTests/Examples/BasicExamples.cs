@@ -61,8 +61,9 @@ namespace RetlangTests.Examples
                         reset.Set();
                     }
                 };
-                var sub = new ChannelSubscription<int>(fiber, onMsg);
-                sub.FilterOnProducerThread = x => x % 2 == 0;
+                var filter = new MessageFilter<int>();
+                filter.AddFilterOnProducerThread(x => x % 2 == 0);
+                var sub = new ChannelSubscription<int>(fiber, onMsg, filter);
                 channel.SubscribeOnProducerThreads(sub);
                 channel.Publish(1);
                 channel.Publish(2);

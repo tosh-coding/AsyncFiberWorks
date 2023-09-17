@@ -1,20 +1,26 @@
+using System.Collections.Generic;
+
 namespace Retlang.Channels
 {
     /// <summary>
-    /// Filter for messages.
+    /// A message filter that run in the producer/publisher thread.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class MessageFilter<T> : IMessageFilter<T>
     {
-        private Filter<T> _filterOnProducerThread;
+        private List<Filter<T>> _filterOnProducerThread;
 
         /// <summary>
-        /// <see cref="IMessageFilter{T}.FilterOnProducerThread"/>
+        /// Add a filter.
         /// </summary>
-        public Filter<T> FilterOnProducerThread
+        /// <param name="filter"></param>
+        public void AddFilterOnProducerThread(Filter<T> filter)
         {
-            get { return _filterOnProducerThread; }
-            set { _filterOnProducerThread = value; }
+            if (_filterOnProducerThread == null)
+            {
+                _filterOnProducerThread = new List<Filter<T>>();
+            }
+            _filterOnProducerThread.Add(filter);
         }
 
         /// <summary>
@@ -24,7 +30,18 @@ namespace Retlang.Channels
         /// <returns>True to pass, false otherwise.</returns>
         public bool PassesProducerThreadFilter(T msg)
         {
-            return _filterOnProducerThread == null || _filterOnProducerThread(msg);
+            if (_filterOnProducerThread == null)
+            {
+                return true;
+            }
+            foreach (var filter in _filterOnProducerThread)
+            {
+                if (!filter(msg))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

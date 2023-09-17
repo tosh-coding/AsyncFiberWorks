@@ -8,21 +8,23 @@ namespace Retlang.Channels
     /// Subscription for actions on a channel.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ChannelSubscription<T> : ISubscriberWithFilter<T>
+    public class ChannelSubscription<T> : IProducerThreadSubscriber<T>
     {
         private readonly Action<T> _receiver;
         private readonly IFiber _fiber;
-        private readonly MessageFilter<T> _filter = new MessageFilter<T>();
+        private readonly IMessageFilter<T> _filter;
 
         /// <summary>
         /// Construct the subscription
         /// </summary>
         /// <param name="fiber"></param>
         /// <param name="receiver"></param>
-        public ChannelSubscription(IFiber fiber, Action<T> receiver)
+        /// <param name="filter"></param>
+        public ChannelSubscription(IFiber fiber, Action<T> receiver, IMessageFilter<T> filter = null)
         {
             _fiber = fiber;
             _receiver = receiver;
+            _filter = filter;
         }
 
         ///<summary>
@@ -34,21 +36,12 @@ namespace Retlang.Channels
         }
 
         /// <summary>
-        /// <see cref="IMessageFilter{T}.FilterOnProducerThread"/>
-        /// </summary>
-        public Filter<T> FilterOnProducerThread
-        {
-            get { return _filter.FilterOnProducerThread; }
-            set { _filter.FilterOnProducerThread = value; }
-        }
-
-        /// <summary>
         /// <see cref="IProducerThreadSubscriberCore{T}.ReceiveOnProducerThread"/>
         /// </summary>
         /// <param name="msg"></param>
         public void ReceiveOnProducerThread(T msg)
         {
-            if (_filter.PassesProducerThreadFilter(msg))
+            if (_filter?.PassesProducerThreadFilter(msg) ?? true)
             {
                 OnMessageOnProducerThread(msg);
             }

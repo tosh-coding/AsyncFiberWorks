@@ -8,14 +8,14 @@ namespace Retlang.Channels
     /// Subscribes to last action received on the channel. 
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class LastSubscriber<T> : ISubscriberWithFilter<T>
+    public class LastSubscriber<T> : IProducerThreadSubscriber<T>
     {
         private readonly object _batchLock = new object();
 
         private readonly Action<T> _target;
         private readonly IFiber _fiber;
         private readonly long _intervalInMs;
-        private readonly MessageFilter<T> _filter = new MessageFilter<T>();
+        private readonly IMessageFilter<T> _filter;
 
         private bool _flushPending;
         private T _pending;
@@ -26,11 +26,13 @@ namespace Retlang.Channels
         /// <param name="target"></param>
         /// <param name="fiber"></param>
         /// <param name="intervalInMs"></param>
-        public LastSubscriber(Action<T> target, IFiber fiber, long intervalInMs)
+        /// <param name="filter"></param>
+        public LastSubscriber(Action<T> target, IFiber fiber, long intervalInMs, IMessageFilter<T> filter = null)
         {
             _fiber = fiber;
             _target = target;
             _intervalInMs = intervalInMs;
+            _filter = filter;
         }
 
         ///<summary>
@@ -42,21 +44,12 @@ namespace Retlang.Channels
         }
 
         /// <summary>
-        /// <see cref="IMessageFilter{T}.FilterOnProducerThread"/>
-        /// </summary>
-        public Filter<T> FilterOnProducerThread
-        {
-            get { return _filter.FilterOnProducerThread; }
-            set { _filter.FilterOnProducerThread = value; }
-        }
-
-        /// <summary>
         /// <see cref="IProducerThreadSubscriberCore{T}.ReceiveOnProducerThread"/>
         /// </summary>
         /// <param name="msg"></param>
         public void ReceiveOnProducerThread(T msg)
         {
-            if (_filter.PassesProducerThreadFilter(msg))
+            if (_filter?.PassesProducerThreadFilter(msg) ?? true)
             {
                 OnMessageOnProducerThread(msg);
             }
