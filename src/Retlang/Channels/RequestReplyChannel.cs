@@ -1,4 +1,5 @@
 using System;
+using Retlang.Core;
 using Retlang.Fibers;
 
 namespace Retlang.Channels
@@ -28,6 +29,20 @@ namespace Retlang.Channels
         }
 
         /// <summary>
+        /// Persistent subscribe to requests. This subscription cannot be unsubscribed. 
+        /// </summary>
+        /// <param name="executionContext"></param>
+        /// <param name="onRequest"></param>
+        public void PersistentSubscribe(IExecutionContext executionContext, Action<IRequest<R, M>> onRequest)
+        {
+            Action<IRequest<R, M>> action = (msg) =>
+            {
+                executionContext.Enqueue(() => onRequest(msg));
+            };
+            _requestChannel.PersistentSubscribeOnProducerThreads(action);
+        }
+
+        /// <summary>
         /// Send request to any and all subscribers.
         /// </summary>
         /// <param name="p"></param>
@@ -37,5 +52,15 @@ namespace Retlang.Channels
             var request = new ChannelRequest<R, M>(p);
             return _requestChannel.Publish(request) ? request : null;
         }
+
+        ///<summary>
+        /// Number of subscribers
+        ///</summary>
+        public int NumSubscribers { get { return _requestChannel.NumSubscribers; } }
+
+        ///<summary>
+        /// Number of persistent subscribers.
+        ///</summary>
+        public int NumPersistentSubscribers { get { return _requestChannel.NumPersistentSubscribers; } }
     }
 }

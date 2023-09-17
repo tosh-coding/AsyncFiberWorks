@@ -50,8 +50,7 @@ namespace Retlang.Channels
         }
 
         /// <summary>
-        /// Subscription that delivers the latest message to the consuming thread.  If a newer message arrives before the consuming thread
-        /// has a chance to process the message, the pending message is replaced by the newer message. The old message is discarded.
+        /// <see cref="ISubscriber{T}.SubscribeToLast(IFiber,Action{T},long)"/>
         /// </summary>
         /// <param name="fiber"></param>
         /// <param name="receive"></param>
@@ -63,8 +62,7 @@ namespace Retlang.Channels
         }
 
         /// <summary>
-        /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
-        /// Action may be invoked on multiple threads.
+        /// <see cref="ISubscriber{T}.SubscribeOnProducerThreads(IFiber,IProducerThreadSubscriber{T})"/>
         /// </summary>
         /// <param name="fiber"></param>
         /// <param name="subscriber"></param>
@@ -72,6 +70,60 @@ namespace Retlang.Channels
         public IDisposable SubscribeOnProducerThreads(IFiber fiber, IProducerThreadSubscriber<T> subscriber)
         {
             return _channel.SubscribeOnProducerThreads(fiber, subscriber.ReceiveOnProducerThread);
+        }
+
+        /// <summary>
+        /// <see cref="ISubscriber{T}.PersistentSubscribe(IFiber,Action{T})"/>
+        /// </summary>
+        /// <param name="fiber"></param>
+        /// <param name="receive"></param>
+        public void PersistentSubscribe(IFiber fiber, Action<T> receive)
+        {
+            PersistentSubscribeOnProducerThreads(new ChannelSubscription<T>(fiber, receive));
+        }
+
+        /// <summary>
+        /// <see cref="ISubscriber{T}.PersistentSubscribeToBatch(IFiber,Action{IList{T}},long)"/>
+        /// </summary>
+        /// <param name="fiber"></param>
+        /// <param name="receive"></param>
+        /// <param name="intervalInMs"></param>
+        public void PersistentSubscribeToBatch(IFiber fiber, Action<IList<T>> receive, long intervalInMs)
+        {
+            PersistentSubscribeOnProducerThreads(new BatchSubscriber<T>(fiber, receive, intervalInMs));
+        }
+
+        /// <summary>
+        /// <see cref="ISubscriber{T}.PersistentSubscribeToKeyedBatch{K}(IFiber,Converter{T,K},Action{IDictionary{K,T}},long)"/>
+        /// </summary>
+        /// <typeparam name="K"></typeparam>
+        /// <param name="fiber"></param>
+        /// <param name="keyResolver"></param>
+        /// <param name="receive"></param>
+        /// <param name="intervalInMs"></param>
+        public void PersistentSubscribeToKeyedBatch<K>(IFiber fiber, Converter<T, K> keyResolver, Action<IDictionary<K, T>> receive, long intervalInMs)
+        {
+            PersistentSubscribeOnProducerThreads(new KeyedBatchSubscriber<K, T>(keyResolver, receive, fiber, intervalInMs));
+        }
+
+        /// <summary>
+        /// <see cref="ISubscriber{T}.PersistentSubscribeToLast(IFiber,Action{T},long)"/>
+        /// </summary>
+        /// <param name="fiber"></param>
+        /// <param name="receive"></param>
+        /// <param name="intervalInMs"></param>
+        public void PersistentSubscribeToLast(IFiber fiber, Action<T> receive, long intervalInMs)
+        {
+            PersistentSubscribeOnProducerThreads(new LastSubscriber<T>(receive, fiber, intervalInMs));
+        }
+
+        /// <summary>
+        /// <see cref="ISubscriber{T}.PersistentSubscribeOnProducerThreads(IProducerThreadSubscriber{T})"/>
+        /// </summary>
+        /// <param name="subscriber"></param>
+        public void PersistentSubscribeOnProducerThreads(IProducerThreadSubscriber<T> subscriber)
+        {
+            _channel.PersistentSubscribeOnProducerThreads(subscriber.ReceiveOnProducerThread);
         }
 
         /// <summary>
@@ -88,5 +140,10 @@ namespace Retlang.Channels
         /// Number of subscribers
         ///</summary>
         public int NumSubscribers { get { return _channel.NumSubscribers; } }
+
+        ///<summary>
+        /// Number of persistent subscribers.
+        ///</summary>
+        public int NumPersistentSubscribers { get { return _channel.NumPersistentSubscribers; } }
     }
 }

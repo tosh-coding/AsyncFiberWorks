@@ -97,6 +97,35 @@ namespace RetlangTests
             Assert.IsTrue(reset.WaitOne(10000, false));
             queues.ForEach(delegate(IFiber q) { q.Dispose(); });
         }
+
+        [Test]
+        public void PersistentSubscriber()
+        {
+            var one = PoolFiber.StartNew();
+            var oneConsumed = 0;
+            var reset = new AutoResetEvent(false);
+            using (one)
+            {
+                var channel = new QueueChannel<int>();
+                Action<int> onMsg = delegate
+                {
+                    oneConsumed++;
+                    if (oneConsumed == 20)
+                    {
+                        reset.Set();
+                    }
+                };
+                channel.PersistentSubscribe(one, onMsg);
+                Assert.AreEqual(1, channel.NumSubscribers);
+                Assert.AreEqual(1, channel.NumPersistentSubscribers);
+                IPublisherQueueChannel<int> publisher = channel;
+                for (var i = 0; i < 20; i++)
+                {
+                    publisher.Publish(i);
+                }
+                Assert.IsTrue(reset.WaitOne(10000, false));
+            }
+        }
     }
 
     public class StubExecutor : IExecutor

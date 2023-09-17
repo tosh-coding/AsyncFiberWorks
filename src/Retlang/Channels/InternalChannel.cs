@@ -10,6 +10,7 @@ namespace Retlang.Channels
     internal sealed class InternalChannel<T>
     {
         private event Action<T> _subscribers;
+        private int _persistentSubscribers = 0;
 
         /// <summary>
         /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
@@ -29,6 +30,18 @@ namespace Retlang.Channels
             subscriptions.RegisterSubscription(unsubscriber);
 
             return unsubscriber;
+        }
+
+        /// <summary>
+        /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
+        /// Action may be invoked on multiple threads.
+        /// This subscription cannot be unsubscribed. The subscriber must be valid until this channel is destroyed.
+        /// </summary>
+        /// <param name="subscriber"></param>
+        public void PersistentSubscribeOnProducerThreads(Action<T> action)
+        {
+            _subscribers += action;
+            _persistentSubscribers += 1;
         }
 
         /// <summary>
@@ -58,5 +71,10 @@ namespace Retlang.Channels
                 return evnt == null ? 0 : evnt.GetInvocationList().Length;
             }
         }
+
+        ///<summary>
+        /// Number of persistent subscribers.
+        ///</summary>
+        public int NumPersistentSubscribers { get { return _persistentSubscribers; } }
     }
 }

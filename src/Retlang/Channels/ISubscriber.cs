@@ -48,5 +48,61 @@ namespace Retlang.Channels
         /// <param name="intervalInMs"></param>
         /// <returns></returns>
         IDisposable SubscribeToLast(IFiber fiber, Action<T> receive, long intervalInMs);
+
+        /// <summary>
+        /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
+        /// Action may be invoked on multiple threads.
+        /// </summary>
+        /// <param name="fiber"></param>
+        /// <param name="subscriber"></param>
+        /// <returns></returns>
+        IDisposable SubscribeOnProducerThreads(IFiber fiber, IProducerThreadSubscriber<T> subscriber);
+
+        ///<summary>
+        /// Subscribe to messages on this channel. The provided action will be invoked via a Action on the provided executor.
+        /// This subscription cannot be unsubscribed. The subscriber must be valid until this channel is destroyed.
+        ///</summary>
+        ///<param name="fiber"></param>
+        ///<param name="receive"></param>
+        void PersistentSubscribe(IFiber fiber, Action<T> receive);
+
+        /// <summary>
+        /// Subscribes to actions on the channel in batch form. The events will be batched if the consumer is unable to process the events 
+        /// faster than the arrival rate.
+        /// This subscription cannot be unsubscribed. The subscriber must be valid until this channel is destroyed.
+        /// </summary>
+        /// <param name="fiber"></param>
+        /// <param name="receive"></param>
+        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        void PersistentSubscribeToBatch(IFiber fiber, Action<IList<T>> receive, long intervalInMs);
+
+        ///<summary>
+        /// Batches actions based upon keyed values allowing for duplicates to be dropped. 
+        /// This subscription cannot be unsubscribed. The subscriber must be valid until this channel is destroyed.
+        ///</summary>
+        ///<param name="fiber"></param>
+        ///<param name="keyResolver"></param>
+        ///<param name="receive"></param>
+        ///<param name="intervalInMs"></param>
+        ///<typeparam name="K"></typeparam>
+        void PersistentSubscribeToKeyedBatch<K>(IFiber fiber, Converter<T, K> keyResolver, Action<IDictionary<K, T>> receive, long intervalInMs);
+
+        /// <summary>
+        /// Subscription that delivers the latest message to the consuming thread.  If a newer message arrives before the consuming thread
+        /// has a chance to process the message, the pending message is replaced by the newer message. The old message is discarded.
+        /// This subscription cannot be unsubscribed. The subscriber must be valid until this channel is destroyed.
+        /// </summary>
+        /// <param name="fiber"></param>
+        /// <param name="receive"></param>
+        /// <param name="intervalInMs"></param>
+        void PersistentSubscribeToLast(IFiber fiber, Action<T> receive, long intervalInMs);
+
+        /// <summary>
+        /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
+        /// Action may be invoked on multiple threads.
+        /// This subscription cannot be unsubscribed. The subscriber must be valid until this channel is destroyed.
+        /// </summary>
+        /// <param name="subscriber"></param>
+        void PersistentSubscribeOnProducerThreads(IProducerThreadSubscriber<T> subscriber);
     }
 }

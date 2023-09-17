@@ -29,6 +29,23 @@ namespace RetlangTests.Examples
         }
 
         [Test]
+        public void PersistentPubSubWithPool()
+        {
+            //PoolFiber uses the .NET thread pool by default
+            using (var fiber = new PoolFiber())
+            {
+                fiber.Start();
+                var channel = new Channel<string>();
+
+                var reset = new AutoResetEvent(false);
+                channel.PersistentSubscribe(fiber, delegate { reset.Set(); });
+                channel.Publish("hello");
+
+                Assert.IsTrue(reset.WaitOne(5000, false));
+            }
+        }
+
+        [Test]
         public void PubSubWithDedicatedThread()
         {
             using (var fiber = new ThreadFiber())
@@ -147,8 +164,9 @@ namespace RetlangTests.Examples
             }
         }
 
-        [Test]
-        public async Task Snapshot()
+        [TestCase(1)]
+        [TestCase(2)]
+        public async Task Snapshot(int responderType)
         {
             using (var fiberReply = new PoolFiber())
             using (var fiberRequest = new PoolFiber())
@@ -159,13 +177,30 @@ namespace RetlangTests.Examples
 
                 var lockerResponseValue = new object();
                 int currentValue = 0;
-                channel.ReplyToPrimingRequest(fiberReply, () =>
+                if (responderType == 0)
                 {
-                    lock (lockerResponseValue)
+                    channel.ReplyToPrimingRequest(fiberReply, () =>
                     {
-                        return currentValue;
-                    }
-                });
+                        lock (lockerResponseValue)
+                        {
+                            return currentValue;
+                        }
+                    });
+                    Assert.AreEqual(1, channel.NumSubscribers);
+                    Assert.AreEqual(0, channel.NumPersistentSubscribers);
+                }
+                else
+                {
+                    channel.PersistentReplyToPrimingRequest(fiberReply, () =>
+                    {
+                        lock (lockerResponseValue)
+                        {
+                            return currentValue;
+                        }
+                    });
+                    Assert.AreEqual(1, channel.NumSubscribers);
+                    Assert.AreEqual(1, channel.NumPersistentSubscribers);
+                }
 
                 lock (lockerResponseValue)
                 {

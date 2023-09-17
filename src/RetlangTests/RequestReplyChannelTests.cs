@@ -72,5 +72,22 @@ namespace RetlangTests
             Assert.AreEqual(5, result);
             Assert.IsFalse(WaitReceiveForTest(response, 3000, out result));
         }
+
+        [Test]
+        public void PersistentSubscriber()
+        {
+            var responder = PoolFiber.StartNew();
+            var timeCheck = new RequestReplyChannel<string, DateTime>();
+            var now = DateTime.Now;
+            Action<IRequest<string, DateTime>> onRequest = req => req.SendReply(now);
+            timeCheck.PersistentSubscribe(responder, onRequest);
+            Assert.AreEqual(1, timeCheck.NumPersistentSubscribers);
+            Assert.AreEqual(1, timeCheck.NumSubscribers);
+            IRequestPublisher<string, DateTime> requester = timeCheck;
+            var response = requester.SendRequest("hello");
+            DateTime result;
+            Assert.IsTrue(WaitReceiveForTest(response, 10000, out result));
+            Assert.AreEqual(result, now);
+        }
     }
 }
