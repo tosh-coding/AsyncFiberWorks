@@ -8,13 +8,14 @@ namespace Retlang.Channels
     /// Subscribes to last action received on the channel. 
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class LastSubscriber<T> : BaseSubscription<T>
+    public class LastSubscriber<T> : ISubscriberWithFilter<T>
     {
         private readonly object _batchLock = new object();
 
         private readonly Action<T> _target;
         private readonly IFiber _fiber;
         private readonly long _intervalInMs;
+        private readonly MessageFilter<T> _filter = new MessageFilter<T>();
 
         private bool _flushPending;
         private T _pending;
@@ -35,16 +36,37 @@ namespace Retlang.Channels
         ///<summary>
         /// Allows for the registration and deregistration of subscriptions
         ///</summary>
-        public override ISubscriptionRegistry Subscriptions
+        public ISubscriptionRegistry Subscriptions
         {
             get { return _fiber; }
+        }
+
+        /// <summary>
+        /// <see cref="IMessageFilter{T}.FilterOnProducerThread"/>
+        /// </summary>
+        public Filter<T> FilterOnProducerThread
+        {
+            get { return _filter.FilterOnProducerThread; }
+            set { _filter.FilterOnProducerThread = value; }
+        }
+
+        /// <summary>
+        /// <see cref="IProducerThreadSubscriberCore{T}.ReceiveOnProducerThread"/>
+        /// </summary>
+        /// <param name="msg"></param>
+        public void ReceiveOnProducerThread(T msg)
+        {
+            if (_filter.PassesProducerThreadFilter(msg))
+            {
+                OnMessageOnProducerThread(msg);
+            }
         }
 
         /// <summary>
         /// Receives message from producer thread.
         /// </summary>
         /// <param name="msg"></param>
-        protected override void OnMessageOnProducerThread(T msg)
+        protected void OnMessageOnProducerThread(T msg)
         {
             lock (_batchLock)
             {

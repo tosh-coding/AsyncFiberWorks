@@ -5,6 +5,6 @@ namespace Retlang.Channels
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="msg"></param>
-    /// <returns></returns>
+    /// <returns>True to pass, false otherwise.</returns>
     public delegate bool Filter<T>(T msg);
 }
