@@ -48,10 +48,5 @@ namespace Retlang.Channels
         /// <param name="intervalInMs"></param>
         /// <returns></returns>
         IDisposable SubscribeToLast(IFiber fiber, Action<T> receive, long intervalInMs);
-
-        /// <summary>
-        /// Removes all subscribers.
-        /// </summary>
-        void ClearSubscribers();
     }
 }

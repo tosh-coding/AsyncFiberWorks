@@ -87,13 +87,5 @@ namespace Retlang.Channels
         /// Number of subscribers
         ///</summary>
         public int NumSubscribers { get { return _channel.NumSubscribers; } }
-
-        /// <summary>
-        /// Remove all subscribers.
-        /// </summary>
-        public void ClearSubscribers()
-        {
-            _channel.ClearSubscribers();
-        }
     }
 }

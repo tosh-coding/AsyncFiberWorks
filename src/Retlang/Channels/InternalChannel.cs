@@ -58,13 +58,5 @@ namespace Retlang.Channels
                 return evnt == null ? 0 : evnt.GetInvocationList().Length;
             }
         }
-
-        /// <summary>
-        /// Remove all subscribers.
-        /// </summary>
-        public void ClearSubscribers()
-        {
-            _subscribers = null;
-        }
     }
 }
