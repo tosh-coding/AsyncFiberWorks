@@ -11,25 +11,17 @@ namespace Retlang.Channels
     ///<typeparam name="T"></typeparam>
     public class SnapshotChannel<T> : ISnapshotChannel<T>
     {
-        private readonly int _timeoutInMs;
         private readonly InternalChannel<T> _updatesChannel = new InternalChannel<T>();
         private readonly RequestReplyChannel<object, T> _requestChannel = new RequestReplyChannel<object, T>();
-
-        ///<summary>
-        ///</summary>
-        ///<param name="timeoutInMs">For initial snapshot</param>
-        public SnapshotChannel(int timeoutInMs)
-        {
-            _timeoutInMs = timeoutInMs;
-        }
 
         ///<summary>
         /// Subscribes for an initial snapshot and then incremental update.
         ///</summary>
         ///<param name="fiber">the target executor to receive the message</param>
         ///<param name="receive"></param>
+        ///<param name="timeoutInMs">For initial snapshot</param>
         /// <returns></returns>
-        public async Task<IDisposable> PrimedSubscribe(IFiber fiber, Action<T> receive)
+        public async Task<IDisposable> PrimedSubscribe(IFiber fiber, Action<T> receive, int timeoutInMs)
         {
             using (var reply = _requestChannel.SendRequest(new object()))
             {
@@ -38,12 +30,12 @@ namespace Retlang.Channels
                     throw new ArgumentException(typeof (T).Name + " synchronous request has no reply subscriber.");
                 }
 
-                await WaitOnReceive(reply, _timeoutInMs).ConfigureAwait(false);
+                await WaitOnReceive(reply, timeoutInMs).ConfigureAwait(false);
 
                 T result;
                 if (!reply.TryReceive(out result))
                 {
-                    throw new ArgumentException(typeof (T).Name + " synchronous request timed out in " + _timeoutInMs);
+                    throw new ArgumentException(typeof (T).Name + " synchronous request timed out in " + timeoutInMs);
                 }
 
                 await fiber.SwitchTo();

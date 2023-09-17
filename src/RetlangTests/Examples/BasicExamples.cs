@@ -154,7 +154,7 @@ namespace RetlangTests.Examples
             {
                 fiberReply.Start();
                 fiberRequest.Start();
-                var channel = new SnapshotChannel<int>(5000);
+                var channel = new SnapshotChannel<int>();
 
                 var lockerResponseValue = new object();
                 int currentValue = 0;
@@ -182,7 +182,7 @@ namespace RetlangTests.Examples
                 {
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
-                });
+                }, 5000);
 
                 lock (lockerResponseValue)
                 {

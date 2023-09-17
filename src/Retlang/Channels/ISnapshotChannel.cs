@@ -16,7 +16,8 @@ namespace Retlang.Channels
         ///</summary>
         ///<param name="fiber">the target executor to receive the message</param>
         ///<param name="receive"></param>
-        Task<IDisposable> PrimedSubscribe(IFiber fiber, Action<T> receive);
+        ///<param name="timeoutInMs"></param>
+        Task<IDisposable> PrimedSubscribe(IFiber fiber, Action<T> receive, int timeoutInMs);
 
         ///<summary>
         /// Ressponds to the request for an initial snapshot.
