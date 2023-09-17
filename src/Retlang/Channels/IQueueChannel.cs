@@ -8,20 +8,7 @@ namespace Retlang.Channels
     /// multiple subscribers to the queue.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IQueueChannel<T>
+    public interface IQueueChannel<T> : ISubscriberQueueChannel<T>, IPublisherQueueChannel<T>
     {
-        /// <summary>
-        /// Subscribe to the context.
-        /// </summary>
-        /// <param name="fiber"></param>
-        /// <param name="onMessage"></param>
-        /// <returns></returns>
-        IDisposable Subscribe(IFiber fiber, Action<T> onMessage);
-
-        /// <summary>
-        /// Pushes a message into the queue. Message will be processed by first available consumer.
-        /// </summary>
-        /// <param name="message"></param>
-        void Publish(T message);
     }
 }
