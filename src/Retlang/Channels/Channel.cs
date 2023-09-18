@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Retlang.Core;
 using Retlang.Fibers;
 
 namespace Retlang.Channels
@@ -62,14 +63,25 @@ namespace Retlang.Channels
         }
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.SubscribeOnProducerThreads(IFiber,IProducerThreadSubscriber{T})"/>
+        /// <see cref="ISubscriber{T}.SubscribeOnProducerThreads(ISubscriptionRegistry,IProducerThreadSubscriber{T})"/>
         /// </summary>
-        /// <param name="fiber"></param>
+        /// <param name="subscriptions"></param>
         /// <param name="subscriber"></param>
         /// <returns></returns>
-        public IDisposable SubscribeOnProducerThreads(IFiber fiber, IProducerThreadSubscriber<T> subscriber)
+        public IDisposable SubscribeOnProducerThreads(ISubscriptionRegistry subscriptions, IProducerThreadSubscriber<T> subscriber)
         {
-            return _channel.SubscribeOnProducerThreads(fiber, subscriber.ReceiveOnProducerThread);
+            return SubscribeOnProducerThreads(subscriptions, subscriber.ReceiveOnProducerThread);
+        }
+
+        /// <summary>
+        /// <see cref="ISubscriber{T}.SubscribeOnProducerThreads(ISubscriptionRegistry,Action{T})"/>
+        /// </summary>
+        /// <param name="subscriptions"></param>
+        /// <param name="receiveOnProducerThread"></param>
+        /// <returns></returns>
+        public IDisposable SubscribeOnProducerThreads(ISubscriptionRegistry subscriptions, Action<T> receiveOnProducerThread)
+        {
+            return _channel.SubscribeOnProducerThreads(subscriptions, receiveOnProducerThread);
         }
 
         /// <summary>
@@ -123,7 +135,16 @@ namespace Retlang.Channels
         /// <param name="subscriber"></param>
         public void PersistentSubscribeOnProducerThreads(IProducerThreadSubscriber<T> subscriber)
         {
-            _channel.PersistentSubscribeOnProducerThreads(subscriber.ReceiveOnProducerThread);
+            PersistentSubscribeOnProducerThreads(subscriber.ReceiveOnProducerThread);
+        }
+
+        /// <summary>
+        /// <see cref="ISubscriber{T}.PersistentSubscribeOnProducerThreads(Action{T})"/>
+        /// </summary>
+        /// <param name="receiveOnProducerThread"></param>
+        public void PersistentSubscribeOnProducerThreads(Action<T> receiveOnProducerThread)
+        {
+            _channel.PersistentSubscribeOnProducerThreads(receiveOnProducerThread);
         }
 
         /// <summary>

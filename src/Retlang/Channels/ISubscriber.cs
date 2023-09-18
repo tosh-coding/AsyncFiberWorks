@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Retlang.Core;
 using Retlang.Fibers;
 
 namespace Retlang.Channels
@@ -53,10 +54,19 @@ namespace Retlang.Channels
         /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
         /// Action may be invoked on multiple threads.
         /// </summary>
-        /// <param name="fiber"></param>
+        /// <param name="subscriptions"></param>
         /// <param name="subscriber"></param>
         /// <returns></returns>
-        IDisposable SubscribeOnProducerThreads(IFiber fiber, IProducerThreadSubscriber<T> subscriber);
+        IDisposable SubscribeOnProducerThreads(ISubscriptionRegistry subscriptions, IProducerThreadSubscriber<T> subscriber);
+
+        /// <summary>
+        /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
+        /// Action may be invoked on multiple threads.
+        /// </summary>
+        /// <param name="subscriptions"></param>
+        /// <param name="receiveOnProducerThread">A message receive process that is performed on the producer/publisher thread. Probably just transfer it to another fiber.</param>
+        /// <returns></returns>
+        IDisposable SubscribeOnProducerThreads(ISubscriptionRegistry subscriptions, Action<T> receiveOnProducerThread);
 
         ///<summary>
         /// Subscribe to messages on this channel. The provided action will be invoked via a Action on the provided executor.
@@ -104,5 +114,13 @@ namespace Retlang.Channels
         /// </summary>
         /// <param name="subscriber"></param>
         void PersistentSubscribeOnProducerThreads(IProducerThreadSubscriber<T> subscriber);
+
+        /// <summary>
+        /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
+        /// Action may be invoked on multiple threads.
+        /// This subscription cannot be unsubscribed. The subscriber must be valid until this channel is destroyed.
+        /// </summary>
+        /// <param name="receiveOnProducerThread">A message receive process that is performed on the producer/publisher thread. Probably just transfer it to another fiber.</param>
+        void PersistentSubscribeOnProducerThreads(Action<T> receiveOnProducerThread);
     }
 }
