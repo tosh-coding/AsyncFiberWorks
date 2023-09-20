@@ -9,7 +9,6 @@ namespace Retlang.Fibers
     public class FiberWithDisposableList : IFiber
     {
         private readonly Subscriptions _subscriptions = new Subscriptions();
-        private readonly Scheduler _scheduler = new Scheduler();
         private readonly IFiberSlim _fiber;
 
         /// <summary>
@@ -58,32 +57,6 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// Number of scheduled actions.
-        /// </summary>
-        public int NumScheduledActions
-        {
-            get { return _scheduler.Count; }
-        }
-
-        /// <summary>
-        /// Register a timer. So that it stops together when the fiber is disposed.
-        /// </summary>
-        /// <param name="timer"></param>
-        public void RegisterSchedule(IDisposable timer)
-        {
-            _scheduler.Add(timer);
-        }
-
-        /// <summary>
-        /// Deregister a timer.
-        /// </summary>
-        /// <param name="timer"></param>
-        public void DeregisterSchedule(IDisposable timer)
-        {
-            _scheduler.Remove(timer);
-        }
-
-        /// <summary>
         /// <see cref="IFiber.Start()"/>
         /// </summary>
         public virtual void Start()
@@ -96,7 +69,6 @@ namespace Retlang.Fibers
         /// </summary>
         public virtual void Dispose()
         {
-            _scheduler.Dispose();
             _subscriptions.Dispose();
             _fiber.Dispose();
         }

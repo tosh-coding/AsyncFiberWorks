@@ -9,6 +9,7 @@ namespace Retlang.Core
     internal class Subscriptions : IDisposable
     {
         private readonly object _lock = new object();
+        private volatile bool _running = true;
         private readonly List<IDisposable> _items = new List<IDisposable>();
 
         /// <summary>
@@ -17,9 +18,18 @@ namespace Retlang.Core
         /// <param name="toAdd"></param>
         public void Add(IDisposable toAdd)
         {
+            bool added = false;
             lock (_lock)
             {
-                _items.Add(toAdd);
+                if (_running)
+                {
+                    _items.Add(toAdd);
+                    added = true;
+                }
+            }
+            if (!added)
+            {
+                toAdd.Dispose();
             }
         }
 
@@ -32,6 +42,10 @@ namespace Retlang.Core
         {
             lock (_lock)
             {
+                if (!_running)
+                {
+                    return false;
+                }
                 return _items.Remove(toRemove);
             }
         }
@@ -41,13 +55,27 @@ namespace Retlang.Core
         /// </summary>
         public void Dispose()
         {
+            IDisposable[] old = null;
             lock (_lock)
             {
-                foreach (var victim in _items.ToArray())
+                if (!_running)
                 {
-                    victim.Dispose();
+                    return;
                 }
-                _items.Clear();
+
+                _running = false;
+                if (_items.Count > 0)
+                {
+                    old = _items.ToArray();
+                    _items.Clear();
+                }
+            }
+            if (old != null)
+            {
+                foreach (var timer in old)
+                {
+                    timer.Dispose();
+                }
             }
         }
 
@@ -60,6 +88,10 @@ namespace Retlang.Core
             {
                 lock (_lock)
                 {
+                    if (!_running)
+                    {
+                        return 0;
+                    }
                     return _items.Count;
                 }
             }

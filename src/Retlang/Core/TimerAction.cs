@@ -29,7 +29,7 @@ namespace Retlang.Core
             _firstIntervalInMs = firstIntervalInMs;
             _intervalInMs = intervalInMs;
             _fiber = fiber;
-            fiber.RegisterSchedule(this);
+            fiber.RegisterSubscription(this);
         }
 
         public static TimerAction StartNew(IFiber fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
@@ -97,7 +97,7 @@ namespace Retlang.Core
             }
             if (_fiber != null)
             {
-                _fiber.DeregisterSchedule(this);
+                _fiber.DeregisterSubscription(this);
             }
         }
     }
