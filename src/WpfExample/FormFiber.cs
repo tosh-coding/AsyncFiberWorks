@@ -13,7 +13,7 @@ namespace WpfExample
         /// Creates an instance.
         /// </summary>
         public FormFiber(ISynchronizeInvoke invoker, IExecutor executor)
-            : base(new PoolFiberSlim(new FormAdapter(invoker), executor))
+            : base(new PoolFiberSlim(new FormAdapter(invoker), executor), new Subscriptions())
         {
         }
 

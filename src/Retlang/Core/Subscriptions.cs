@@ -6,17 +6,17 @@ namespace Retlang.Core
     /// <summary>
     /// Registry for subscriptions. Provides thread safe methods for list of subscriptions.
     /// </summary>
-    internal class Subscriptions : IDisposable
+    public class Subscriptions : ISubscriptionRegistry, IDisposable
     {
         private readonly object _lock = new object();
         private volatile bool _running = true;
         private readonly List<IDisposable> _items = new List<IDisposable>();
 
         /// <summary>
-        /// Add Disposable
+        /// Add Disposable. It will be unsubscribed when the fiber is discarded.
         /// </summary>
         /// <param name="toAdd"></param>
-        public void Add(IDisposable toAdd)
+        public void RegisterSubscription(IDisposable toAdd)
         {
             bool added = false;
             lock (_lock)
@@ -38,7 +38,7 @@ namespace Retlang.Core
         /// </summary>
         /// <param name="toRemove"></param>
         /// <returns></returns>
-        public bool Remove(IDisposable toRemove)
+        public bool DeregisterSubscription(IDisposable toRemove)
         {
             lock (_lock)
             {
@@ -82,7 +82,7 @@ namespace Retlang.Core
         /// <summary>
         /// Number of registered disposables.
         /// </summary>
-        public int Count
+        public int NumSubscriptions
         {
             get
             {

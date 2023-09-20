@@ -16,7 +16,7 @@ namespace WpfExample
         /// <param name="priority">The priority.</param>
         /// <param name="executor">The executor.</param>
         public DispatcherFiber(Dispatcher dispatcher, DispatcherPriority priority, IExecutor executor)
-            : base(new PoolFiberSlim(new DispatcherAdapter(dispatcher, priority), executor))
+            : base(new PoolFiberSlim(new DispatcherAdapter(dispatcher, priority), executor), new Subscriptions())
         {
         }
 

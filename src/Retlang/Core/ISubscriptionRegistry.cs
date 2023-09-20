@@ -19,5 +19,10 @@ namespace Retlang.Core
         ///<param name="toRemove"></param>
         ///<returns></returns>
         bool DeregisterSubscription(IDisposable toRemove);
+
+        /// <summary>
+        /// Number of registered disposables.
+        /// </summary>
+        int NumSubscriptions { get; }
     }
 }

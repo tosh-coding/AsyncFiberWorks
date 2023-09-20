@@ -57,7 +57,7 @@ namespace Retlang.Channels
         /// <param name="subscriptions"></param>
         /// <param name="subscriber"></param>
         /// <returns></returns>
-        IDisposable SubscribeOnProducerThreads(ISubscriptionRegistry subscriptions, IProducerThreadSubscriber<T> subscriber);
+        IDisposable SubscribeOnProducerThreads(ISubscriptionRegistryGetter subscriptions, IProducerThreadSubscriber<T> subscriber);
 
         /// <summary>
         /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
@@ -66,7 +66,7 @@ namespace Retlang.Channels
         /// <param name="subscriptions"></param>
         /// <param name="receiveOnProducerThread">A message receive process that is performed on the producer/publisher thread. Probably just transfer it to another fiber.</param>
         /// <returns></returns>
-        IDisposable SubscribeOnProducerThreads(ISubscriptionRegistry subscriptions, Action<T> receiveOnProducerThread);
+        IDisposable SubscribeOnProducerThreads(ISubscriptionRegistryGetter subscriptions, Action<T> receiveOnProducerThread);
 
         ///<summary>
         /// Subscribe to messages on this channel. The provided action will be invoked via a Action on the provided executor.

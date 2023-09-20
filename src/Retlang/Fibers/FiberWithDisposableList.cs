@@ -8,16 +8,18 @@ namespace Retlang.Fibers
     /// </summary>
     public class FiberWithDisposableList : IFiber
     {
-        private readonly Subscriptions _subscriptions = new Subscriptions();
+        private readonly Subscriptions _subscriptions;
         private readonly IFiberSlim _fiber;
 
         /// <summary>
         /// Construct new instance.
         /// </summary>
         /// <param name="fiber"></param>
-        public FiberWithDisposableList(IFiberSlim fiber)
+        /// <param name="subscriptions"></param>
+        public FiberWithDisposableList(IFiberSlim fiber, Subscriptions subscriptions)
         {
             _fiber = fiber;
+            _subscriptions = subscriptions;
         }
 
         /// <summary>
@@ -29,31 +31,12 @@ namespace Retlang.Fibers
             _fiber.Enqueue(action);
         }
 
-        ///<summary>
-        /// Register subscription to be unsubcribed from when the fiber is disposed.
-        ///</summary>
-        ///<param name="toAdd"></param>
-        public void RegisterSubscription(IDisposable toAdd)
+        /// <summary>
+        /// <see cref="ISubscriptionRegistryGetter.FallbackDisposer"/>
+        /// </summary>
+        public ISubscriptionRegistry FallbackDisposer
         {
-            _subscriptions.Add(toAdd);
-        }
-
-        ///<summary>
-        /// Deregister a subscription.
-        ///</summary>
-        ///<param name="toRemove"></param>
-        ///<returns></returns>
-        public bool DeregisterSubscription(IDisposable toRemove)
-        {
-            return _subscriptions.Remove(toRemove);
-        }
-
-        ///<summary>
-        /// Number of subscriptions.
-        ///</summary>
-        public int NumSubscriptions
-        {
-            get { return _subscriptions.Count; }
+            get { return _subscriptions; }
         }
 
         /// <summary>
@@ -61,7 +44,7 @@ namespace Retlang.Fibers
         /// </summary>
         public virtual void Dispose()
         {
-            _subscriptions.Dispose();
+            _subscriptions?.Dispose();
         }
     }
 }

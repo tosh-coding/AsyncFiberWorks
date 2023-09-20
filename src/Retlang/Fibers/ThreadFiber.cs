@@ -49,7 +49,7 @@ namespace Retlang.Fibers
         /// Creates a thread fiber.
         /// </summary>
         private ThreadFiber(ThreadFiberSlim fiber)
-            : base(fiber)
+            : base(fiber, new Subscriptions())
         {
             _threadFiberSlim = fiber;
         }

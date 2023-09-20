@@ -19,7 +19,7 @@ namespace Retlang.Fibers
         /// </summary>
         /// <param name="poolFiber"></param>
         private PoolFiber(PoolFiberSlim poolFiber)
-            : base(poolFiber)
+            : base(poolFiber, new Subscriptions())
         {
             _fiber = poolFiber;
         }

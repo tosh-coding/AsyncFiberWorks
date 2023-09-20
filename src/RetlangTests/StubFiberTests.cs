@@ -112,11 +112,11 @@ namespace RetlangTests
             channel.Subscribe(sut, x => { });
             channel.Publish(2);
 
-            Assert.AreEqual(2, sut.NumSubscriptions);
+            Assert.AreEqual(2, sut.FallbackDisposer.NumSubscriptions);
 
             sut.Dispose();
 
-            Assert.AreEqual(0, sut.NumSubscriptions);
+            Assert.AreEqual(0, sut.FallbackDisposer.NumSubscriptions);
         }
     }
 }

@@ -31,7 +31,7 @@ namespace Retlang.Fibers
         /// Construct new instance.
         /// </summary>
         private StubFiber(StubFiberSlim stubFiberSlim)
-            : base(stubFiberSlim)
+            : base(stubFiberSlim, new Subscriptions())
         {
             _stubFiberSlim = stubFiberSlim;
         }

@@ -63,23 +63,23 @@ namespace Retlang.Channels
         }
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.SubscribeOnProducerThreads(ISubscriptionRegistry,IProducerThreadSubscriber{T})"/>
+        /// <see cref="ISubscriber{T}.SubscribeOnProducerThreads(ISubscriptionRegistryGetter,IProducerThreadSubscriber{T})"/>
         /// </summary>
         /// <param name="subscriptions"></param>
         /// <param name="subscriber"></param>
         /// <returns></returns>
-        public IDisposable SubscribeOnProducerThreads(ISubscriptionRegistry subscriptions, IProducerThreadSubscriber<T> subscriber)
+        public IDisposable SubscribeOnProducerThreads(ISubscriptionRegistryGetter subscriptions, IProducerThreadSubscriber<T> subscriber)
         {
             return SubscribeOnProducerThreads(subscriptions, subscriber.ReceiveOnProducerThread);
         }
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.SubscribeOnProducerThreads(ISubscriptionRegistry,Action{T})"/>
+        /// <see cref="ISubscriber{T}.SubscribeOnProducerThreads(ISubscriptionRegistryGetter,Action{T})"/>
         /// </summary>
         /// <param name="subscriptions"></param>
         /// <param name="receiveOnProducerThread"></param>
         /// <returns></returns>
-        public IDisposable SubscribeOnProducerThreads(ISubscriptionRegistry subscriptions, Action<T> receiveOnProducerThread)
+        public IDisposable SubscribeOnProducerThreads(ISubscriptionRegistryGetter subscriptions, Action<T> receiveOnProducerThread)
         {
             return _channel.SubscribeOnProducerThreads(subscriptions, receiveOnProducerThread);
         }

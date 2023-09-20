@@ -19,15 +19,15 @@ namespace Retlang.Channels
         /// <param name="subscriptions"></param>
         /// <param name="action"></param>
         /// <returns></returns>
-        public IDisposable SubscribeOnProducerThreads(ISubscriptionRegistry subscriptions, Action<T> action)
+        public IDisposable SubscribeOnProducerThreads(ISubscriptionRegistryGetter subscriptions, Action<T> action)
         {
             _subscribers += action;
 
             var unsubscriber = new Unsubscriber((x) => {
                 this._subscribers -= action;
-                subscriptions.DeregisterSubscription(x);
+                subscriptions.FallbackDisposer?.DeregisterSubscription(x);
             });
-            subscriptions.RegisterSubscription(unsubscriber);
+            subscriptions.FallbackDisposer?.RegisterSubscription(unsubscriber);
 
             return unsubscriber;
         }
