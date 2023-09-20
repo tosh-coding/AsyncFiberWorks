@@ -7,7 +7,7 @@ namespace Retlang.Fibers
     /// <summary>
     /// Fiber implementation backed by a dedicated thread.
     /// </summary>
-    public class ThreadFiberSlim : IFiberSlim
+    public class ThreadFiberSlim : IFiberSlim, IDisposable
     {
         private static int THREAD_COUNT;
         private readonly Thread _thread;
@@ -130,7 +130,7 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// <see cref="IFiberSlim.Start"/>
+        /// Start the thread.
         /// </summary>
         public void Start()
         {

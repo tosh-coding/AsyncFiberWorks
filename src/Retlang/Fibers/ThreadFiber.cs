@@ -113,11 +113,11 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// <see cref="IFiber.Start()"/>
+        /// Start the thread.
         /// </summary>
-        public override void Start()
+        public void Start()
         {
-            base.Start();
+            _threadFiberSlim.Start();
         }
 
         ///<summary>
@@ -134,6 +134,7 @@ namespace Retlang.Fibers
         public override void Dispose()
         {
             base.Dispose();
+            _threadFiberSlim.Dispose();
         }
     }
 }

@@ -287,7 +287,7 @@ namespace RetlangTests.Examples
         [Test]
         public void ShouldIncreaseStubFiberSubscriberCountByOne()
         {
-            var fiber = StubFiber.StartNew();
+            var fiber = new StubFiber();
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, fiber.NumSubscriptions);

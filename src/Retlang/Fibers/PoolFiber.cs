@@ -1,4 +1,6 @@
 ﻿using Retlang.Core;
+using System;
+using System.Collections.Generic;
 
 namespace Retlang.Fibers
 {
@@ -7,13 +9,28 @@ namespace Retlang.Fibers
     /// </summary>
     public class PoolFiber : FiberWithDisposableList
     {
+        private readonly object _lock = new object();
+        private readonly IFiberSlim _fiber;
+
+        private List<Action> _queue = new List<Action>();
+
+        /// <summary>
+        /// Create a pool fiber with the specified thread pool and specified executor.
+        /// </summary>
+        /// <param name="poolFiber"></param>
+        private PoolFiber(PoolFiberSlim poolFiber)
+            : base(poolFiber)
+        {
+            _fiber = poolFiber;
+        }
+
         /// <summary>
         /// Create a pool fiber with the specified thread pool and specified executor.
         /// </summary>
         /// <param name="pool"></param>
         /// <param name="executor"></param>
         public PoolFiber(IThreadPool pool, IExecutor executor)
-            : base(new PoolFiberSlim(pool, executor))
+            : this(new PoolFiberSlim(pool, executor))
         {
         }
 
@@ -21,7 +38,7 @@ namespace Retlang.Fibers
         /// Create a pool fiber with the default thread pool.
         /// </summary>
         public PoolFiber(IExecutor executor) 
-            : base(new PoolFiberSlim(executor))
+            : this(DefaultThreadPool.Instance, executor)
         {
         }
 
@@ -29,7 +46,7 @@ namespace Retlang.Fibers
         /// Create a pool fiber with the default thread pool and default executor.
         /// </summary>
         public PoolFiber() 
-            : base(new PoolFiberSlim())
+            : this(DefaultThreadPool.Instance, new DefaultExecutor())
         {
         }
 
@@ -74,9 +91,20 @@ namespace Retlang.Fibers
         /// <summary>
         /// Start consuming actions.
         /// </summary>
-        public override void Start()
+        public void Start()
         {
-            base.Start();
+            lock (_lock)
+            {
+                if (_queue == null)
+                {
+                    return;
+                }
+                foreach (var action in _queue)
+                {
+                    _fiber.Enqueue(action);
+                }
+                _queue = null;
+            }
         }
 
         /// <summary>
@@ -85,6 +113,25 @@ namespace Retlang.Fibers
         public override void Dispose()
         {
             base.Dispose();
+        }
+
+        /// <summary>
+        /// <see cref="IExecutionContext.Enqueue(Action)"/>
+        /// </summary>
+        /// <param name="action"></param>
+        public override void Enqueue(Action action)
+        {
+            lock (_lock)
+            {
+                if (_queue == null)
+                {
+                    _fiber.Enqueue(action);
+                }
+                else
+                {
+                    _queue.Add(action);
+                }
+            }
         }
     }
 }

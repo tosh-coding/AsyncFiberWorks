@@ -12,7 +12,7 @@ namespace RetlangTests
         [Test]
         public void CancelBeforeStart()
         {
-            var stubFiber = StubFiber.StartNew();
+            var stubFiber = new StubFiber();
             var executionCount = 0;
             Action action = () => executionCount++;
             var timer = new TimerAction(stubFiber, action, 1, 2);
@@ -27,7 +27,7 @@ namespace RetlangTests
         [Test]
         public void CallbackFromTimer()
         {
-            var stubFiber = StubFiber.StartNew();
+            var stubFiber = new StubFiber();
             long counter = 0;
             Action action = () => { counter++; };
             var timer = new TimerAction(stubFiber, action, 2);
@@ -43,7 +43,7 @@ namespace RetlangTests
         [Test]
         public void CallbackFromIntervalTimerWithCancel()
         {
-            var stubFiber = StubFiber.StartNew();
+            var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
             var timer = new TimerAction(stubFiber, actionOnTimer, 2, 100);
@@ -62,7 +62,7 @@ namespace RetlangTests
         [Test]
         public void CallbackFromTimerWithCancel()
         {
-            var stubFiber = StubFiber.StartNew();
+            var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
             var timer = new TimerAction(stubFiber, actionOnTimer, 2);

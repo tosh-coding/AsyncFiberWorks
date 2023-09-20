@@ -9,9 +9,5 @@ namespace Retlang.Fibers
     /// </summary>
     public interface IFiber : ISubscriptionRegistry, IExecutionContext, IDisposable
     {
-        /// <summary>
-        /// Start consuming actions.
-        /// </summary>
-        void Start();
     }
 }

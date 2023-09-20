@@ -6,15 +6,17 @@ namespace WpfExample
 {
     public class UpdateController
     {
-        private readonly IFiber fiber = new ThreadFiber();
+        private readonly IFiber fiber;
         private IDisposable timer;
         private readonly WindowChannels channels;
 
         public UpdateController(WindowChannels winChannels)
         {
             channels = winChannels;
-            channels.StartChannel.Subscribe(fiber, OnStart);
-            fiber.Start();
+            var threadFiber = new ThreadFiber();
+            channels.StartChannel.Subscribe(threadFiber, OnStart);
+            threadFiber.Start();
+            fiber = threadFiber;
         }
 
         private void OnStart(RoutedEventArgs msg)

@@ -15,7 +15,7 @@ namespace WpfExample
         public Window1()
         {
             InitializeComponent();
-            fiber = DispatcherFiber.StartNew(Dispatcher);
+            fiber = new DispatcherFiber(Dispatcher);
             channels.TimeUpdate.SubscribeToLast(fiber, OnTimeUpdate, 0);
             new UpdateController(channels);
         }

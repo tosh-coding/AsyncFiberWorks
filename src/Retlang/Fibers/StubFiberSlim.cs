@@ -31,39 +31,6 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// Create a stub fiber with the default executor, and call the Start method.
-        /// </summary>
-        public static StubFiberSlim StartNew()
-        {
-            var fiber = new StubFiberSlim();
-            fiber.Start();
-            return fiber;
-        }
-
-        /// <summary>
-        /// Create a stub fiber with the specified executor, and call the Start method.
-        /// </summary>
-        public static StubFiberSlim StartNew(IExecutor executor)
-        {
-            var fiber = new StubFiberSlim(executor);
-            fiber.Start();
-            return fiber;
-        }
-
-        /// <summary>
-        /// No Op
-        /// </summary>
-        public void Start()
-        {}
-
-        /// <summary>
-        /// Destroy the instance.
-        /// </summary>
-        public void Dispose()
-        {
-        }
-
-        /// <summary>
         /// Enqueue a single action.
         /// </summary>
         /// <param name="action"></param>

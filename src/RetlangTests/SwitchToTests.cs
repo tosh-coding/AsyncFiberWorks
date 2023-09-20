@@ -50,7 +50,7 @@ namespace RetlangTests
         [Test]
         public void SwitchToFiberSlim()
         {
-            var stubFiber = StubFiberSlim.StartNew();
+            var stubFiber = new StubFiberSlim();
             var ctsStubFiberExecution = new CancellationTokenSource();
             var t = SwitchToFiberSlimAsync(stubFiber, ctsStubFiberExecution);
             try
@@ -72,12 +72,12 @@ namespace RetlangTests
             var userThreadPoolB = UserThreadPool.StartNew();
 
             var threadFiber = ThreadFiberSlim.StartNew();
-            var dotnetPoolFiber1 = PoolFiberSlim.StartNew(defaultThreadPool, new DefaultExecutor());
-            var dotnetPoolFiber2 = PoolFiberSlim.StartNew();
-            var userPoolFiberA1 = PoolFiberSlim.StartNew(userThreadPoolA, new DefaultExecutor());
-            var userPoolFiberA2 = PoolFiberSlim.StartNew(userThreadPoolA, new DefaultExecutor());
-            var userPoolFiberB1 = PoolFiberSlim.StartNew(userThreadPoolB, new DefaultExecutor());
-            var userPoolFiberB2 = PoolFiberSlim.StartNew(userThreadPoolB, new DefaultExecutor());
+            var dotnetPoolFiber1 = new PoolFiberSlim(defaultThreadPool, new DefaultExecutor());
+            var dotnetPoolFiber2 = new PoolFiberSlim();
+            var userPoolFiberA1 = new PoolFiberSlim(userThreadPoolA, new DefaultExecutor());
+            var userPoolFiberA2 = new PoolFiberSlim(userThreadPoolA, new DefaultExecutor());
+            var userPoolFiberB1 = new PoolFiberSlim(userThreadPoolB, new DefaultExecutor());
+            var userPoolFiberB2 = new PoolFiberSlim(userThreadPoolB, new DefaultExecutor());
 
             var idListOfStub = new HashSet<int>();
             var idListOfThread = new HashSet<int>();
@@ -157,7 +157,7 @@ namespace RetlangTests
         [Test]
         public void SwitchToFiber()
         {
-            var stubFiber = StubFiber.StartNew();
+            var stubFiber = new StubFiber();
             var ctsStubFiberExecution = new CancellationTokenSource();
             var t = SwitchToFiberAsync(stubFiber, ctsStubFiberExecution);
             try

@@ -17,7 +17,6 @@ namespace Retlang.Fibers
         private List<Action> _queue = new List<Action>();
         private List<Action> _toPass = new List<Action>();
 
-        private ExecutionState _started = ExecutionState.Created;
         private bool _flushPending;
 
         /// <summary>
@@ -48,59 +47,14 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// Create a pool fiber with the specified thread pool and specified executor, and call the Start method.
-        /// </summary>
-        /// <param name="pool"></param>
-        /// <param name="executor"></param>
-        /// <returns></returns>
-        public static PoolFiberSlim StartNew(IThreadPool pool, IExecutor executor)
-        {
-            var fiber = new PoolFiberSlim(pool, executor);
-            fiber.Start();
-            return fiber;
-        }
-
-        /// <summary>
-        /// Create a pool fiber with the default thread pool and call the Start method.
-        /// </summary>
-        /// <param name="executor"></param>
-        /// <returns></returns>
-        public static PoolFiberSlim StartNew(IExecutor executor)
-        {
-            var fiber = new PoolFiberSlim(executor);
-            fiber.Start();
-            return fiber;
-        }
-
-        /// <summary>
-        /// Create a pool fiber with the default thread pool and default executor, and call the Start method.
-        /// </summary>
-        /// <returns></returns>
-        public static PoolFiberSlim StartNew()
-        {
-            var fiber = new PoolFiberSlim();
-            fiber.Start();
-            return fiber;
-        }
-
-        /// <summary>
         /// Enqueue a single action.
         /// </summary>
         /// <param name="action"></param>
         public void Enqueue(Action action)
         {
-            if (_started == ExecutionState.Disposed)
-            {
-                return;
-            }
-
             lock (_lock)
             {
                 _queue.Add(action);
-                if (_started == ExecutionState.Created)
-                {
-                    return;
-                }
                 if (!_flushPending)
                 {
                     _pool.Queue(Flush);
@@ -143,32 +97,6 @@ namespace Retlang.Fibers
                 _queue.Clear();
                 return _toPass;
             }
-        }
-
-        /// <summary>
-        /// Start consuming actions.
-        /// </summary>
-        public void Start()
-        {
-            if (_started == ExecutionState.Running)
-            {
-                throw new ThreadStateException("Already Started");
-            }
-            else if (_started == ExecutionState.Disposed)
-            {
-                throw new ThreadStateException("Already Disposed");
-            }
-            _started = ExecutionState.Running;
-            //flush any pending events in queue
-            Enqueue(() => { });
-        }
-
-        /// <summary>
-        /// Destroy the instance.
-        /// </summary>
-        public void Dispose()
-        {
-            _started = ExecutionState.Disposed;
         }
     }
 }

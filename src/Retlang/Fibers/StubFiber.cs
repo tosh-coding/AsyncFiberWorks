@@ -37,25 +37,6 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// Create a new instance and call the Start method.
-        /// </summary>
-        /// <returns></returns>
-        public static StubFiber StartNew()
-        {
-            var fiber = new StubFiber();
-            fiber.Start();
-            return fiber;
-        }
-
-        /// <summary>
-        /// No Op
-        /// </summary>
-        public override void Start()
-        {
-            base.Start();
-        }
-
-        /// <summary>
         /// Clears all subscriptions, scheduled, and pending actions.
         /// </summary>
         public override void Dispose()

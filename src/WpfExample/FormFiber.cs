@@ -18,20 +18,7 @@ namespace WpfExample
         }
 
         /// <summary>
-        /// Create a new instance and call the Start method.
-        /// </summary>
-        /// <param name="invoker"></param>
-        /// <param name="executor"></param>
-        /// <returns></returns>
-        public static FormFiber StartNew(ISynchronizeInvoke invoker, IExecutor executor)
-        {
-            var fiber = new FormFiber(invoker, executor);
-            fiber.Start();
-            return fiber;
-        }
-
-        /// <summary>
-        /// Stops the fiber.
+        /// Clears all subscriptions, scheduled.
         /// </summary>
         public void Stop()
         {

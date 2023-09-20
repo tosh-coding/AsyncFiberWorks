@@ -24,7 +24,7 @@ namespace Retlang.Fibers
         /// Enqueue a single action.
         /// </summary>
         /// <param name="action"></param>
-        public void Enqueue(Action action)
+        public virtual void Enqueue(Action action)
         {
             _fiber.Enqueue(action);
         }
@@ -57,20 +57,11 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// <see cref="IFiber.Start()"/>
-        /// </summary>
-        public virtual void Start()
-        {
-            _fiber.Start();
-        }
-
-        /// <summary>
-        /// <see cref="IDisposable.Dispose()"/>
+        /// Clears all subscriptions, scheduled.
         /// </summary>
         public virtual void Dispose()
         {
             _subscriptions.Dispose();
-            _fiber.Dispose();
         }
     }
 }
