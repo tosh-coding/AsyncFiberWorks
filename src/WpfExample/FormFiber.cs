@@ -10,15 +10,14 @@ namespace WpfExample
     ///</summary>
     public class FormFiber : IFiber
     {
-        private readonly IFiberSlim _fiber;
-        private readonly Subscriptions _subscriptions = new Subscriptions();
+        private readonly PoolFiber _fiber;
 
         /// <summary>
         /// Creates an instance.
         /// </summary>
         public FormFiber(ISynchronizeInvoke invoker, IExecutor executor)
         {
-            _fiber = new PoolFiberSlim(new FormAdapter(invoker), executor);
+            _fiber = PoolFiber.StartNew(new FormAdapter(invoker), executor);
         }
 
         /// <summary>
@@ -43,7 +42,7 @@ namespace WpfExample
         /// </summary>
         public ISubscriptionRegistry FallbackDisposer
         {
-            get { return _subscriptions; }
+            get { return _fiber.FallbackDisposer; }
         }
 
         /// <summary>
@@ -51,7 +50,7 @@ namespace WpfExample
         /// </summary>
         public void Dispose()
         {
-            _subscriptions?.Dispose();
+            _fiber?.Dispose();
         }
     }
 }

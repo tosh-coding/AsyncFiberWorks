@@ -7,7 +7,7 @@ namespace Retlang.Fibers
     /// <summary>
     /// Fiber implementation backed by a dedicated thread.
     /// </summary>
-    public class ThreadFiberSlim : IFiberSlim, IDisposable
+    public class ThreadFiberSlim : IExecutionContext, IDisposable
     {
         private static int THREAD_COUNT;
         private readonly Thread _thread;

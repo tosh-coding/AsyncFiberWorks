@@ -10,7 +10,7 @@ namespace Retlang.Fibers
     public class PoolFiber : IFiber
     {
         private readonly object _lock = new object();
-        private readonly IFiberSlim _fiber;
+        private readonly PoolFiberSlim _fiber;
         private readonly Subscriptions _subscriptions = new Subscriptions();
 
         private List<Action> _queue = new List<Action>();

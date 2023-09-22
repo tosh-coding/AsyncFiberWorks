@@ -10,8 +10,7 @@ namespace WpfExample
     /// </summary>
     public class DispatcherFiber : IFiber
     {
-        private readonly IFiberSlim _fiber;
-        private readonly Subscriptions _subscriptions = new Subscriptions();
+        private readonly PoolFiber _fiber;
 
         /// <summary>
         /// Constructs a Fiber that executes on dispatcher thread.
@@ -21,7 +20,7 @@ namespace WpfExample
         /// <param name="executor">The executor.</param>
         public DispatcherFiber(Dispatcher dispatcher, DispatcherPriority priority, IExecutor executor)
         {
-            _fiber = new PoolFiberSlim(new DispatcherAdapter(dispatcher, priority), executor);
+            _fiber = PoolFiber.StartNew(new DispatcherAdapter(dispatcher, priority), executor);
         }
 
         /// <summary>
@@ -94,7 +93,7 @@ namespace WpfExample
         /// </summary>
         public ISubscriptionRegistry FallbackDisposer
         {
-            get { return _subscriptions; }
+            get { return _fiber.FallbackDisposer; }
         }
 
         /// <summary>
@@ -102,7 +101,7 @@ namespace WpfExample
         /// </summary>
         public void Dispose()
         {
-            _subscriptions?.Dispose();
+            _fiber?.Dispose();
         }
     }
 }

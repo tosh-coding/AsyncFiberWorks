@@ -9,7 +9,7 @@ namespace Retlang.Fibers
     /// StubFiberSlim does not use a backing thread or a thread pool for execution. Actions are added to pending
     /// lists for execution. These actions can be executed synchronously by the calling thread.
     /// </summary>
-    public class StubFiberSlim : IFiberSlim, IConsumingContext
+    public class StubFiberSlim : IExecutionContext, IConsumingContext
     {
         private readonly BlockingCollection<Action> _pending = new BlockingCollection<Action>();
         private readonly IExecutor _executor;

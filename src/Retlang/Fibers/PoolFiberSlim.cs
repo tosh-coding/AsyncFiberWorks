@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Retlang.Core;
 
 namespace Retlang.Fibers
@@ -8,7 +7,7 @@ namespace Retlang.Fibers
     /// <summary>
     /// Fiber implementation backed by shared threads. Mainly thread pool.
     /// </summary>
-    public class PoolFiberSlim : IFiberSlim
+    public class PoolFiberSlim : IExecutionContext
     {
         private readonly object _lock = new object();
         private readonly IThreadPool _pool;
