@@ -1,4 +1,5 @@
-﻿using System.Windows.Threading;
+﻿using System;
+using System.Windows.Threading;
 using Retlang.Core;
 using Retlang.Fibers;
 
@@ -7,8 +8,11 @@ namespace WpfExample
     /// <summary>
     /// Adapts Dispatcher to a Fiber. Transparently moves actions onto the Dispatcher thread.
     /// </summary>
-    public class DispatcherFiber : FiberWithDisposableList
+    public class DispatcherFiber : IFiber
     {
+        private readonly IFiberSlim _fiber;
+        private readonly Subscriptions _subscriptions = new Subscriptions();
+
         /// <summary>
         /// Constructs a Fiber that executes on dispatcher thread.
         /// </summary>
@@ -16,8 +20,8 @@ namespace WpfExample
         /// <param name="priority">The priority.</param>
         /// <param name="executor">The executor.</param>
         public DispatcherFiber(Dispatcher dispatcher, DispatcherPriority priority, IExecutor executor)
-            : base(new PoolFiberSlim(new DispatcherAdapter(dispatcher, priority), executor), new Subscriptions())
         {
+            _fiber = new PoolFiberSlim(new DispatcherAdapter(dispatcher, priority), executor);
         }
 
         /// <summary>
@@ -69,11 +73,36 @@ namespace WpfExample
         }
 
         /// <summary>
+        /// <see cref="IExecutionContext.Enqueue(Action)"/>
+        /// </summary>
+        /// <param name="action"></param>
+        public void Enqueue(Action action)
+        {
+            _fiber.Enqueue(action);
+        }
+
+        /// <summary>
         /// Clears all subscriptions, scheduled.
         /// </summary>
         public void Stop()
         {
-            base.Dispose();
+            Dispose();
+        }
+
+        /// <summary>
+        /// <see cref="ISubscriptionRegistryGetter.FallbackDisposer"/>
+        /// </summary>
+        public ISubscriptionRegistry FallbackDisposer
+        {
+            get { return _subscriptions; }
+        }
+
+        /// <summary>
+        /// Clears all subscriptions, scheduled.
+        /// </summary>
+        public void Dispose()
+        {
+            _subscriptions?.Dispose();
         }
     }
 }

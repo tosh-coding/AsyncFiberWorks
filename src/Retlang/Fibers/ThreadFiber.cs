@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using Retlang.Core;
 
 namespace Retlang.Fibers
@@ -6,9 +7,10 @@ namespace Retlang.Fibers
     /// <summary>
     /// Fiber implementation backed by a dedicated thread.
     /// </summary>
-    public class ThreadFiber : FiberWithDisposableList
+    public class ThreadFiber : IFiber
     {
         private readonly ThreadFiberSlim _threadFiberSlim;
+        private readonly Subscriptions _subscriptions = new Subscriptions();
 
         /// <summary>
         /// Create a thread fiber with the default queue.
@@ -49,7 +51,6 @@ namespace Retlang.Fibers
         /// Creates a thread fiber.
         /// </summary>
         private ThreadFiber(ThreadFiberSlim fiber)
-            : base(fiber, new Subscriptions())
         {
             _threadFiberSlim = fiber;
         }
@@ -130,11 +131,29 @@ namespace Retlang.Fibers
 
         /// <summary>
         /// Stops the thread.
+        /// Clears all subscriptions, scheduled.
         /// </summary>
-        public override void Dispose()
+        public void Dispose()
         {
-            base.Dispose();
+            _subscriptions?.Dispose();
             _threadFiberSlim.Dispose();
+        }
+
+        /// <summary>
+        /// <see cref="IExecutionContext.Enqueue(Action)"/>
+        /// </summary>
+        /// <param name="action"></param>
+        public void Enqueue(Action action)
+        {
+            _threadFiberSlim.Enqueue(action);
+        }
+
+        /// <summary>
+        /// <see cref="ISubscriptionRegistryGetter.FallbackDisposer"/>
+        /// </summary>
+        public ISubscriptionRegistry FallbackDisposer
+        {
+            get { return _subscriptions; }
         }
     }
 }

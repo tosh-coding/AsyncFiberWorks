@@ -7,10 +7,11 @@ namespace Retlang.Fibers
     /// <summary>
     /// Fiber implementation backed by shared threads. Mainly thread pool.
     /// </summary>
-    public class PoolFiber : FiberWithDisposableList
+    public class PoolFiber : IFiber
     {
         private readonly object _lock = new object();
         private readonly IFiberSlim _fiber;
+        private readonly Subscriptions _subscriptions = new Subscriptions();
 
         private List<Action> _queue = new List<Action>();
 
@@ -19,7 +20,6 @@ namespace Retlang.Fibers
         /// </summary>
         /// <param name="poolFiber"></param>
         private PoolFiber(PoolFiberSlim poolFiber)
-            : base(poolFiber, new Subscriptions())
         {
             _fiber = poolFiber;
         }
@@ -110,16 +110,16 @@ namespace Retlang.Fibers
         /// <summary>
         /// Clears all subscriptions, scheduled, and pending actions.
         /// </summary>
-        public override void Dispose()
+        public void Dispose()
         {
-            base.Dispose();
+            _subscriptions?.Dispose();
         }
 
         /// <summary>
         /// <see cref="IExecutionContext.Enqueue(Action)"/>
         /// </summary>
         /// <param name="action"></param>
-        public override void Enqueue(Action action)
+        public void Enqueue(Action action)
         {
             lock (_lock)
             {
@@ -132,6 +132,14 @@ namespace Retlang.Fibers
                     _queue.Add(action);
                 }
             }
+        }
+
+        /// <summary>
+        /// <see cref="ISubscriptionRegistryGetter.FallbackDisposer"/>
+        /// </summary>
+        public ISubscriptionRegistry FallbackDisposer
+        {
+            get { return _subscriptions; }
         }
     }
 }

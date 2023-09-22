@@ -8,9 +8,10 @@ namespace Retlang.Fibers
     /// StubFiber does not use a backing thread or a thread pool for execution. Actions are added to pending
     /// lists for execution. These actions can be executed synchronously by the calling thread.
     /// </summary>
-    public class StubFiber : FiberWithDisposableList, IConsumingContext
+    public class StubFiber : IFiber, IConsumingContext
     {
         private readonly StubFiberSlim _stubFiberSlim;
+        private readonly Subscriptions _subscriptions = new Subscriptions();
 
         /// <summary>
         /// Create a stub fiber with the default executor.
@@ -31,7 +32,6 @@ namespace Retlang.Fibers
         /// Construct new instance.
         /// </summary>
         private StubFiber(StubFiberSlim stubFiberSlim)
-            : base(stubFiberSlim, new Subscriptions())
         {
             _stubFiberSlim = stubFiberSlim;
         }
@@ -39,9 +39,26 @@ namespace Retlang.Fibers
         /// <summary>
         /// Clears all subscriptions, scheduled, and pending actions.
         /// </summary>
-        public override void Dispose()
+        public void Dispose()
         {
-            base.Dispose();
+            _subscriptions?.Dispose();
+        }
+
+        /// <summary>
+        /// <see cref="IExecutionContext.Enqueue(Action)"/>
+        /// </summary>
+        /// <param name="action"></param>
+        public void Enqueue(Action action)
+        {
+            _stubFiberSlim.Enqueue(action);
+        }
+
+        /// <summary>
+        /// <see cref="ISubscriptionRegistryGetter.FallbackDisposer"/>
+        /// </summary>
+        public ISubscriptionRegistry FallbackDisposer
+        {
+            get { return _subscriptions; }
         }
 
         /// <summary>
