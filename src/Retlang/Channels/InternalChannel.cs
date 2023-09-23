@@ -16,18 +16,40 @@ namespace Retlang.Channels
         /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
         /// Action may be invoked on multiple threads.
         /// </summary>
-        /// <param name="subscriptions"></param>
         /// <param name="action"></param>
         /// <returns></returns>
-        public IDisposable SubscribeOnProducerThreads(ISubscriptionRegistryGetter subscriptions, Action<T> action)
+        public IDisposable SubscribeOnProducerThreads(Action<T> action)
         {
             _subscribers += action;
 
             var unsubscriber = new Unsubscriber((x) => {
                 this._subscribers -= action;
-                subscriptions.FallbackDisposer?.DeregisterSubscription(x);
             });
-            subscriptions.FallbackDisposer?.RegisterSubscription(unsubscriber);
+
+            return unsubscriber;
+        }
+
+        /// <summary>
+        /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
+        /// Action may be invoked on multiple threads.
+        /// </summary>
+        /// <param name="subscriptions"></param>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public IDisposable SubscribeOnProducerThreads(ISubscriptionRegistry subscriptions, Action<T> action)
+        {
+            if (subscriptions == null)
+            {
+                return SubscribeOnProducerThreads(action);
+            }
+
+            _subscribers += action;
+
+            var unsubscriber = new Unsubscriber((x) => {
+                this._subscribers -= action;
+                subscriptions?.DeregisterSubscription(x);
+            });
+            subscriptions?.RegisterSubscription(unsubscriber);
 
             return unsubscriber;
         }

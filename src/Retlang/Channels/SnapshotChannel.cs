@@ -21,8 +21,9 @@ namespace Retlang.Channels
         ///<param name="fiber">the target executor to receive the message</param>
         ///<param name="receive"></param>
         ///<param name="timeoutInMs">For initial snapshot</param>
+        ///<param name="registry"></param>
         /// <returns></returns>
-        public async Task<IDisposable> PrimedSubscribe(IFiber fiber, Action<T> receive, int timeoutInMs)
+        public async Task<IDisposable> PrimedSubscribe(IExecutionContext fiber, Action<T> receive, int timeoutInMs, ISubscriptionRegistry registry)
         {
             using (var reply = _requestChannel.SendRequest(new object()))
             {
@@ -53,8 +54,20 @@ namespace Retlang.Channels
                 {
                     fiber.Enqueue(() => receive(msg));
                 };
-                return _updatesChannel.SubscribeOnProducerThreads(fiber, action);
+                return _updatesChannel.SubscribeOnProducerThreads(registry, action);
             }
+        }
+
+        ///<summary>
+        /// Subscribes for an initial snapshot and then incremental update.
+        ///</summary>
+        ///<param name="fiber">the target executor to receive the message</param>
+        ///<param name="receive"></param>
+        ///<param name="timeoutInMs">For initial snapshot</param>
+        /// <returns></returns>
+        public Task<IDisposable> PrimedSubscribe(IFiber fiber, Action<T> receive, int timeoutInMs)
+        {
+            return PrimedSubscribe(fiber, receive, timeoutInMs, fiber.FallbackDisposer);
         }
 
         private static Task WaitOnReceive(IReply<T> reply, int timeoutInMs)
