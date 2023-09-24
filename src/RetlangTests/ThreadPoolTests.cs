@@ -197,5 +197,33 @@ namespace RetlangTests
                 }
             }
         }
+
+        [Test]
+        public void DisposeUserThreadPoolViaFiber()
+        {
+            var userThreadPool = UserThreadPool.StartNew(1);
+            var userThreadId = userThreadPool.ThreadList[0].ManagedThreadId;
+            var poolFiber = PoolFiber.StartNew(userThreadPool, new DefaultExecutor());
+            var fiber = new FallbackFiber(poolFiber, userThreadPool);
+
+            long threadIdBefore = 0;
+            fiber.Enqueue(() =>
+            {
+                threadIdBefore = Thread.CurrentThread.ManagedThreadId;
+            });
+            Thread.Sleep(10);
+            Assert.AreEqual(userThreadId, threadIdBefore);
+
+            fiber.Dispose();
+            Thread.Sleep(10);
+
+            long threadIdAfter = 0;
+            fiber.Enqueue(() =>
+            {
+                threadIdAfter = Thread.CurrentThread.ManagedThreadId;
+            });
+            Thread.Sleep(10);
+            Assert.AreNotEqual(userThreadId, threadIdAfter);
+        }
     }
 }
