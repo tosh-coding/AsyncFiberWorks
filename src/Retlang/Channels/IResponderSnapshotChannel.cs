@@ -16,7 +16,7 @@ namespace Retlang.Channels
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="reply">returns the snapshot update</param>
         /// <returns></returns>
-        IDisposable ReplyToPrimingRequest(IFiber fiber, Func<T> reply);
+        IDisposable ReplyToPrimingRequest(IFiberWithFallbackRegistry fiber, Func<T> reply);
 
         /// <summary>
         /// Responds to the request for an initial snapshot.

@@ -17,7 +17,7 @@ namespace Retlang.Channels
         ///<param name="fiber">the target executor to receive the message</param>
         ///<param name="receive"></param>
         ///<returns>Unsubscriber object</returns>
-        IDisposable Subscribe(IFiber fiber, Action<T> receive);
+        IDisposable Subscribe(IFiberWithFallbackRegistry fiber, Action<T> receive);
 
         /// <summary>
         /// Subscribes to actions on the channel in batch form. The events will be batched if the consumer is unable to process the events 
@@ -27,7 +27,7 @@ namespace Retlang.Channels
         /// <param name="receive"></param>
         /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
         /// <returns></returns>
-        IDisposable SubscribeToBatch(IFiber fiber, Action<IList<T>> receive, long intervalInMs);
+        IDisposable SubscribeToBatch(IFiberWithFallbackRegistry fiber, Action<IList<T>> receive, long intervalInMs);
 
         ///<summary>
         /// Batches actions based upon keyed values allowing for duplicates to be dropped. 
@@ -38,7 +38,7 @@ namespace Retlang.Channels
         ///<param name="intervalInMs"></param>
         ///<typeparam name="K"></typeparam>
         ///<returns></returns>
-        IDisposable SubscribeToKeyedBatch<K>(IFiber fiber, Converter<T, K> keyResolver, Action<IDictionary<K, T>> receive, long intervalInMs);
+        IDisposable SubscribeToKeyedBatch<K>(IFiberWithFallbackRegistry fiber, Converter<T, K> keyResolver, Action<IDictionary<K, T>> receive, long intervalInMs);
 
         /// <summary>
         /// Subscription that delivers the latest message to the consuming thread.  If a newer message arrives before the consuming thread
@@ -48,7 +48,7 @@ namespace Retlang.Channels
         /// <param name="receive"></param>
         /// <param name="intervalInMs"></param>
         /// <returns></returns>
-        IDisposable SubscribeToLast(IFiber fiber, Action<T> receive, long intervalInMs);
+        IDisposable SubscribeToLast(IFiberWithFallbackRegistry fiber, Action<T> receive, long intervalInMs);
 
         /// <summary>
         /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 
@@ -74,7 +74,7 @@ namespace Retlang.Channels
         ///</summary>
         ///<param name="fiber"></param>
         ///<param name="receive"></param>
-        void PersistentSubscribe(IFiber fiber, Action<T> receive);
+        void PersistentSubscribe(IExecutionContext fiber, Action<T> receive);
 
         /// <summary>
         /// Subscribes to actions on the channel in batch form. The events will be batched if the consumer is unable to process the events 
@@ -84,7 +84,7 @@ namespace Retlang.Channels
         /// <param name="fiber"></param>
         /// <param name="receive"></param>
         /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
-        void PersistentSubscribeToBatch(IFiber fiber, Action<IList<T>> receive, long intervalInMs);
+        void PersistentSubscribeToBatch(IExecutionContext fiber, Action<IList<T>> receive, long intervalInMs);
 
         ///<summary>
         /// Batches actions based upon keyed values allowing for duplicates to be dropped. 
@@ -95,7 +95,7 @@ namespace Retlang.Channels
         ///<param name="receive"></param>
         ///<param name="intervalInMs"></param>
         ///<typeparam name="K"></typeparam>
-        void PersistentSubscribeToKeyedBatch<K>(IFiber fiber, Converter<T, K> keyResolver, Action<IDictionary<K, T>> receive, long intervalInMs);
+        void PersistentSubscribeToKeyedBatch<K>(IExecutionContext fiber, Converter<T, K> keyResolver, Action<IDictionary<K, T>> receive, long intervalInMs);
 
         /// <summary>
         /// Subscription that delivers the latest message to the consuming thread.  If a newer message arrives before the consuming thread
@@ -105,7 +105,7 @@ namespace Retlang.Channels
         /// <param name="fiber"></param>
         /// <param name="receive"></param>
         /// <param name="intervalInMs"></param>
-        void PersistentSubscribeToLast(IFiber fiber, Action<T> receive, long intervalInMs);
+        void PersistentSubscribeToLast(IExecutionContext fiber, Action<T> receive, long intervalInMs);
 
         /// <summary>
         /// Subscribes an action to be executed for every action posted to the channel. Action should be thread safe. 

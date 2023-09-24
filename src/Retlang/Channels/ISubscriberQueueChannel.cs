@@ -16,7 +16,7 @@ namespace Retlang.Channels
         /// <param name="fiber"></param>
         /// <param name="onMessage"></param>
         /// <returns></returns>
-        IDisposable Subscribe(IFiber fiber, Action<T> onMessage);
+        IDisposable Subscribe(IFiberWithFallbackRegistry fiber, Action<T> onMessage);
 
         /// <summary>
         /// Subscribe to the context.

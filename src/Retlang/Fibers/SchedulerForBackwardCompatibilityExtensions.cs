@@ -16,7 +16,7 @@ namespace Retlang.Fibers
         /// <param name="action"></param>
         /// <param name="firstInMs"></param>
         /// <returns>a handle to cancel the timer.</returns>
-        public static IDisposable Schedule(this IFiber fiber, Action action, long firstInMs)
+        public static IDisposable Schedule(this IFiberWithFallbackRegistry fiber, Action action, long firstInMs)
         {
             return TimerAction.StartNew(fiber, action, firstInMs, Timeout.Infinite, fiber.FallbackDisposer);
         }
@@ -29,7 +29,7 @@ namespace Retlang.Fibers
         /// <param name="firstInMs"></param>
         /// <param name="regularInMs"></param>
         /// <returns>a handle to cancel the timer.</returns>
-        public static IDisposable ScheduleOnInterval(this IFiber fiber, Action action, long firstInMs, long regularInMs)
+        public static IDisposable ScheduleOnInterval(this IFiberWithFallbackRegistry fiber, Action action, long firstInMs, long regularInMs)
         {
             return TimerAction.StartNew(fiber, action, firstInMs, regularInMs, fiber.FallbackDisposer);
         }

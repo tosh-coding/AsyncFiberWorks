@@ -41,7 +41,7 @@ namespace Retlang.Channels
         /// <param name="fiber"></param>
         /// <param name="onMessage"></param>
         /// <returns></returns>
-        public IDisposable Subscribe(IFiber fiber, Action<T> onMessage)
+        public IDisposable Subscribe(IFiberWithFallbackRegistry fiber, Action<T> onMessage)
         {
             return Subscribe(fiber, onMessage, fiber.FallbackDisposer);
         }

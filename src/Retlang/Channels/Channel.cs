@@ -14,30 +14,30 @@ namespace Retlang.Channels
         private readonly InternalChannel<T> _channel = new InternalChannel<T>();
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.Subscribe(IFiber,Action{T})"/>
+        /// <see cref="ISubscriber{T}.Subscribe(IFiberWithFallbackRegistry,Action{T})"/>
         /// </summary>
         /// <param name="fiber"></param>
         /// <param name="receive"></param>
         /// <returns></returns>
-        public IDisposable Subscribe(IFiber fiber, Action<T> receive)
+        public IDisposable Subscribe(IFiberWithFallbackRegistry fiber, Action<T> receive)
         {
             return SubscribeOnProducerThreads(fiber.FallbackDisposer, new ChannelSubscription<T>(fiber, receive));
         }
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.SubscribeToBatch(IFiber,Action{IList{T}},long)"/>
+        /// <see cref="ISubscriber{T}.SubscribeToBatch(IFiberWithFallbackRegistry,Action{IList{T}},long)"/>
         /// </summary>
         /// <param name="fiber"></param>
         /// <param name="receive"></param>
         /// <param name="intervalInMs"></param>
         /// <returns></returns>
-        public IDisposable SubscribeToBatch(IFiber fiber, Action<IList<T>> receive, long intervalInMs)
+        public IDisposable SubscribeToBatch(IFiberWithFallbackRegistry fiber, Action<IList<T>> receive, long intervalInMs)
         {
             return SubscribeOnProducerThreads(fiber.FallbackDisposer, new BatchSubscriber<T>(fiber, receive, intervalInMs, null, fiber.FallbackDisposer));
         }
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.SubscribeToKeyedBatch{K}(IFiber,Converter{T,K},Action{IDictionary{K,T}},long)"/>
+        /// <see cref="ISubscriber{T}.SubscribeToKeyedBatch{K}(IFiberWithFallbackRegistry,Converter{T,K},Action{IDictionary{K,T}},long)"/>
         /// </summary>
         /// <typeparam name="K"></typeparam>
         /// <param name="fiber"></param>
@@ -45,19 +45,19 @@ namespace Retlang.Channels
         /// <param name="receive"></param>
         /// <param name="intervalInMs"></param>
         /// <returns></returns>
-        public IDisposable SubscribeToKeyedBatch<K>(IFiber fiber, Converter<T, K> keyResolver, Action<IDictionary<K, T>> receive, long intervalInMs)
+        public IDisposable SubscribeToKeyedBatch<K>(IFiberWithFallbackRegistry fiber, Converter<T, K> keyResolver, Action<IDictionary<K, T>> receive, long intervalInMs)
         {
             return SubscribeOnProducerThreads(fiber.FallbackDisposer, new KeyedBatchSubscriber<K, T>(keyResolver, receive, fiber, intervalInMs, null, fiber.FallbackDisposer));
         }
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.SubscribeToLast(IFiber,Action{T},long)"/>
+        /// <see cref="ISubscriber{T}.SubscribeToLast(IFiberWithFallbackRegistry,Action{T},long)"/>
         /// </summary>
         /// <param name="fiber"></param>
         /// <param name="receive"></param>
         /// <param name="intervalInMs"></param>
         /// <returns></returns>
-        public IDisposable SubscribeToLast(IFiber fiber, Action<T> receive, long intervalInMs)
+        public IDisposable SubscribeToLast(IFiberWithFallbackRegistry fiber, Action<T> receive, long intervalInMs)
         {
             return SubscribeOnProducerThreads(fiber.FallbackDisposer, new LastSubscriber<T>(receive, fiber, intervalInMs, null, fiber.FallbackDisposer));
         }
@@ -85,46 +85,46 @@ namespace Retlang.Channels
         }
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.PersistentSubscribe(IFiber,Action{T})"/>
+        /// <see cref="ISubscriber{T}.PersistentSubscribe(IExecutionContext,Action{T})"/>
         /// </summary>
         /// <param name="fiber"></param>
         /// <param name="receive"></param>
-        public void PersistentSubscribe(IFiber fiber, Action<T> receive)
+        public void PersistentSubscribe(IExecutionContext fiber, Action<T> receive)
         {
             PersistentSubscribeOnProducerThreads(new ChannelSubscription<T>(fiber, receive));
         }
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.PersistentSubscribeToBatch(IFiber,Action{IList{T}},long)"/>
+        /// <see cref="ISubscriber{T}.PersistentSubscribeToBatch(IExecutionContext,Action{IList{T}},long)"/>
         /// </summary>
         /// <param name="fiber"></param>
         /// <param name="receive"></param>
         /// <param name="intervalInMs"></param>
-        public void PersistentSubscribeToBatch(IFiber fiber, Action<IList<T>> receive, long intervalInMs)
+        public void PersistentSubscribeToBatch(IExecutionContext fiber, Action<IList<T>> receive, long intervalInMs)
         {
             PersistentSubscribeOnProducerThreads(new BatchSubscriber<T>(fiber, receive, intervalInMs));
         }
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.PersistentSubscribeToKeyedBatch{K}(IFiber,Converter{T,K},Action{IDictionary{K,T}},long)"/>
+        /// <see cref="ISubscriber{T}.PersistentSubscribeToKeyedBatch{K}(IExecutionContext,Converter{T,K},Action{IDictionary{K,T}},long)"/>
         /// </summary>
         /// <typeparam name="K"></typeparam>
         /// <param name="fiber"></param>
         /// <param name="keyResolver"></param>
         /// <param name="receive"></param>
         /// <param name="intervalInMs"></param>
-        public void PersistentSubscribeToKeyedBatch<K>(IFiber fiber, Converter<T, K> keyResolver, Action<IDictionary<K, T>> receive, long intervalInMs)
+        public void PersistentSubscribeToKeyedBatch<K>(IExecutionContext fiber, Converter<T, K> keyResolver, Action<IDictionary<K, T>> receive, long intervalInMs)
         {
             PersistentSubscribeOnProducerThreads(new KeyedBatchSubscriber<K, T>(keyResolver, receive, fiber, intervalInMs));
         }
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.PersistentSubscribeToLast(IFiber,Action{T},long)"/>
+        /// <see cref="ISubscriber{T}.PersistentSubscribeToLast(IExecutionContext,Action{T},long)"/>
         /// </summary>
         /// <param name="fiber"></param>
         /// <param name="receive"></param>
         /// <param name="intervalInMs"></param>
-        public void PersistentSubscribeToLast(IFiber fiber, Action<T> receive, long intervalInMs)
+        public void PersistentSubscribeToLast(IExecutionContext fiber, Action<T> receive, long intervalInMs)
         {
             PersistentSubscribeOnProducerThreads(new LastSubscriber<T>(receive, fiber, intervalInMs));
         }
