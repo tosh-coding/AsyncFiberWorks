@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using Retlang.Channels;
 using Retlang.Fibers;
@@ -166,17 +165,18 @@ namespace RetlangTests.Examples
 
         [TestCase(1)]
         [TestCase(2)]
-        public async Task Snapshot(int responderType)
+        public void Snapshot(int responderType)
         {
             using (var fiberReply = new PoolFiber())
-            using (var fiberRequest = new PoolFiber())
             {
                 fiberReply.Start();
-                fiberRequest.Start();
                 var channel = new SnapshotChannel<int>();
-
                 var lockerResponseValue = new object();
+
+                // A value managed by the responder.
                 int currentValue = 0;
+
+                // Set up responder. 
                 if (responderType == 0)
                 {
                     channel.ReplyToPrimingRequest(fiberReply, () =>
@@ -202,6 +202,8 @@ namespace RetlangTests.Examples
                     Assert.AreEqual(1, channel.NumPersistentSubscribers);
                 }
 
+                // Start changing values.
+
                 lock (lockerResponseValue)
                 {
                     currentValue = 1;
@@ -213,38 +215,63 @@ namespace RetlangTests.Examples
                     channel.Publish(currentValue);
                 }
 
+                // Start requesting.
+                var fiberRequest = new StubFiber();
+                var cancellation = new CancellationTokenSource();
                 var receivedValues = new List<int>();
-                var handleReceive = await channel.PrimedSubscribe(fiberRequest, (v) =>
+                Action<SnapshotRequestControlEvent> actionControl = (controlEvent) =>
+                {
+                    if (controlEvent == SnapshotRequestControlEvent.Timeout)
+                    {
+                        Assert.Fail("SnapshotRequestControlEvent.Timeout");
+                    }
+                    if (controlEvent == SnapshotRequestControlEvent.Connecting)
+                    {
+                        return;
+                    }
+                    if (controlEvent == SnapshotRequestControlEvent.Connected)
+                    {
+                        lock (lockerResponseValue)
+                        {
+                            currentValue = 4;
+                            channel.Publish(currentValue);
+                        }
+                        lock (lockerResponseValue)
+                        {
+                            currentValue = 8;
+                            channel.Publish(currentValue);
+                        }
+
+                        fiberRequest.Schedule(() =>
+                        {
+                            // Finish.
+
+                            int[] expectedReceiveValues = new int[]
+                            {
+                            2, 4, 8,
+                            };
+
+                            Assert.AreEqual(expectedReceiveValues.Length, receivedValues.Count);
+
+                            for (int i = 0; i < expectedReceiveValues.Length; i++)
+                            {
+                                Assert.AreEqual(expectedReceiveValues[i], receivedValues[i]);
+                            }
+
+                            cancellation.Cancel();
+                        }, 200);
+                    }
+                };
+                Action<int> actionReceive = (v) =>
                 {
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
-                }, 5000);
-
-                lock (lockerResponseValue)
-                {
-                    currentValue = 4;
-                    channel.Publish(currentValue);
-                }
-                lock (lockerResponseValue)
-                {
-                    currentValue = 8;
-                    channel.Publish(currentValue);
-                }
-
-                Thread.Sleep(200);
-                handleReceive.Dispose();
-
-                int[] expectedReceiveValues = new int[]
-                {
-                    2, 4, 8,
                 };
+                var handleReceive = channel.PrimedSubscribe(
+                    fiberRequest, actionControl, actionReceive, 5000);
 
-                Assert.AreEqual(expectedReceiveValues.Length, receivedValues.Count);
-
-                for (int i = 0; i < expectedReceiveValues.Length; i++)
-                {
-                    Assert.AreEqual(expectedReceiveValues[i], receivedValues[i]);
-                }
+                fiberRequest.ExecuteUntilCanceled(cancellation.Token);
+                handleReceive.Dispose();
             }
         }
 

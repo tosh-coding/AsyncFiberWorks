@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Retlang.Core;
 using Retlang.Fibers;
 
@@ -19,65 +18,27 @@ namespace Retlang.Channels
         /// Subscribes for an initial snapshot and then incremental update.
         ///</summary>
         ///<param name="fiber">the target executor to receive the message</param>
+        ///<param name="control"></param>
         ///<param name="receive"></param>
         ///<param name="timeoutInMs">For initial snapshot</param>
         ///<param name="registry"></param>
         /// <returns></returns>
-        public async Task<IDisposable> PrimedSubscribe(IExecutionContext fiber, Action<T> receive, int timeoutInMs, ISubscriptionRegistry registry)
+        public IDisposable PrimedSubscribe(IExecutionContext fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs, ISubscriptionRegistry registry)
         {
-            using (var reply = _requestChannel.SendRequest(new object()))
-            {
-                if (reply == null)
-                {
-                    throw new ArgumentException(typeof (T).Name + " synchronous request has no reply subscriber.");
-                }
-
-                await WaitOnReceive(reply, timeoutInMs).ConfigureAwait(false);
-
-                T result;
-                if (!reply.TryReceive(out result))
-                {
-                    throw new ArgumentException(typeof (T).Name + " synchronous request timed out in " + timeoutInMs);
-                }
-
-                await fiber.SwitchTo();
-                try
-                {
-                    receive(result);
-                }
-                finally
-                {
-                    await Task.Yield();
-                }
-
-                Action<T> action = (msg) =>
-                {
-                    fiber.Enqueue(() => receive(msg));
-                };
-                return _updatesChannel.SubscribeOnProducerThreads(registry, action);
-            }
+            return new SnapshotRequest<T>(_requestChannel, _updatesChannel, fiber, control, receive, timeoutInMs, registry);
         }
 
         ///<summary>
         /// Subscribes for an initial snapshot and then incremental update.
         ///</summary>
         ///<param name="fiber">the target executor to receive the message</param>
+        ///<param name="control"></param>
         ///<param name="receive"></param>
         ///<param name="timeoutInMs">For initial snapshot</param>
         /// <returns></returns>
-        public Task<IDisposable> PrimedSubscribe(IFiber fiber, Action<T> receive, int timeoutInMs)
+        public IDisposable PrimedSubscribe(IFiber fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs)
         {
-            return PrimedSubscribe(fiber, receive, timeoutInMs, fiber.FallbackDisposer);
-        }
-
-        private static Task WaitOnReceive(IReply<T> reply, int timeoutInMs)
-        {
-            var tcs = new TaskCompletionSource<byte>();
-            reply.SetCallbackOnReceive(timeoutInMs, null, (_) =>
-            {
-                tcs.SetResult(1);
-            });
-            return tcs.Task;
+            return PrimedSubscribe(fiber, control, receive, timeoutInMs, fiber.FallbackDisposer);
         }
 
         ///<summary>
