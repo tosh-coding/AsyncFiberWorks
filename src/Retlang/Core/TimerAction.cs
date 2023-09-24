@@ -1,4 +1,3 @@
-using Retlang.Fibers;
 using System;
 using System.Threading;
 
@@ -10,12 +9,13 @@ namespace Retlang.Core
         private readonly Action _action;
         private readonly long _firstIntervalInMs;
         private readonly long _intervalInMs;
-        private readonly IFiber _fiber;
+        private readonly IExecutionContext _fiber;
+        private readonly ISubscriptionRegistry _fallbackDisposer;
 
         private Timer _timer = null;
         private bool _canceled = false;
 
-        public TimerAction(IFiber fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
+        public TimerAction(IExecutionContext fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite, ISubscriptionRegistry fallbackDisposer = null)
         {
             if (firstIntervalInMs < 0)
             {
@@ -29,12 +29,13 @@ namespace Retlang.Core
             _firstIntervalInMs = firstIntervalInMs;
             _intervalInMs = intervalInMs;
             _fiber = fiber;
-            fiber.FallbackDisposer?.RegisterSubscription(this);
+            _fallbackDisposer = fallbackDisposer;
+            fallbackDisposer?.RegisterSubscription(this);
         }
 
-        public static TimerAction StartNew(IFiber fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
+        public static TimerAction StartNew(IExecutionContext fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite, ISubscriptionRegistry fallbackDisposer = null)
         {
-            var timerAction = new TimerAction(fiber, action, firstIntervalInMs, intervalInMs);
+            var timerAction = new TimerAction(fiber, action, firstIntervalInMs, intervalInMs, fallbackDisposer);
             timerAction.Start();
             return timerAction;
         }
@@ -95,10 +96,7 @@ namespace Retlang.Core
             {
                 _timer.Dispose();
             }
-            if (_fiber.FallbackDisposer != null)
-            {
-                _fiber.FallbackDisposer.DeregisterSubscription(this);
-            }
+            _fallbackDisposer?.DeregisterSubscription(this);
         }
     }
 }

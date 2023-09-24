@@ -20,6 +20,14 @@ namespace Retlang.Channels
 
         /// <summary>
         /// Responds to the request for an initial snapshot.
+        /// </summary>
+        /// <param name="fiber">the target executor to receive the message</param>
+        /// <param name="reply">returns the snapshot update</param>
+        /// <returns></returns>
+        IDisposable ReplyToPrimingRequest(IExecutionContext fiber, Func<T> reply, ISubscriptionRegistry fallbackRegistry);
+
+        /// <summary>
+        /// Responds to the request for an initial snapshot.
         /// This subscription cannot be unsubscribed. 
         /// </summary>
         /// <param name="executionContext">the target executor to receive the message</param>

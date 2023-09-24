@@ -1,6 +1,6 @@
 using System;
+using System.Threading;
 using Retlang.Core;
-using Retlang.Fibers;
 
 namespace Retlang.Channels
 {
@@ -11,11 +11,11 @@ namespace Retlang.Channels
     public class LastSubscriber<T> : IProducerThreadSubscriber<T>
     {
         private readonly object _batchLock = new object();
-
         private readonly Action<T> _target;
-        private readonly IFiber _fiber;
+        private readonly IExecutionContext _fiber;
         private readonly long _intervalInMs;
         private readonly IMessageFilter<T> _filter;
+        private readonly ISubscriptionRegistry _fallbackRegistry;
 
         private bool _flushPending;
         private T _pending;
@@ -27,12 +27,14 @@ namespace Retlang.Channels
         /// <param name="fiber"></param>
         /// <param name="intervalInMs"></param>
         /// <param name="filter"></param>
-        public LastSubscriber(Action<T> target, IFiber fiber, long intervalInMs, IMessageFilter<T> filter = null)
+        /// <param name="fallbackRegistry"></param>
+        public LastSubscriber(Action<T> target, IExecutionContext fiber, long intervalInMs, IMessageFilter<T> filter = null, ISubscriptionRegistry fallbackRegistry = null)
         {
             _fiber = fiber;
             _target = target;
             _intervalInMs = intervalInMs;
             _filter = filter;
+            _fallbackRegistry = fallbackRegistry;
         }
 
         /// <summary>
@@ -57,7 +59,7 @@ namespace Retlang.Channels
             {
                 if (!_flushPending)
                 {
-                    TimerAction.StartNew(_fiber, Flush, _intervalInMs);
+                    TimerAction.StartNew(_fiber, Flush, _intervalInMs, Timeout.Infinite, _fallbackRegistry);
                     _flushPending = true;
                 }
                 _pending = msg;

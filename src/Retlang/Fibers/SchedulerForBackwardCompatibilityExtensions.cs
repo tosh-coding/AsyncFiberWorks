@@ -1,5 +1,6 @@
 ﻿using Retlang.Core;
 using System;
+using System.Threading;
 
 namespace Retlang.Fibers
 {
@@ -17,7 +18,7 @@ namespace Retlang.Fibers
         /// <returns>a handle to cancel the timer.</returns>
         public static IDisposable Schedule(this IFiber fiber, Action action, long firstInMs)
         {
-            return TimerAction.StartNew(fiber, action, firstInMs);
+            return TimerAction.StartNew(fiber, action, firstInMs, Timeout.Infinite, fiber.FallbackDisposer);
         }
 
         /// <summary>
@@ -30,7 +31,7 @@ namespace Retlang.Fibers
         /// <returns>a handle to cancel the timer.</returns>
         public static IDisposable ScheduleOnInterval(this IFiber fiber, Action action, long firstInMs, long regularInMs)
         {
-            return TimerAction.StartNew(fiber, action, firstInMs, regularInMs);
+            return TimerAction.StartNew(fiber, action, firstInMs, regularInMs, fiber.FallbackDisposer);
         }
     }
 }

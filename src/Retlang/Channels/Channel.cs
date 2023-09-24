@@ -33,7 +33,7 @@ namespace Retlang.Channels
         /// <returns></returns>
         public IDisposable SubscribeToBatch(IFiber fiber, Action<IList<T>> receive, long intervalInMs)
         {
-            return SubscribeOnProducerThreads(fiber.FallbackDisposer, new BatchSubscriber<T>(fiber, receive, intervalInMs));
+            return SubscribeOnProducerThreads(fiber.FallbackDisposer, new BatchSubscriber<T>(fiber, receive, intervalInMs, null, fiber.FallbackDisposer));
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace Retlang.Channels
         /// <returns></returns>
         public IDisposable SubscribeToKeyedBatch<K>(IFiber fiber, Converter<T, K> keyResolver, Action<IDictionary<K, T>> receive, long intervalInMs)
         {
-            return SubscribeOnProducerThreads(fiber.FallbackDisposer, new KeyedBatchSubscriber<K, T>(keyResolver, receive, fiber, intervalInMs));
+            return SubscribeOnProducerThreads(fiber.FallbackDisposer, new KeyedBatchSubscriber<K, T>(keyResolver, receive, fiber, intervalInMs, null, fiber.FallbackDisposer));
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace Retlang.Channels
         /// <returns></returns>
         public IDisposable SubscribeToLast(IFiber fiber, Action<T> receive, long intervalInMs)
         {
-            return SubscribeOnProducerThreads(fiber.FallbackDisposer, new LastSubscriber<T>(receive, fiber, intervalInMs));
+            return SubscribeOnProducerThreads(fiber.FallbackDisposer, new LastSubscriber<T>(receive, fiber, intervalInMs, null, fiber.FallbackDisposer));
         }
 
         /// <summary>

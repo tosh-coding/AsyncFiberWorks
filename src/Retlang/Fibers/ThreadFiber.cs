@@ -106,7 +106,7 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// <see cref="IFiber"/>
+        /// The thread.
         /// </summary>
         public Thread Thread
         {
