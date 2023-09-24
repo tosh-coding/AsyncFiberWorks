@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Retlang.Channels;
 using Retlang.Fibers;
@@ -126,7 +127,7 @@ namespace RetlangTests
 
             int timeoutInMs = 500;
             IReply<int> response = null;
-            var stubFiber = new StubFiber();
+            var mainFiber = new StubFiber();
             var cancellation = new CancellationTokenSource();
             var ownAction = new List<Action>();
             Action action = () =>
@@ -134,14 +135,14 @@ namespace RetlangTests
                 response?.Dispose();
                 if (indexRequest >= requests.Count)
                 {
-                    stubFiber.Enqueue(() => { cancellation.Cancel(); });
+                    mainFiber.Enqueue(() => { cancellation.Cancel(); });
                 }
                 else
                 {
                     string requestData = requests[indexRequest];
                     indexRequest += 1;
                     response = countChannel.SendRequest(requestData);
-                    response.SetCallbackOnReceive(timeoutInMs, stubFiber, (_) =>
+                    response.SetCallbackOnReceive(timeoutInMs, mainFiber, (_) =>
                     {
                         bool isReceived = response.TryReceive(out int responseData);
                         Assert.IsTrue(isReceived);
@@ -153,14 +154,94 @@ namespace RetlangTests
                         {
                             Assert.AreEqual(-1, responseData);
                         }
-                        stubFiber.Enqueue(ownAction[0]);
+                        mainFiber.Enqueue(ownAction[0]);
                     });
                 }
             };
             ownAction.Add(action);
-            stubFiber.Enqueue(action);
-            stubFiber.ExecuteUntilCanceled(cancellation.Token);
+            mainFiber.Enqueue(action);
+            mainFiber.ExecuteUntilCanceled(cancellation.Token);
             Assert.AreEqual(requests.Count, indexRequest);
+        }
+
+        [Test]
+        public async Task ChangeResponseAsync()
+        {
+            IFiber responder = PoolFiber.StartNew();
+            var countChannel = new RequestReplyChannel<string, int>();
+
+            var dic = new (string, int)[] {
+                ("apple", 100),
+                ("banana", 200),
+                ("carrot", 300),
+            }.ToDictionary(x => x.Item1, x => x.Item2);
+
+            Action<IRequest<string, int>> onRequest =
+                (IRequest<string, int> req) =>
+                {
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay(20);
+                        await responder.SwitchTo();
+                        if (dic.TryGetValue(req.Request, out int value))
+                        {
+                            req.SendReply(value);
+                        }
+                        else
+                        {
+                            req.SendReply(-1);
+                        }
+                    });
+                };
+            countChannel.Subscribe(responder, onRequest);
+
+            var requests = new List<string>();
+            requests.AddRange(dic.Keys);
+            requests.Add("daikon");
+
+            var mainFiber = PoolFiber.StartNew();
+
+            foreach (var requestData in requests)
+            {
+                using (var response = countChannel.SendRequest(requestData))
+                {
+                    try
+                    {
+                        int responseData = await WaitOnReceive(response, 500);
+                        await mainFiber.SwitchTo();
+                        if (dic.ContainsKey(requestData))
+                        {
+                            Assert.AreEqual(dic[requestData], responseData);
+                        }
+                        else
+                        {
+                            Assert.AreEqual(-1, responseData);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Assert.Fail();
+                    }
+                }
+            }
+        }
+
+        private static Task<T> WaitOnReceive<T>(IReply<T> reply, int timeoutInMs)
+        {
+            var tcs = new TaskCompletionSource<T>();
+            reply.SetCallbackOnReceive(timeoutInMs, null, (_) =>
+            {
+                bool isReceived = reply.TryReceive(out T responseData);
+                if (isReceived)
+                {
+                    tcs.SetResult(responseData);
+                }
+                else
+                {
+                    tcs.SetCanceled();
+                }
+            });
+            return tcs.Task;
         }
     }
 }
