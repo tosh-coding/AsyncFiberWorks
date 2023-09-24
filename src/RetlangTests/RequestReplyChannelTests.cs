@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using Retlang.Channels;
@@ -88,6 +90,77 @@ namespace RetlangTests
             DateTime result;
             Assert.IsTrue(WaitReceiveForTest(response, 10000, out result));
             Assert.AreEqual(result, now);
+        }
+
+        [Test]
+        public void ChangeResponseSync()
+        {
+            IFiber responder = PoolFiber.StartNew();
+            var countChannel = new RequestReplyChannel<string, int>();
+
+            var dic = new (string, int)[] {
+                ("apple", 100),
+                ("banana", 200),
+                ("carrot", 300),
+            }.ToDictionary(x => x.Item1, x => x.Item2);
+
+            Action<IRequest<string, int>> onRequest =
+                delegate (IRequest<string, int> req)
+                {
+                    Thread.Sleep(20);
+                    if (dic.TryGetValue(req.Request, out int value))
+                    {
+                        req.SendReply(value);
+                    }
+                    else
+                    {
+                        req.SendReply(-1);
+                    }
+                };
+            countChannel.Subscribe(responder, onRequest);
+
+            var requests = new List<string>();
+            requests.AddRange(dic.Keys);
+            requests.Add("daikon");
+            int indexRequest = 0;
+
+            int timeoutInMs = 500;
+            IReply<int> response = null;
+            var stubFiber = new StubFiber();
+            var cancellation = new CancellationTokenSource();
+            var ownAction = new List<Action>();
+            Action action = () =>
+            {
+                response?.Dispose();
+                if (indexRequest >= requests.Count)
+                {
+                    stubFiber.Enqueue(() => { cancellation.Cancel(); });
+                }
+                else
+                {
+                    string requestData = requests[indexRequest];
+                    indexRequest += 1;
+                    response = countChannel.SendRequest(requestData);
+                    response.SetCallbackOnReceive(timeoutInMs, stubFiber, (_) =>
+                    {
+                        bool isReceived = response.TryReceive(out int responseData);
+                        Assert.IsTrue(isReceived);
+                        if (dic.ContainsKey(requestData))
+                        {
+                            Assert.AreEqual(dic[requestData], responseData);
+                        }
+                        else
+                        {
+                            Assert.AreEqual(-1, responseData);
+                        }
+                        stubFiber.Enqueue(ownAction[0]);
+                    });
+                }
+            };
+            ownAction.Add(action);
+            stubFiber.Enqueue(action);
+            stubFiber.ExecuteUntilCanceled(cancellation.Token);
+            Assert.AreEqual(requests.Count, indexRequest);
         }
     }
 }

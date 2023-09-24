@@ -85,7 +85,7 @@ namespace Retlang.Channels
                     ClearCallbackOnReceive();
                 }
 
-                if (_resp.Count < 0)
+                if (_resp.Count <= 0)
                 {
                     _fiberOnReceive = fiberOnReceive;
                     _callbackOnReceive = callbackOnReceive;
