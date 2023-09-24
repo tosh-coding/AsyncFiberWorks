@@ -82,7 +82,11 @@ namespace Retlang.Channels
                 }
                 if (_timer != null)
                 {
+                    var oldFiberOnReceive = _fiberOnReceive;
+                    var oldCallbackOnReceive = _callbackOnReceive;
+                    var oldArgumentOfCallback = _argumentOfCallback;
                     ClearCallbackOnReceive();
+                    EnqueueOnReceive(oldFiberOnReceive, oldCallbackOnReceive, oldArgumentOfCallback);
                 }
 
                 if (_resp.Count <= 0)
