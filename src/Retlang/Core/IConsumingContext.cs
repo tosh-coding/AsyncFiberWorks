@@ -16,12 +16,5 @@ namespace Retlang.Core
         /// Execute all actions in the pending list.
         /// </summary>
         void ExecuteAllPending();
-
-        /// <summary>
-        /// Execute actions until canceled.
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="OperationCanceledException">Canceled.</exception>
-        void ExecuteUntilCanceled(CancellationToken cancellationToken);
     }
 }

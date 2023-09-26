@@ -50,12 +50,11 @@ namespace RetlangTests
         [Test]
         public void SwitchToFiberSlim()
         {
-            var stubFiber = new StubFiberSlim();
-            var ctsStubFiberExecution = new CancellationTokenSource();
-            var t = SwitchToFiberSlimAsync(stubFiber, ctsStubFiberExecution);
+            var consumingThread = new ConsumingThread();
+            var t = SwitchToFiberSlimAsync(consumingThread);
             try
             {
-                stubFiber.ExecuteUntilCanceled(ctsStubFiberExecution.Token);
+                consumingThread.Run();
             }
             catch (OperationCanceledException)
             {
@@ -63,9 +62,11 @@ namespace RetlangTests
             t.Wait();
         }
 
-        public async Task SwitchToFiberSlimAsync(StubFiberSlim stubFiber, CancellationTokenSource ctsStubFiberExecution)
+        public async Task SwitchToFiberSlimAsync(ConsumingThread consumingThread)
         {
             await Task.Yield();
+
+            var mainFiber = new PoolFiberSlim(consumingThread, new DefaultExecutor());
 
             var defaultThreadPool = new DefaultThreadPool();
             var userThreadPoolA = UserThreadPool.StartNew();
@@ -89,7 +90,7 @@ namespace RetlangTests
             var idListOfUserPoolB2 = new HashSet<int>();
             for (int i = 0; i < 1000; i++)
             {
-                await stubFiber.SwitchTo();
+                await mainFiber.SwitchTo();
                 idListOfStub.Add(Thread.CurrentThread.ManagedThreadId);
 
                 await threadFiber.SwitchTo();
@@ -150,19 +151,18 @@ namespace RetlangTests
 
             Assert.Greater(idListOfUserPoolB1.Intersect(idListOfUserPoolB2).Count(), 0);
 
-            // Stop the StubFiber.
-            ctsStubFiberExecution.Cancel();
+            // Stop the ConsumingThread.
+            consumingThread.Stop();
         }
 
         [Test]
         public void SwitchToFiber()
         {
-            var stubFiber = new StubFiber();
-            var ctsStubFiberExecution = new CancellationTokenSource();
-            var t = SwitchToFiberAsync(stubFiber, ctsStubFiberExecution);
+            var consumingThread = new ConsumingThread();
+            var t = SwitchToFiberAsync(consumingThread);
             try
             {
-                stubFiber.ExecuteUntilCanceled(ctsStubFiberExecution.Token);
+                consumingThread.Run();
             }
             catch (OperationCanceledException)
             {
@@ -170,9 +170,11 @@ namespace RetlangTests
             t.Wait();
         }
 
-        public async Task SwitchToFiberAsync(StubFiber stubFiber, CancellationTokenSource ctsStubFiberExecution)
+        public async Task SwitchToFiberAsync(ConsumingThread consumingThread)
         {
             await Task.Yield();
+
+            var mainFiber = PoolFiber.StartNew(consumingThread, new DefaultExecutor());
 
             var defaultThreadPool = new DefaultThreadPool();
             var userThreadPoolA = UserThreadPool.StartNew();
@@ -196,7 +198,7 @@ namespace RetlangTests
             var idListOfUserPoolB2 = new HashSet<int>();
             for (int i = 0; i < 1000; i++)
             {
-                await stubFiber.SwitchTo();
+                await mainFiber.SwitchTo();
                 idListOfStub.Add(Thread.CurrentThread.ManagedThreadId);
 
                 await threadFiber.SwitchTo();
@@ -257,8 +259,8 @@ namespace RetlangTests
 
             Assert.Greater(idListOfUserPoolB1.Intersect(idListOfUserPoolB2).Count(), 0);
 
-            // Stop the StubFiber.
-            ctsStubFiberExecution.Cancel();
+            // Stop the ConsumingThread.
+            consumingThread.Stop();
         }
     }
 }

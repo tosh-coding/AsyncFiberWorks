@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using Retlang.Channels;
+using Retlang.Core;
 using Retlang.Fibers;
 
 namespace RetlangTests.Examples
@@ -216,8 +217,8 @@ namespace RetlangTests.Examples
                 }
 
                 // Start requesting.
-                var fiberRequest = new StubFiber();
-                var cancellation = new CancellationTokenSource();
+                var FiberRequestConsumer = new ConsumingThread();
+                var fiberRequest = PoolFiber.StartNew(FiberRequestConsumer, new DefaultExecutor());
                 var receivedValues = new List<int>();
                 Action<SnapshotRequestControlEvent> actionControl = (controlEvent) =>
                 {
@@ -258,7 +259,7 @@ namespace RetlangTests.Examples
                                 Assert.AreEqual(expectedReceiveValues[i], receivedValues[i]);
                             }
 
-                            cancellation.Cancel();
+                            FiberRequestConsumer.Stop();
                         }, 200);
                     }
                 };
@@ -270,7 +271,7 @@ namespace RetlangTests.Examples
                 var handleReceive = channel.PrimedSubscribe(
                     fiberRequest, actionControl, actionReceive, 5000);
 
-                fiberRequest.ExecuteUntilCanceled(cancellation.Token);
+                FiberRequestConsumer.Run();
                 handleReceive.Dispose();
             }
         }

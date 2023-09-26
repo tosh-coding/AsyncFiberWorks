@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Retlang.Channels;
+using Retlang.Core;
 using Retlang.Fibers;
 
 namespace RetlangTests
@@ -127,15 +128,15 @@ namespace RetlangTests
 
             int timeoutInMs = 500;
             IReply<int> response = null;
-            var mainFiber = new StubFiber();
-            var cancellation = new CancellationTokenSource();
+            var mainFiberConsumer = new ConsumingThread();
+            var mainFiber = PoolFiber.StartNew(mainFiberConsumer, new DefaultExecutor());
             var ownAction = new List<Action>();
             Action action = () =>
             {
                 response?.Dispose();
                 if (indexRequest >= requests.Count)
                 {
-                    mainFiber.Enqueue(() => { cancellation.Cancel(); });
+                    mainFiber.Enqueue(() => { mainFiberConsumer.Stop(); });
                 }
                 else
                 {
@@ -160,7 +161,7 @@ namespace RetlangTests
             };
             ownAction.Add(action);
             mainFiber.Enqueue(action);
-            mainFiber.ExecuteUntilCanceled(cancellation.Token);
+            mainFiberConsumer.Run();
             Assert.AreEqual(requests.Count, indexRequest);
         }
 
