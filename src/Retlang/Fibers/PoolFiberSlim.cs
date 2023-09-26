@@ -13,10 +13,11 @@ namespace Retlang.Fibers
         private readonly IThreadPool _pool;
         private readonly IExecutor _executor;
 
-        private List<Action> _queue = new List<Action>();
-        private List<Action> _toPass = new List<Action>();
+        private Queue<Action> _queue = new Queue<Action>();
+        private Queue<Action> _toPass = new Queue<Action>();
 
         private bool _flushPending;
+        private bool _paused = false;
 
         /// <summary>
         /// Create a pool fiber with the specified thread pool and specified executor.
@@ -53,7 +54,11 @@ namespace Retlang.Fibers
         {
             lock (_lock)
             {
-                _queue.Add(action);
+                _queue.Enqueue(action);
+                if (_paused)
+                {
+                    return;
+                }
                 if (!_flushPending)
                 {
                     _pool.Queue(Flush);
@@ -67,10 +72,23 @@ namespace Retlang.Fibers
             var toExecute = ClearActions();
             if (toExecute != null)
             {
-                _executor.Execute(toExecute);
+                while (toExecute.Count > 0)
+                {
+                    Action action = toExecute.Dequeue();
+                    _executor.Execute(action);
+
+                    if (IsPaused)
+                    {
+                        break;
+                    }
+                }
                 lock (_lock)
                 {
-                    if (_queue.Count > 0)
+                    if (_paused)
+                    {
+                        _flushPending = false;
+                    }
+                    else if (_queue.Count > 0)
                     {
                         // don't monopolize thread.
                         _pool.Queue(Flush);
@@ -83,18 +101,76 @@ namespace Retlang.Fibers
             }
         }
 
-        private List<Action> ClearActions()
+        private Queue<Action> ClearActions()
         {
             lock (_lock)
             {
+                if (_paused)
+                {
+                    _flushPending = false;
+                    return null;
+                }
+                if (_toPass.Count > 0)
+                {
+                    return _toPass;
+                }
                 if (_queue.Count == 0)
                 {
                     _flushPending = false;
                     return null;
                 }
-                Lists.Swap(ref _queue, ref _toPass);
+                Queues.Swap(ref _queue, ref _toPass);
                 _queue.Clear();
                 return _toPass;
+            }
+        }
+
+        /// <summary>
+        /// Paused. After the Pause, and before the Resume.
+        /// </summary>
+        public bool IsPaused
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _paused;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Pauses the consumption of the task queue.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Pause was called twice.</exception>
+        public void Pause()
+        {
+            lock (_lock)
+            {
+                if (_paused)
+                {
+                    throw new InvalidOperationException("Pause was called twice.");
+                }
+                _paused = true;
+            }
+        }
+
+        /// <summary>
+        /// Resumes consumption of a paused task queue.
+        /// </summary>
+        /// <param name="action">The action to be taken immediately before the resume.</param>
+        /// <exception cref="InvalidOperationException">Resume was called in the unpaused state.</exception>
+        public void Resume(Action action)
+        {
+            lock (_lock)
+            {
+                if (!_paused)
+                {
+                    throw new InvalidOperationException("Resume was called in the unpaused state.");
+                }
+
+                action();
+                _paused = false;
             }
         }
     }

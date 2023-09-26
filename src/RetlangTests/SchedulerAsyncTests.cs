@@ -62,7 +62,8 @@ namespace RetlangTests
         [Test]
         public void ResumeInDotNetThreadPool()
         {
-            var fiber = ThreadFiberSlim.StartNew();
+            var fiber = new ThreadFiberSlim();
+            fiber.Start();
             ResumeInDotNetThreadPoolAsync(fiber).Wait();
         }
 

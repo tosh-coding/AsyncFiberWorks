@@ -17,7 +17,7 @@ namespace RetlangTests
         [Test]
         public void SynchronousRequestReply()
         {
-            var responder = PoolFiber.StartNew();
+            var responder = new PoolFiber();
             var timeCheck = new RequestReplyChannel<string, DateTime>();
             var now = DateTime.Now;
             Action<IRequest<string, DateTime>> onRequest = req => req.SendReply(now);
@@ -49,7 +49,7 @@ namespace RetlangTests
         [Test]
         public void SynchronousRequestWithMultipleReplies()
         {
-            IFiber responder = PoolFiber.StartNew();
+            IFiber responder = new PoolFiber();
             var countChannel = new RequestReplyChannel<string, int>();
 
             var allSent = new AutoResetEvent(false);
@@ -80,7 +80,7 @@ namespace RetlangTests
         [Test]
         public void PersistentSubscriber()
         {
-            var responder = PoolFiber.StartNew();
+            var responder = new PoolFiber();
             var timeCheck = new RequestReplyChannel<string, DateTime>();
             var now = DateTime.Now;
             Action<IRequest<string, DateTime>> onRequest = req => req.SendReply(now);
@@ -97,7 +97,7 @@ namespace RetlangTests
         [Test]
         public void ChangeResponseSync()
         {
-            IFiber responder = PoolFiber.StartNew();
+            IFiber responder = new PoolFiber();
             var countChannel = new RequestReplyChannel<string, int>();
 
             var dic = new (string, int)[] {
@@ -129,7 +129,7 @@ namespace RetlangTests
             int timeoutInMs = 500;
             IReply<int> response = null;
             var mainFiberConsumer = new ConsumingThread();
-            var mainFiber = PoolFiber.StartNew(mainFiberConsumer, new DefaultExecutor());
+            var mainFiber = new PoolFiber(mainFiberConsumer, new DefaultExecutor());
             var ownAction = new List<Action>();
             Action action = () =>
             {
@@ -168,7 +168,7 @@ namespace RetlangTests
         [Test]
         public async Task ChangeResponseAsync()
         {
-            IFiber responder = PoolFiber.StartNew();
+            IFiber responder = new PoolFiber();
             var countChannel = new RequestReplyChannel<string, int>();
 
             var dic = new (string, int)[] {
@@ -200,7 +200,7 @@ namespace RetlangTests
             requests.AddRange(dic.Keys);
             requests.Add("daikon");
 
-            var mainFiber = PoolFiber.StartNew();
+            var mainFiber = new PoolFiber();
 
             foreach (var requestData in requests)
             {

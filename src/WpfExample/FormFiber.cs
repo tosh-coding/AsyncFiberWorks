@@ -17,7 +17,7 @@ namespace WpfExample
         /// </summary>
         public FormFiber(ISynchronizeInvoke invoker, IExecutor executor)
         {
-            _fiber = PoolFiber.StartNew(new FormAdapter(invoker), executor);
+            _fiber = new PoolFiber(new FormAdapter(invoker), executor);
         }
 
         /// <summary>

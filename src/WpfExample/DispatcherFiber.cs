@@ -20,7 +20,7 @@ namespace WpfExample
         /// <param name="executor">The executor.</param>
         public DispatcherFiber(Dispatcher dispatcher, DispatcherPriority priority, IExecutor executor)
         {
-            _fiber = PoolFiber.StartNew(new DispatcherAdapter(dispatcher, priority), executor);
+            _fiber = new PoolFiber(new DispatcherAdapter(dispatcher, priority), executor);
         }
 
         /// <summary>

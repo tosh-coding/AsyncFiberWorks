@@ -15,7 +15,8 @@ namespace RetlangTests
             IFiber fallbackFiber;
             int originalManagedThreadId;
             {
-                var threadFiber = ThreadFiber.StartNew();
+                var threadFiber = new ThreadFiber();
+                threadFiber.Start();
                 originalManagedThreadId = threadFiber.Thread.ManagedThreadId;
                 fallbackFiber = new FallbackFiber(threadFiber, threadFiber);
             }
@@ -57,7 +58,7 @@ namespace RetlangTests
             IFiber fallbackFiber;
             int originalManagedThreadId;
             {
-                var poolFiber = PoolFiber.StartNew(userThreadPool, new DefaultExecutor());
+                var poolFiber = new PoolFiber(userThreadPool, new DefaultExecutor());
                 originalManagedThreadId = userThreadPool.ThreadList[0].ManagedThreadId;
                 var unsubscriber = new Unsubscriber((_) =>
                 {

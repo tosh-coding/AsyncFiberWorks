@@ -162,10 +162,6 @@ namespace RetlangTests
                 using (var fiber2 = new PoolFiber(pool, new DefaultExecutor()))
                 using (var fiber3 = new PoolFiber(pool, new DefaultExecutor()))
                 {
-                    fiber1.Start();
-                    fiber2.Start();
-                    fiber3.Start();
-
                     int loopCount = 1000;
 
                     long counter1 = 0;
@@ -203,7 +199,7 @@ namespace RetlangTests
         {
             var userThreadPool = UserThreadPool.StartNew(1);
             var userThreadId = userThreadPool.ThreadList[0].ManagedThreadId;
-            var poolFiber = PoolFiber.StartNew(userThreadPool, new DefaultExecutor());
+            var poolFiber = new PoolFiber(userThreadPool, new DefaultExecutor());
             var fiber = new FallbackFiber(poolFiber, userThreadPool);
 
             long threadIdBefore = 0;

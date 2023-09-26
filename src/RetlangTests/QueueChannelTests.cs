@@ -14,7 +14,7 @@ namespace RetlangTests
         [Test]
         public void SingleConsumer()
         {
-            var one = PoolFiber.StartNew();
+            var one = new PoolFiber();
             var oneConsumed = 0;
             var reset = new AutoResetEvent(false);
             using (one)
@@ -41,7 +41,7 @@ namespace RetlangTests
         public void SingleConsumerWithException()
         {
             var exec = new StubExecutor();
-            var one = PoolFiber.StartNew(new DefaultThreadPool(), exec);
+            var one = new PoolFiber(new DefaultThreadPool(), exec);
             var reset = new AutoResetEvent(false);
             using (one)
             {
@@ -86,7 +86,7 @@ namespace RetlangTests
                                                     }
                                                 }
                                             };
-                var fiber = PoolFiber.StartNew();
+                var fiber = new PoolFiber();
                 queues.Add(fiber);
                 channel.Subscribe(fiber, onReceive);
             }
@@ -101,7 +101,7 @@ namespace RetlangTests
         [Test]
         public void PersistentSubscriber()
         {
-            var one = PoolFiber.StartNew();
+            var one = new PoolFiber();
             var oneConsumed = 0;
             var reset = new AutoResetEvent(false);
             using (one)

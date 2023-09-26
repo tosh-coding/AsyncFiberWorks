@@ -53,56 +53,6 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// Create a thread fiber with the default queue and call the Start method.
-        /// </summary>
-        /// <returns></returns>
-        public static ThreadFiberSlim StartNew()
-        {
-            var fiber = new ThreadFiberSlim();
-            fiber.Start();
-            return fiber;
-        }
-
-        /// <summary>
-        /// Creates a thread fiber with a specified queue and call the Start method.
-        /// </summary>
-        /// <param name="queue"></param>
-        /// <returns></returns>
-        public static ThreadFiberSlim StartNew(IQueue queue)
-        {
-            var fiber = new ThreadFiberSlim(queue);
-            fiber.Start();
-            return fiber;
-        }
-
-        /// <summary>
-        /// Creates a thread fiber with a specified name and call the Start method.
-        /// </summary>
-        /// <param name="threadName"></param>
-        /// <returns></returns>
-        public static ThreadFiberSlim StartNew(string threadName)
-        {
-            var fiber = new ThreadFiberSlim(threadName);
-            fiber.Start();
-            return fiber;
-        }
-
-        /// <summary>
-        /// Create a new instance and call the Start method.
-        /// </summary>
-        /// <param name="queue"></param>
-        /// <param name="threadName"></param>
-        /// <param name="isBackground"></param>
-        /// <param name="priority"></param>
-        /// <returns></returns>
-        public static ThreadFiberSlim StartNew(IQueue queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
-        {
-            var fiber = new ThreadFiberSlim(queue, threadName, isBackground, priority);
-            fiber.Start();
-            return fiber;
-        }
-
-        /// <summary>
         /// The dedicated thread.
         /// </summary>
         public Thread Thread

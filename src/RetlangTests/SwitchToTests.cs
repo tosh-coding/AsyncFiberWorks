@@ -72,7 +72,8 @@ namespace RetlangTests
             var userThreadPoolA = UserThreadPool.StartNew();
             var userThreadPoolB = UserThreadPool.StartNew();
 
-            var threadFiber = ThreadFiberSlim.StartNew();
+            var threadFiber = new ThreadFiberSlim();
+            threadFiber.Start();
             var dotnetPoolFiber1 = new PoolFiberSlim(defaultThreadPool, new DefaultExecutor());
             var dotnetPoolFiber2 = new PoolFiberSlim();
             var userPoolFiberA1 = new PoolFiberSlim(userThreadPoolA, new DefaultExecutor());
@@ -174,19 +175,20 @@ namespace RetlangTests
         {
             await Task.Yield();
 
-            var mainFiber = PoolFiber.StartNew(consumingThread, new DefaultExecutor());
+            var mainFiber = new PoolFiber(consumingThread, new DefaultExecutor());
 
             var defaultThreadPool = new DefaultThreadPool();
             var userThreadPoolA = UserThreadPool.StartNew();
             var userThreadPoolB = UserThreadPool.StartNew();
 
-            var threadFiber = ThreadFiber.StartNew();
-            var dotnetPoolFiber1 = PoolFiber.StartNew(defaultThreadPool, new DefaultExecutor());
-            var dotnetPoolFiber2 = PoolFiber.StartNew();
-            var userPoolFiberA1 = PoolFiber.StartNew(userThreadPoolA, new DefaultExecutor());
-            var userPoolFiberA2 = PoolFiber.StartNew(userThreadPoolA, new DefaultExecutor());
-            var userPoolFiberB1 = PoolFiber.StartNew(userThreadPoolB, new DefaultExecutor());
-            var userPoolFiberB2 = PoolFiber.StartNew(userThreadPoolB, new DefaultExecutor());
+            var threadFiber = new ThreadFiber();
+            threadFiber.Start();
+            var dotnetPoolFiber1 = new PoolFiber(defaultThreadPool, new DefaultExecutor());
+            var dotnetPoolFiber2 = new PoolFiber();
+            var userPoolFiberA1 = new PoolFiber(userThreadPoolA, new DefaultExecutor());
+            var userPoolFiberA2 = new PoolFiber(userThreadPoolA, new DefaultExecutor());
+            var userPoolFiberB1 = new PoolFiber(userThreadPoolB, new DefaultExecutor());
+            var userPoolFiberB2 = new PoolFiber(userThreadPoolB, new DefaultExecutor());
 
             var idListOfStub = new HashSet<int>();
             var idListOfThread = new HashSet<int>();

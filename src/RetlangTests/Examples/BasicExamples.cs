@@ -17,7 +17,6 @@ namespace RetlangTests.Examples
             //PoolFiber uses the .NET thread pool by default
             using (var fiber = new PoolFiber())
             {
-                fiber.Start();
                 var channel = new Channel<string>();
 
                 var reset = new AutoResetEvent(false);
@@ -34,7 +33,6 @@ namespace RetlangTests.Examples
             //PoolFiber uses the .NET thread pool by default
             using (var fiber = new PoolFiber())
             {
-                fiber.Start();
                 var channel = new Channel<string>();
 
                 var reset = new AutoResetEvent(false);
@@ -153,7 +151,6 @@ namespace RetlangTests.Examples
         {
             using (var fiber = new PoolFiber())
             {
-                fiber.Start();
                 var channel = new RequestReplyChannel<string, string>();
                 channel.Subscribe(fiber, req => req.SendReply("bye"));
                 var reply = channel.SendRequest("hello");
@@ -170,7 +167,6 @@ namespace RetlangTests.Examples
         {
             using (var fiberReply = new PoolFiber())
             {
-                fiberReply.Start();
                 var channel = new SnapshotChannel<int>();
                 var lockerResponseValue = new object();
 
@@ -218,7 +214,7 @@ namespace RetlangTests.Examples
 
                 // Start requesting.
                 var FiberRequestConsumer = new ConsumingThread();
-                var fiberRequest = PoolFiber.StartNew(FiberRequestConsumer, new DefaultExecutor());
+                var fiberRequest = new PoolFiber(FiberRequestConsumer, new DefaultExecutor());
                 var receivedValues = new List<int>();
                 Action<SnapshotRequestControlEvent> actionControl = (controlEvent) =>
                 {
@@ -279,7 +275,7 @@ namespace RetlangTests.Examples
         [Test]
         public void ShouldIncreasePoolFiberSubscriberCountByOne()
         {
-            var fiber = PoolFiber.StartNew();
+            var fiber = new PoolFiber();
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
@@ -297,7 +293,8 @@ namespace RetlangTests.Examples
         [Test]
         public void ShouldIncreaseThreadFiberSubscriberCountByOne()
         {
-            var fiber = ThreadFiber.StartNew();
+            var fiber = new ThreadFiber();
+            fiber.Start();
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
@@ -333,7 +330,7 @@ namespace RetlangTests.Examples
         [Test]
         public void UnsubscriptionShouldRemoveSubscriber()
         {
-            var fiber = PoolFiber.StartNew();
+            var fiber = new PoolFiber();
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
