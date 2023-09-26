@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using Retlang.Core;
 
 namespace Retlang.Fibers
@@ -7,16 +6,15 @@ namespace Retlang.Fibers
     /// <summary>
     /// Fiber implementation backed by a dedicated thread.
     /// </summary>
-    public class ThreadFiber : IFiber
+    public class ThreadFiber : ThreadFiberSlim, IFiber
     {
-        private readonly ThreadFiberSlim _threadFiberSlim;
         private readonly Subscriptions _subscriptions = new Subscriptions();
 
         /// <summary>
         /// Create a thread fiber with the default queue.
         /// </summary>
         public ThreadFiber() 
-            : this(new ThreadFiberSlim())
+            : base()
         {}
 
         /// <summary>
@@ -24,7 +22,7 @@ namespace Retlang.Fibers
         /// </summary>
         /// <param name="queue"></param>
         public ThreadFiber(IQueue queue) 
-            : this(new ThreadFiberSlim(queue))
+            : base(queue)
         {}
 
         /// <summary>
@@ -32,7 +30,7 @@ namespace Retlang.Fibers
         /// </summary>
         /// /// <param name="threadName"></param>
         public ThreadFiber(string threadName)
-            : this(new ThreadFiberSlim(threadName))
+            : base(threadName)
         {}
 
         /// <summary>
@@ -43,59 +41,18 @@ namespace Retlang.Fibers
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
         public ThreadFiber(IQueue queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
-            : this(new ThreadFiberSlim(queue, threadName, isBackground, priority))
+            : base(queue, threadName, isBackground, priority)
         {
-        }
-
-        /// <summary>
-        /// Creates a thread fiber.
-        /// </summary>
-        private ThreadFiber(ThreadFiberSlim fiber)
-        {
-            _threadFiberSlim = fiber;
-        }
-
-        /// <summary>
-        /// The thread.
-        /// </summary>
-        public Thread Thread
-        {
-            get { return _threadFiberSlim.Thread; }
-        }
-
-        /// <summary>
-        /// Start the thread.
-        /// </summary>
-        public void Start()
-        {
-            _threadFiberSlim.Start();
-        }
-
-        ///<summary>
-        /// Calls join on the thread.
-        ///</summary>
-        public void Join()
-        {
-            _threadFiberSlim.Join();
         }
 
         /// <summary>
         /// Stops the thread.
         /// Clears all subscriptions, scheduled.
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
             _subscriptions?.Dispose();
-            _threadFiberSlim.Dispose();
-        }
-
-        /// <summary>
-        /// <see cref="IExecutionContext.Enqueue(Action)"/>
-        /// </summary>
-        /// <param name="action"></param>
-        public void Enqueue(Action action)
-        {
-            _threadFiberSlim.Enqueue(action);
+            base.Dispose();
         }
 
         /// <summary>

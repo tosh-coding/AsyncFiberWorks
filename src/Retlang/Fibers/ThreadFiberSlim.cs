@@ -98,7 +98,7 @@ namespace Retlang.Fibers
         /// <summary>
         /// Stops the thread.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             _queue.Stop();
         }
