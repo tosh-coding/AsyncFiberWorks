@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,27 +21,23 @@ namespace RetlangTests
             var now = DateTime.Now;
             Action<IRequest<string, DateTime>> onRequest = req => req.SendReply(now);
             timeCheck.Subscribe(responder, onRequest);
-            var response = timeCheck.SendRequest("hello");
-            DateTime result;
-            Assert.IsTrue(WaitReceiveForTest(response, 10000, out result));
-            Assert.AreEqual(result, now);
-        }
 
-        public static bool WaitReceiveForTest<T>(IReply<T> reply, int timeoutInMs, out T result)
-        {
-            var sw = Stopwatch.StartNew();
-            while (true)
             {
-                if (reply.TryReceive(out result))
+                var requesterThread = new ConsumingThread();
+                var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
+                requesterFiber.Pause();
+                var response = timeCheck.SendRequest("hello");
+                response.SetCallbackOnReceive(10000, new PoolFiber(), (_) =>
                 {
-                    return true;
-                }
-                if (sw.ElapsedMilliseconds >= timeoutInMs)
-                {
-                    return false;
-                }
-                // Blocking should be avoided. Here we use it for simplifying the test code.
-                Thread.Sleep(100);
+                    requesterFiber.Resume(() =>
+                    {
+                        bool received = response.TryReceive(out DateTime result);
+                        Assert.IsTrue(received);
+                        Assert.AreEqual(result, now);
+                        requesterThread.Stop();
+                    });
+                });
+                requesterThread.Run();
             }
         }
 
@@ -61,20 +56,65 @@ namespace RetlangTests
                     allSent.Set();
                 };
             countChannel.Subscribe(responder, onRequest);
-            var response = countChannel.SendRequest("hello");
-            int result;
-            using (response)
+
             {
-                for (var i = 0; i < 5; i++)
-                {
-                    Assert.IsTrue(WaitReceiveForTest(response, 1000, out result));
-                    Assert.AreEqual(result, i);
-                }
+                var requesterThread = new ConsumingThread();
+                var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
+                requesterFiber.Pause();
+                var response = countChannel.SendRequest("hello");
                 allSent.WaitOne(10000, false);
+                using (response)
+                {
+                    int i = 0;
+                    Action[] receivingArray = new Action[1];
+                    Action receiving = () =>
+                    {
+                        requesterFiber.Resume(() =>
+                        {
+                            int result;
+                            bool received = response.TryReceive(out result);
+                            Assert.IsTrue(received);
+                            Assert.AreEqual(result, i);
+                            i += 1;
+                            if (i < 5)
+                            {
+                                requesterFiber.Pause();
+                                response.SetCallbackOnReceive(1000, new PoolFiber(), (_) =>
+                                {
+                                    receivingArray[0].Invoke();
+                                });
+                            }
+                            else
+                            {
+                                requesterFiber.Pause();
+                                response.SetCallbackOnReceive(3000, new PoolFiber(), (_) =>
+                                {
+                                    requesterFiber.Resume(() =>
+                                    {
+                                        received = response.TryReceive(out result);
+                                        Assert.IsTrue(received);
+                                        Assert.AreEqual(5, result);
+
+                                        requesterFiber.Pause();
+                                        response.SetCallbackOnReceive(3000, new PoolFiber(), (dummy) =>
+                                        {
+                                            requesterFiber.Resume(() =>
+                                            {
+                                                received = response.TryReceive(out result);
+                                                Assert.IsFalse(received);
+                                                requesterThread.Stop();
+                                            });
+                                        });
+                                    });
+                                });
+                            }
+                        });
+                    };
+                    receivingArray[0] = receiving;
+                    response.SetCallbackOnReceive(1000, new PoolFiber(), (_) => receiving());
+                    requesterThread.Run();
+                }
             }
-            Assert.IsTrue(WaitReceiveForTest(response, 3000, out result));
-            Assert.AreEqual(5, result);
-            Assert.IsFalse(WaitReceiveForTest(response, 3000, out result));
         }
 
         [Test]
@@ -88,10 +128,25 @@ namespace RetlangTests
             Assert.AreEqual(1, timeCheck.NumPersistentSubscribers);
             Assert.AreEqual(1, timeCheck.NumSubscribers);
             IRequestPublisher<string, DateTime> requester = timeCheck;
-            var response = requester.SendRequest("hello");
-            DateTime result;
-            Assert.IsTrue(WaitReceiveForTest(response, 10000, out result));
-            Assert.AreEqual(result, now);
+
+            {
+                var requesterThread = new ConsumingThread();
+                var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
+                requesterFiber.Pause();
+                var response = requester.SendRequest("hello");
+                DateTime result;
+                response.SetCallbackOnReceive(10000, new PoolFiber(), (_) =>
+                {
+                    requesterFiber.Resume(() =>
+                    {
+                        bool received = response.TryReceive(out result);
+                        Assert.IsTrue(received);
+                        Assert.AreEqual(result, now);
+                        requesterThread.Stop();
+                    });
+                });
+                requesterThread.Run();
+            }
         }
 
         [Test]

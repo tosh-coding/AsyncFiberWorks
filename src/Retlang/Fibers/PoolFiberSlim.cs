@@ -158,7 +158,7 @@ namespace Retlang.Fibers
         /// <summary>
         /// Resumes consumption of a paused task queue.
         /// </summary>
-        /// <param name="action">The action to be taken immediately before the resume.</param>
+        /// <param name="action">The action to be taken immediately after the resume.</param>
         /// <exception cref="InvalidOperationException">Resume was called in the unpaused state.</exception>
         public void Resume(Action action)
         {
@@ -168,9 +168,9 @@ namespace Retlang.Fibers
                 {
                     throw new InvalidOperationException("Resume was called in the unpaused state.");
                 }
+                _paused = false;
 
                 action();
-                _paused = false;
             }
         }
     }

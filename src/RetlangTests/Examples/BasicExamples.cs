@@ -149,15 +149,24 @@ namespace RetlangTests.Examples
         [Test]
         public void RequestReply()
         {
+            var testThread = new ConsumingThread();
+            var testFiber = new PoolFiber(testThread, new DefaultExecutor());
+
             using (var fiber = new PoolFiber())
             {
                 var channel = new RequestReplyChannel<string, string>();
                 channel.Subscribe(fiber, req => req.SendReply("bye"));
+                
                 var reply = channel.SendRequest("hello");
-
-                string result;
-                Assert.IsTrue(RequestReplyChannelTests.WaitReceiveForTest(reply, 10000, out result));
-                Assert.AreEqual("bye", result);
+                reply.SetCallbackOnReceive(10000, testFiber, (_) =>
+                {
+                    string result;
+                    bool received = reply.TryReceive(out result);
+                    Assert.IsTrue(received);
+                    Assert.AreEqual("bye", result);
+                    testThread.Stop();
+                });
+                testThread.Run();
             }
         }
 
