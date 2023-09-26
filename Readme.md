@@ -5,12 +5,13 @@ RetlangFiberSwitcher is a fiber-based C# threading library. Forked from [Retlang
 async Task TestAsync()
 {
     // Create fibers.
-    var threadFiber = ThreadFiber.StartNew();
-    var poolFiber = PoolFiber.StartNew();
+    var threadFiber = new ThreadFiber();
+    threadFiber.Start();
+    var poolFiber = new PoolFiber();
 
     // Create a user thread pool and its fiber.
     var userThreadPool = UserThreadPool.StartNew(2);
-    var userPoolFiber = PoolFiber.StartNew(userThreadPool, new DefaultExecutor());
+    var userPoolFiber = new PoolFiber(userThreadPool, new DefaultExecutor());
 
     // Switche to operate on the fibers.
     await threadFiber.SwitchTo();
@@ -50,7 +51,7 @@ All messages to a particular [IFiber](https://github.com/github-tosh/RetlangFibe
   * High performance design optimized for low latency and high scalability.
   * Publishing is thread safe, allowing easy integration with other threading models.
   * Low Lock Contention - Minimizing lock contention is critical for performance. Other concurrency solutions are limited by a single lock typically on a central thread pool or message queue. Retlang is optimized for low lock contention. Without a central bottleneck, performance easily scales to the needs of the application.
-  * [Synchronous](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/RequestReplyChannel.cs)/[Asynchronous](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/RetlangTests/Channels/ChannelTests.cs#L171) request-reply support.
+  * [Synchronous](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/RetlangTests/RequestReplyChannelTests.cs#L17)/[Asynchronous](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/RetlangTests/RequestReplyChannelTests.cs#L224) request-reply support.
   * Single assembly with no dependencies except the CLR (4.0+).
 
 Retlang relies upon four abstractions: [IFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiber.cs),
@@ -64,20 +65,14 @@ Retlang relies upon four abstractions: [IFiber](https://github.com/github-tosh/R
 
 # Quick Start #
 
-## FiberSlims ##
-[IFiberSlims](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs) is a mechanism for sequential processing.  Actions added to a fiber are executed sequentially.  Three implementations of IFiberSlim are included in RetlangFiberSwitcher.
+## Fibers ##
+[IFiberSlims](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiberSlim.cs) is a mechanism for sequential processing.  Actions added to a fiber are executed sequentially.  [IFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiber.cs) is a IFiberSlim with subscription and scheduling registration functions.  Three implementations of each of them are included in RetlangFiberSwitcher.
 
-  * _[ThreadFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/ThreadFiberSlim.cs)_ - an IFiberSlim backed by a dedicated thread.  Internally, it works using [IQueue](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Core/IQueue.cs).
-  * _[PoolFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/PoolFiberSlim.cs)_ - an IFiberSlim backed by shared threads.  Internally, it works using [IThreadPool](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Core/IThreadPool.cs).  The .NET thread pool is used by default, and the user thread pool is also available.  See [unit test](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/RetlangTests/ThreadPoolTests.cs#L156).
-  * _[StubFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/StubFiberSlim.cs)_ - an IFiberSlim without a specific thread.  Actions are buffered in the queue.  Useful for consumption in periodic processing.
+  * _[PoolFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/PoolFiberSlim.cs)_/_[PoolFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/PoolFiber.cs)_ - an IFiberSlim backed by shared threads.  Internally, it works using [IThreadPool](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Core/IThreadPool.cs).  The .NET thread pool is used by default, and a user thread pool is also available.  See [unit test](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/RetlangTests/ThreadPoolTests.cs#L156). Pause/Resume methods are supported for synchronous request-reply.
+  * _[StubFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/StubFiberSlim.cs)_/_[StubFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/StubFiber.cs)_ - an IFiberSlim without a specific thread.  Actions are buffered in the queue.  Useful for consumption in periodic processing.
+  * _[ThreadFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/ThreadFiberSlim.cs)_/_[ThreadFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/ThreadFiber.cs)_ - an IFiberSlim backed by a dedicated thread.  Internally, it works using [IQueue](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Core/IQueue.cs).
 
-## Fibers for backward compatibility ##
-[IFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiber.cs) is iFiberSlim with subscription and scheduling registration functions.  Three implementations of IFiber are included in RetlangFiberSwitcher. 
-
-  * _[ThreadFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/ThreadFiber.cs)_ - an IFiber based [ThreadFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/ThreadFiberSlim.cs).
-  * _[PoolFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/PoolFiber.cs)_ - an IFiber based [PoolFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/PoolFiberSlim.cs).
-  * _[StubFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/StubFiber.cs)_ - an IFiber based [StubFiberSlim](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/StubFiberSlim.cs).
-
+### Removed fibers ###
 Some Retlang's fibers have been moved to the WpfExample. Copy it from there if you need it.
   * (Quote from [Retlang page](https://code.google.com/archive/p/retlang/)) _[FormFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/FormFiber.cs)/[DispatchFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/DispatcherFiber.cs)_ - an [IFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiber.cs) backed by a [WinForms](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/FormFiber.cs)/[WPF](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/DispatcherFiber.cs) message pump.  The [FormFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/FormFiber.cs)/[DispatchFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/DispatcherFiber.cs) entirely removes the need to call Invoke or BeginInvoke to communicate with a window from a different thread.
 
