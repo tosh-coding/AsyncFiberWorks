@@ -74,12 +74,6 @@
     <PackageReference Include="RhinoMocks" Version="3.6.1" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Channels\ChannelTests.cs" />
-    <Compile Remove="PerfBug.cs" />
-    <Compile Remove="Tests\PoolFiberTests.cs" />
-    <Compile Remove="Tests\ThreadFiberTests.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.InteropServices.ComVisibleAttribute">
       <_Parameter1>false</_Parameter1>
     </AssemblyAttribute>
