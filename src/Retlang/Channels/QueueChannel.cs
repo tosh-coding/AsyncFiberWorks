@@ -13,6 +13,10 @@ namespace Retlang.Channels
         private readonly IMessageQueue<T> _queue;
         private readonly InternalChannel<byte> _channel = new InternalChannel<byte>();
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="queue"></param>
         public QueueChannel(IMessageQueue<T> queue = null)
         {
             if (queue == null)

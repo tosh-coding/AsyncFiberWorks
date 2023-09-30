@@ -89,14 +89,33 @@ namespace Retlang.Channels
     }
 
     /// <summary>
-    /// 
+    /// A state change event for a request to a snapshot channel.
     /// </summary>
     public enum SnapshotRequestControlEvent : byte
     {
+        /// <summary>
+        /// Initial value. Not used.
+        /// </summary>
         None = 0,
+
+        /// <summary>
+        /// A timeout occurred.
+        /// </summary>
         Timeout = 1,
+
+        /// <summary>
+        /// The state changed during a connection attempt.
+        /// </summary>
         Connecting = 2,
+
+        /// <summary>
+        /// The state has changed to a stopped state.
+        /// </summary>
         Stopped = 3,
+
+        /// <summary>
+        /// The connection was successful.
+        /// </summary>
         Connected = 4,
     }
 }

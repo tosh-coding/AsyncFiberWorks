@@ -5,6 +5,9 @@ using Retlang.Core;
 
 namespace Retlang.Fibers
 {
+    /// <summary>
+    /// Methods for scheduling actions that will be executed in the future.
+    /// </summary>
     public static class SchedulerAsyncContextExtensions
     {
         /// <summary>
@@ -41,6 +44,7 @@ namespace Retlang.Fibers
         /// <param name="action"></param>
         /// <param name="firstInMs"></param>
         /// <param name="regularInMs"></param>
+        /// <param name="cancellationToken"></param>
         public static async Task ScheduleOnIntervalAsync(this IExecutionContext fiber, Action action, int firstInMs, int regularInMs, CancellationToken cancellationToken = default)
         {
             try

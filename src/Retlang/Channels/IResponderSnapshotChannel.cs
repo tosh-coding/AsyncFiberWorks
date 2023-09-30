@@ -23,6 +23,7 @@ namespace Retlang.Channels
         /// </summary>
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="reply">returns the snapshot update</param>
+        /// <param name="fallbackRegistry">The registration destination for batch disposing.</param>
         /// <returns></returns>
         IDisposable ReplyToPrimingRequest(IExecutionContext fiber, Func<T> reply, ISubscriptionRegistry fallbackRegistry);
 

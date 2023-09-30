@@ -59,7 +59,7 @@ namespace Retlang.Channels
         /// Action may be invoked on multiple threads.
         /// This subscription cannot be unsubscribed. The subscriber must be valid until this channel is destroyed.
         /// </summary>
-        /// <param name="subscriber"></param>
+        /// <param name="action"></param>
         public void PersistentSubscribeOnProducerThreads(Action<T> action)
         {
             _subscribers += action;
