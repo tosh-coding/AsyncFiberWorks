@@ -1,3 +1,5 @@
+https://github.com/github-tosh/RetlangFiberSwitcher
+
 # RetlangFiberSwitcher
 RetlangFiberSwitcher is a fiber-based C# threading library. Forked from [Retlang](https://code.google.com/archive/p/retlang/). A new feature is the ability to switch the fiber in use within an async method.
 
@@ -81,6 +83,9 @@ Retlang relies upon four abstractions: [IFiber](https://github.com/github-tosh/R
   * _[SubscribeToLast](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/ISubscriber.cs#L50)_ - Published messages are buffered first, but always overwrite the buffer. And over time, only the latest messages reach subscribers. Internally, [LastSubscriber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/LastSubscriber.cs) is used.
 
 [Unit tests](https://github.com/github-tosh/RetlangFiberSwitcher/tree/master/src/RetlangTests) can also be used as a code sample.
+
+# API Documentation #
+See https://github-tosh.github.io/RetlangFiberSwitcher/api/
 
 # Supplemental explanations #
 
