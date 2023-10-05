@@ -13,6 +13,13 @@ namespace Retlang.Core
         ///<param name="toAdd"></param>
         void RegisterSubscription(IDisposable toAdd);
 
+        /// <summary>
+        /// Add Disposable. It will be unsubscribed when the fiber is discarded.
+        /// It is destroyed at the last.
+        /// </summary>
+        /// <param name="toAdd"></param>
+        void RegisterSubscriptionLast(IDisposable toAdd);
+
         ///<summary>
         /// Deregister a subscription.
         ///</summary>

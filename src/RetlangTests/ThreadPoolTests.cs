@@ -199,8 +199,8 @@ namespace RetlangTests
         {
             var userThreadPool = UserThreadPool.StartNew(1);
             var userThreadId = userThreadPool.ThreadList[0].ManagedThreadId;
-            var poolFiber = new PoolFiber(userThreadPool, new DefaultExecutor());
-            var fiber = new FallbackFiber(poolFiber, userThreadPool);
+            var fiber = new PoolFiber(userThreadPool, new DefaultExecutor());
+            fiber.FallbackDisposer.RegisterSubscriptionLast(userThreadPool);
 
             long threadIdBefore = 0;
             fiber.Enqueue(() =>
@@ -219,7 +219,7 @@ namespace RetlangTests
                 threadIdAfter = Thread.CurrentThread.ManagedThreadId;
             });
             Thread.Sleep(10);
-            Assert.AreNotEqual(userThreadId, threadIdAfter);
+            Assert.AreEqual(0, threadIdAfter);
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Retlang.Core
 {
@@ -10,7 +11,7 @@ namespace Retlang.Core
     {
         private readonly object _lock = new object();
         private volatile bool _running = true;
-        private readonly List<IDisposable> _items = new List<IDisposable>();
+        private readonly LinkedList<IDisposable> _items = new LinkedList<IDisposable>();
 
         /// <summary>
         /// Add Disposable. It will be unsubscribed when the fiber is discarded.
@@ -23,7 +24,29 @@ namespace Retlang.Core
             {
                 if (_running)
                 {
-                    _items.Add(toAdd);
+                    _items.AddFirst(toAdd);
+                    added = true;
+                }
+            }
+            if (!added)
+            {
+                toAdd.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Add Disposable. It will be unsubscribed when the fiber is discarded.
+        /// It is destroyed at the last.
+        /// </summary>
+        /// <param name="toAdd"></param>
+        public void RegisterSubscriptionLast(IDisposable toAdd)
+        {
+            bool added = false;
+            lock (_lock)
+            {
+                if (_running)
+                {
+                    _items.AddLast(toAdd);
                     added = true;
                 }
             }
