@@ -64,6 +64,8 @@ ThreadFiber does not support pause. It is specifically intended for performance-
 # API Documentation #
 See https://github-tosh.github.io/RetlangFiberSwitcher/api/
 
+[Unit tests](https://github.com/github-tosh/RetlangFiberSwitcher/tree/master/src/RetlangTests) can also be used as a code sample.
+
 # Supplemental explanations #
 
 ## Introduction of Retlang (Quote) ##
@@ -94,23 +96,21 @@ Retlang relies upon four abstractions: [IFiber](https://github.com/github-tosh/R
 Some Retlang's fibers have been moved to the WpfExample. Copy it from there if you need it.
   * (Quote from [Retlang page](https://code.google.com/archive/p/retlang/)) _[FormFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/FormFiber.cs)/[DispatchFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/DispatcherFiber.cs)_ - an [IFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Fibers/IFiber.cs) backed by a [WinForms](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/FormFiber.cs)/[WPF](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/DispatcherFiber.cs) message pump.  The [FormFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/FormFiber.cs)/[DispatchFiber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/WpfExample/DispatcherFiber.cs) entirely removes the need to call Invoke or BeginInvoke to communicate with a window from a different thread.
 
-## Channels ##
+## Channel ##
 [Channel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/Channel.cs) class provides several ways to receive messages. Subscribers can choose from them when they start subscribing.
 
-  * _[Subscribe](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/ISubscriber.cs#L19)_ - Messages reach a subscriber each time they are published.  Internally, [ChannelSubscription](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/ChannelSubscription.cs) is used.
-  * _[SubscribeToBatch](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/ISubscriber.cs#L29)_ - Published messages are first buffered. And over time it will reach a subscriber in bulk.  Internally, [BatchSubscriber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/BatchSubscriber.cs) is used.
-  * _[SubscribeToKeyedBatch](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/ISubscriber.cs#L40)_ - Published messages are buffered first, but may overwrite the buffer. If the key extracted from the new message matches the old buffered message, the old one is deleted. And over time, it will reach a subscriber in bulk. Internally, [KeyedBatchSubscriber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/KeyedBatchSubscriber.cs) is used.
-  * _[SubscribeToLast](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/ISubscriber.cs#L50)_ - Published messages are buffered first, but always overwrite the buffer. And over time, only the latest messages reach subscribers. Internally, [LastSubscriber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/LastSubscriber.cs) is used.
-
-[Unit tests](https://github.com/github-tosh/RetlangFiberSwitcher/tree/master/src/RetlangTests) can also be used as a code sample.
+  * _[Subscribe](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/ISubscriber.cs#L19)_ - Messages reach a subscriber each time they are published.  Internally, [ChannelSubscription](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/ChannelSubscription.cs) is used.  Messages are never lost.
+  * _[SubscribeToBatch](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/ISubscriber.cs#L29)_ - Published messages are first buffered. And over time it will reach a subscriber in bulk.  Internally, [BatchSubscriber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/BatchSubscriber.cs) is used.  Messages are never lost.
+  * _[SubscribeToKeyedBatch](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/ISubscriber.cs#L40)_ - Published messages are buffered first, but may overwrite the buffer. If the key extracted from the new message matches the old buffered message, the old one is deleted. And over time, it will reach a subscriber in bulk.  Internally, [KeyedBatchSubscriber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/KeyedBatchSubscriber.cs) is used.  Messages may be lost.
+  * _[SubscribeToLast](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/ISubscriber.cs#L50)_ - Published messages are buffered first, but always overwrite the buffer. And over time, only the latest messages reach subscribers.  Internally, [LastSubscriber](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/LastSubscriber.cs) is used.  Messages may be lost.
 
 ## Another channels ##
 There are four channel types.
 
- * _[Channel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/Channel.cs)_ - Forward published messages to all subscribers. Used for broadcasting.
- * _[QueueChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/QueueChannel.cs)_ - Forward a published message to only one of the subscribers. Used for load balancing.
- * _[RequestReplyChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/RequestReplyChannel.cs)_ - Subscribers respond to requests from publishers. Used for request/reply messaging.
- * _[SnapshotChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/SnapshotChannel.cs)_ - Subscribers are also notified when they start subscribing, and separately thereafter. Used for replication, incremental update notifications and change notifications.
+ * _[Channel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/Channel.cs)_ - Forward published messages to all subscribers.  One-way.  Used for 1:1 unicasting, 1:N broadcasting and N:1 message aggregation.  [Example](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/RetlangTests/Examples/BasicExamples.cs#L20).
+ * _[QueueChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/QueueChannel.cs)_ - Forward a published message to only one of the subscribers. One-way. Used for 1:N/N:N load balancing.  [Example](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/RetlangTests/QueueChannelTests.cs#L22).
+ * _[RequestReplyChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/RequestReplyChannel.cs)_ - Subscribers respond to requests from publishers. Two-way.  Used for 1:1/N:1 request/reply messaging, 1:N/N:M bulk queries to multiple nodes.  [Example](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/RetlangTests/RequestReplyChannelTests.cs#L20).
+ * _[SnapshotChannel](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Channels/SnapshotChannel.cs)_ - Subscribers are also notified when they start subscribing, and separately thereafter.  One-way. Used for replication with incremental update notifications.  Only one responder can be handled within a single channel.  [Example](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/RetlangTests/Examples/BasicExamples.cs#L162).
 
 ## IQueues ##
 There are several implementations of [IQueue](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Core/IQueue.cs) that can be specified for ThreadFiber.
