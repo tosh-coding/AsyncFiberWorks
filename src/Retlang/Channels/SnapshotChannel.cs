@@ -72,24 +72,8 @@ namespace Retlang.Channels
         }
 
         ///<summary>
-        /// Ressponds to the request for an initial snapshot.
-        ///</summary>
-        ///<param name="executionContext">the target executor to receive the message</param>
-        ///<param name="reply">returns the snapshot update</param>
-        public void PersistentReplyToPrimingRequest(IExecutionContext executionContext, Func<T> reply)
-        {
-            _requestChannel.PersistentSubscribe(executionContext, request => request.SendReply(reply()));
-        }
-
-
-        ///<summary>
         /// Number of subscribers
         ///</summary>
         public int NumSubscribers { get { return _requestChannel.NumSubscribers; } }
-
-        ///<summary>
-        /// Number of persistent subscribers.
-        ///</summary>
-        public int NumPersistentSubscribers { get { return _requestChannel.NumPersistentSubscribers; } }
     }
 }

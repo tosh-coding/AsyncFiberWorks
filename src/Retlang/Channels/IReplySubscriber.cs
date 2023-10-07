@@ -27,12 +27,5 @@ namespace Retlang.Channels
         /// <param name="fallbackRegistry"></param>
         /// <returns></returns>
         IDisposable Subscribe(IExecutionContext fiber, Action<IRequest<R, M>> onRequest, ISubscriptionRegistry fallbackRegistry);
-
-        /// <summary>
-        /// Persistent subscribe to requests. This subscription cannot be unsubscribed. 
-        /// </summary>
-        /// <param name="executionContext"></param>
-        /// <param name="onRequest"></param>
-        void PersistentSubscribe(IExecutionContext executionContext, Action<IRequest<R, M>> onRequest);
     }
 }

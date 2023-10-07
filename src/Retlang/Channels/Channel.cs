@@ -85,69 +85,6 @@ namespace Retlang.Channels
         }
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.PersistentSubscribe(IExecutionContext,Action{T})"/>
-        /// </summary>
-        /// <param name="fiber"></param>
-        /// <param name="receive"></param>
-        public void PersistentSubscribe(IExecutionContext fiber, Action<T> receive)
-        {
-            PersistentSubscribeOnProducerThreads(new ChannelSubscription<T>(fiber, receive));
-        }
-
-        /// <summary>
-        /// <see cref="ISubscriber{T}.PersistentSubscribeToBatch(IExecutionContext,Action{IList{T}},long)"/>
-        /// </summary>
-        /// <param name="fiber"></param>
-        /// <param name="receive"></param>
-        /// <param name="intervalInMs"></param>
-        public void PersistentSubscribeToBatch(IExecutionContext fiber, Action<IList<T>> receive, long intervalInMs)
-        {
-            PersistentSubscribeOnProducerThreads(new BatchSubscriber<T>(fiber, receive, intervalInMs));
-        }
-
-        /// <summary>
-        /// <see cref="ISubscriber{T}.PersistentSubscribeToKeyedBatch{K}(IExecutionContext,Converter{T,K},Action{IDictionary{K,T}},long)"/>
-        /// </summary>
-        /// <typeparam name="K"></typeparam>
-        /// <param name="fiber"></param>
-        /// <param name="keyResolver"></param>
-        /// <param name="receive"></param>
-        /// <param name="intervalInMs"></param>
-        public void PersistentSubscribeToKeyedBatch<K>(IExecutionContext fiber, Converter<T, K> keyResolver, Action<IDictionary<K, T>> receive, long intervalInMs)
-        {
-            PersistentSubscribeOnProducerThreads(new KeyedBatchSubscriber<K, T>(keyResolver, receive, fiber, intervalInMs));
-        }
-
-        /// <summary>
-        /// <see cref="ISubscriber{T}.PersistentSubscribeToLast(IExecutionContext,Action{T},long)"/>
-        /// </summary>
-        /// <param name="fiber"></param>
-        /// <param name="receive"></param>
-        /// <param name="intervalInMs"></param>
-        public void PersistentSubscribeToLast(IExecutionContext fiber, Action<T> receive, long intervalInMs)
-        {
-            PersistentSubscribeOnProducerThreads(new LastSubscriber<T>(receive, fiber, intervalInMs));
-        }
-
-        /// <summary>
-        /// <see cref="ISubscriber{T}.PersistentSubscribeOnProducerThreads(IProducerThreadSubscriber{T})"/>
-        /// </summary>
-        /// <param name="subscriber"></param>
-        public void PersistentSubscribeOnProducerThreads(IProducerThreadSubscriber<T> subscriber)
-        {
-            PersistentSubscribeOnProducerThreads(subscriber.ReceiveOnProducerThread);
-        }
-
-        /// <summary>
-        /// <see cref="ISubscriber{T}.PersistentSubscribeOnProducerThreads(Action{T})"/>
-        /// </summary>
-        /// <param name="receiveOnProducerThread"></param>
-        public void PersistentSubscribeOnProducerThreads(Action<T> receiveOnProducerThread)
-        {
-            _channel.PersistentSubscribeOnProducerThreads(receiveOnProducerThread);
-        }
-
-        /// <summary>
         /// <see cref="IPublisher{T}.Publish(T)"/>
         /// </summary>
         /// <param name="msg"></param>
@@ -161,10 +98,5 @@ namespace Retlang.Channels
         /// Number of subscribers
         ///</summary>
         public int NumSubscribers { get { return _channel.NumSubscribers; } }
-
-        ///<summary>
-        /// Number of persistent subscribers.
-        ///</summary>
-        public int NumPersistentSubscribers { get { return _channel.NumPersistentSubscribers; } }
     }
 }

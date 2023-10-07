@@ -118,38 +118,6 @@ namespace RetlangTests
         }
 
         [Test]
-        public void PersistentSubscriber()
-        {
-            var responder = new PoolFiber();
-            var timeCheck = new RequestReplyChannel<string, DateTime>();
-            var now = DateTime.Now;
-            Action<IRequest<string, DateTime>> onRequest = req => req.SendReply(now);
-            timeCheck.PersistentSubscribe(responder, onRequest);
-            Assert.AreEqual(1, timeCheck.NumPersistentSubscribers);
-            Assert.AreEqual(1, timeCheck.NumSubscribers);
-            IRequestPublisher<string, DateTime> requester = timeCheck;
-
-            {
-                var requesterThread = new ConsumingThread();
-                var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
-                requesterFiber.Pause();
-                var response = requester.SendRequest("hello");
-                DateTime result;
-                response.SetCallbackOnReceive(10000, new PoolFiber(), (_) =>
-                {
-                    requesterFiber.Resume(() =>
-                    {
-                        bool received = response.TryReceive(out result);
-                        Assert.IsTrue(received);
-                        Assert.AreEqual(result, now);
-                        requesterThread.Stop();
-                    });
-                });
-                requesterThread.Run();
-            }
-        }
-
-        [Test]
         public void ChangeResponseSync()
         {
             IFiber responder = new PoolFiber();

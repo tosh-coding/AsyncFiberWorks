@@ -51,17 +51,6 @@ namespace Retlang.Channels
         }
 
         /// <summary>
-        /// Persistent subscribe to the context. This subscription cannot be unsubscribed. 
-        /// </summary>
-        /// <param name="executionContext"></param>
-        /// <param name="onMessage"></param>
-        public void PersistentSubscribe(IExecutionContext executionContext, Action<T> onMessage)
-        {
-            var consumer = new QueueConsumer<T>(executionContext, onMessage, _queue);
-            _channel.PersistentSubscribeOnProducerThreads(consumer.Signal);
-        }
-
-        /// <summary>
         /// Publish message onto queue. Notify consumers of message.
         /// </summary>
         /// <param name="message"></param>
@@ -75,10 +64,5 @@ namespace Retlang.Channels
         /// Number of subscribers
         ///</summary>
         public int NumSubscribers { get { return _channel.NumSubscribers; } }
-
-        ///<summary>
-        /// Number of persistent subscribers.
-        ///</summary>
-        public int NumPersistentSubscribers { get { return _channel.NumPersistentSubscribers; } }
     }
 }

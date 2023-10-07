@@ -28,22 +28,6 @@ namespace RetlangTests.Examples
         }
 
         [Test]
-        public void PersistentPubSubWithPool()
-        {
-            //PoolFiber uses the .NET thread pool by default
-            using (var fiber = new PoolFiber())
-            {
-                var channel = new Channel<string>();
-
-                var reset = new AutoResetEvent(false);
-                channel.PersistentSubscribe(fiber, delegate { reset.Set(); });
-                channel.Publish("hello");
-
-                Assert.IsTrue(reset.WaitOne(5000, false));
-            }
-        }
-
-        [Test]
         public void PubSubWithDedicatedThread()
         {
             using (var fiber = new ThreadFiber())
@@ -170,9 +154,8 @@ namespace RetlangTests.Examples
             }
         }
 
-        [TestCase(1)]
-        [TestCase(2)]
-        public void Snapshot(int responderType)
+        [Test]
+        public void Snapshot()
         {
             using (var fiberReply = new PoolFiber())
             {
@@ -183,30 +166,14 @@ namespace RetlangTests.Examples
                 int currentValue = 0;
 
                 // Set up responder. 
-                if (responderType == 0)
+                channel.ReplyToPrimingRequest(fiberReply, () =>
                 {
-                    channel.ReplyToPrimingRequest(fiberReply, () =>
+                    lock (lockerResponseValue)
                     {
-                        lock (lockerResponseValue)
-                        {
-                            return currentValue;
-                        }
-                    });
-                    Assert.AreEqual(1, channel.NumSubscribers);
-                    Assert.AreEqual(0, channel.NumPersistentSubscribers);
-                }
-                else
-                {
-                    channel.PersistentReplyToPrimingRequest(fiberReply, () =>
-                    {
-                        lock (lockerResponseValue)
-                        {
-                            return currentValue;
-                        }
-                    });
-                    Assert.AreEqual(1, channel.NumSubscribers);
-                    Assert.AreEqual(1, channel.NumPersistentSubscribers);
-                }
+                        return currentValue;
+                    }
+                });
+                Assert.AreEqual(1, channel.NumSubscribers);
 
                 // Start changing values.
 
