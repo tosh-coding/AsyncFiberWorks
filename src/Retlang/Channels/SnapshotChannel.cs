@@ -50,24 +50,36 @@ namespace Retlang.Channels
             return _updatesChannel.Publish(update);
         }
 
-        ///<summary>
+        /// <summary>
         /// Ressponds to the request for an initial snapshot.
-        ///</summary>
-        ///<param name="fiber">the target executor to receive the message</param>
-        ///<param name="reply">returns the snapshot update</param>
+        /// </summary>
+        /// <param name="fiber">the target executor to receive the message</param>
+        /// <param name="reply">returns the snapshot update</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Only one responder can be handled within a single channel.</exception>
         public IDisposable ReplyToPrimingRequest(IFiberWithFallbackRegistry fiber, Func<T> reply)
         {
+            if (_requestChannel.NumSubscribers > 0)
+            {
+                throw new InvalidOperationException("Only one responder can be handled within a single channel.");
+            }
             return _requestChannel.Subscribe(fiber, request => request.SendReply(reply()));
         }
 
-        ///<summary>
+        /// <summary>
         /// Ressponds to the request for an initial snapshot.
-        ///</summary>
-        ///<param name="fiber">the target executor to receive the message</param>
-        ///<param name="reply">returns the snapshot update</param>
-        ///<param name="fallbackRegistry"></param>
+        /// </summary>
+        /// <param name="fiber">the target executor to receive the message</param>
+        /// <param name="reply">returns the snapshot update</param>
+        /// <param name="fallbackRegistry"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Only one responder can be handled within a single channel.</exception>
         public IDisposable ReplyToPrimingRequest(IExecutionContext fiber, Func<T> reply, ISubscriptionRegistry fallbackRegistry)
         {
+            if (_requestChannel.NumSubscribers > 0)
+            {
+                throw new InvalidOperationException("Only one responder can be handled within a single channel.");
+            }
             return _requestChannel.Subscribe(fiber, request => request.SendReply(reply()), fallbackRegistry);
         }
 
