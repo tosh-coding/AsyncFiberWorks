@@ -6,7 +6,7 @@ namespace Retlang.Core
     /// <summary>
     /// A Implementation of INotifyCompletion for IThreadPool.
     /// </summary>
-    public class ThreadPoolNotifyCompletion : INotifyCompletion
+    public struct ThreadPoolNotifyCompletion : INotifyCompletion
     {
         private readonly IThreadPool _threadPool;
 

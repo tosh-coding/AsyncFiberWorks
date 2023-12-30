@@ -7,7 +7,7 @@ namespace Retlang.Fibers
     /// <summary>
     /// A Implementation of INotifyCompletion for IExecutionContext.
     /// </summary>
-    public class FiberNotifyCompletion : INotifyCompletion
+    public struct FiberNotifyCompletion : INotifyCompletion
     {
         private readonly IExecutionContext _fiber;
 
