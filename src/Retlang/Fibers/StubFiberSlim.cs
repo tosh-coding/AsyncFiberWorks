@@ -41,20 +41,24 @@ namespace Retlang.Fibers
         /// <summary>
         /// Execute all actions in the pending list.  If any of the executed actions enqueue more actions, execute those as well.
         /// </summary>
-        public void ExecuteAllPendingUntilEmpty()
+        public int ExecuteAllPendingUntilEmpty()
         {
+            int count = 0;
             while (_pending.TryTake(out var toExecute))
             {
                 _executor.Execute(toExecute);
+                count += 1;
             }
+            return count;
         }
 
         /// <summary>
         /// Execute all actions in the pending list.
         /// </summary>
-        public void ExecuteAllPending()
+        public int ExecuteAllPending()
         {
             int count = _pending.Count;
+            int ret = count;
             while (_pending.TryTake(out var toExecute))
             {
                 _executor.Execute(toExecute);
@@ -65,6 +69,7 @@ namespace Retlang.Fibers
                     break;
                 }
             }
+            return ret;
         }
     }
 }

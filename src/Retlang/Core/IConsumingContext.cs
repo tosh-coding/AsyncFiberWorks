@@ -10,11 +10,11 @@ namespace Retlang.Core
         /// <summary>
         /// Execute all actions in the pending list.  If any of the executed actions enqueue more actions, execute those as well.
         /// </summary>
-        void ExecuteAllPendingUntilEmpty();
+        int ExecuteAllPendingUntilEmpty();
 
         /// <summary>
         /// Execute all actions in the pending list.
         /// </summary>
-        void ExecuteAllPending();
+        int ExecuteAllPending();
     }
 }
