@@ -18,14 +18,5 @@ namespace Retlang.Channels
         /// <param name="onRequest"></param>
         /// <returns></returns>
         IDisposable Subscribe(IFiberWithFallbackRegistry fiber, Action<IRequest<R, M>> onRequest);
-
-        /// <summary>
-        /// Subscribe to a request on the channel.
-        /// </summary>
-        /// <param name="fiber"></param>
-        /// <param name="onRequest"></param>
-        /// <param name="fallbackRegistry"></param>
-        /// <returns></returns>
-        IDisposable Subscribe(IExecutionContext fiber, Action<IRequest<R, M>> onRequest, ISubscriptionRegistry fallbackRegistry);
     }
 }
