@@ -81,7 +81,8 @@ namespace Retlang.Channels
         /// <returns></returns>
         public IDisposable SubscribeOnProducerThreads(ISubscriptionRegistry subscriptions, Action<T> receiveOnProducerThread)
         {
-            return _channel.SubscribeOnProducerThreads(subscriptions, receiveOnProducerThread);
+            var disposable = _channel.SubscribeOnProducerThreads(receiveOnProducerThread);
+            return subscriptions?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
         }
 
         /// <summary>

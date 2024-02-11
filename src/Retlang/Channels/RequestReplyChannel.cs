@@ -26,7 +26,8 @@ namespace Retlang.Channels
             {
                 fiber.Enqueue(() => onRequest(msg));
             };
-            return _requestChannel.SubscribeOnProducerThreads(registry, action);
+            var disposable = _requestChannel.SubscribeOnProducerThreads(action);
+            return registry?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
         }
 
         /// <summary>

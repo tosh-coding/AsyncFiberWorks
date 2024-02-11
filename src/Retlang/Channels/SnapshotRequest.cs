@@ -46,7 +46,8 @@ namespace Retlang.Channels
                     fiber.Enqueue(() => receive(msg));
                 };
                 action(result);
-                var disposableOfReceiver = _updatesChannel.SubscribeOnProducerThreads(registry, action);
+                var disposableOfReceiver = _updatesChannel.SubscribeOnProducerThreads(action);
+                disposableOfReceiver = registry?.RegisterSubscriptionAndCreateDisposable(disposableOfReceiver) ?? disposableOfReceiver;
                 lock (_lock)
                 {
                     if (_disposed)

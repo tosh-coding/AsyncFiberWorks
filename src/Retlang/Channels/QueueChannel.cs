@@ -36,7 +36,8 @@ namespace Retlang.Channels
         public IDisposable Subscribe(IExecutionContext fiber, Action<T> onMessage, ISubscriptionRegistry registry)
         {
             var consumer = new QueueConsumer<T>(fiber, onMessage, _queue);
-            return _channel.SubscribeOnProducerThreads(registry, consumer.Signal);
+            var disposable = _channel.SubscribeOnProducerThreads(consumer.Signal);
+            return registry?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
         }
 
         /// <summary>

@@ -1,3 +1,4 @@
+using Retlang.Channels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +33,22 @@ namespace Retlang.Core
             {
                 toAdd.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Register subscription to be unsubcribed from when the fiber is disposed.
+        /// </summary>
+        /// <param name="toAdd"></param>
+        /// <returns>The caller of DeregisterSubscription and the IDisposable.</returns>
+        public IDisposable RegisterSubscriptionAndCreateDisposable(IDisposable toAdd)
+        {
+            var unsubscriber = new Unsubscriber((x) =>
+            {
+                toAdd.Dispose();
+                this.DeregisterSubscription(x);
+            });
+            this.RegisterSubscription(unsubscriber);
+            return unsubscriber;
         }
 
         /// <summary>
