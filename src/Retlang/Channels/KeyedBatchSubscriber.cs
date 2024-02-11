@@ -11,7 +11,7 @@ namespace Retlang.Channels
     /// </summary>
     /// <typeparam name="K"></typeparam>
     /// <typeparam name="T"></typeparam>
-    public class KeyedBatchSubscriber<K, T> : IProducerThreadSubscriber<T>
+    public class KeyedBatchSubscriber<K, T>
     {
         private readonly object _batchLock = new object();
 
@@ -47,15 +47,15 @@ namespace Retlang.Channels
         /// <returns>For unsubscriptions.</returns>
         public IDisposable Subscribe(ISubscriber<T> channel)
         {
-            var disposable = channel.SubscribeOnProducerThreads(this);
+            var disposable = channel.SubscribeOnProducerThreads(ReceiveOnProducerThread);
             return _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
         }
 
         /// <summary>
-        /// <see cref="IProducerThreadSubscriber{T}.ReceiveOnProducerThread"/>
+        /// Message receiving function.
         /// </summary>
         /// <param name="msg"></param>
-        public void ReceiveOnProducerThread(T msg)
+        void ReceiveOnProducerThread(T msg)
         {
             if (_filter?.PassesProducerThreadFilter(msg) ?? true)
             {

@@ -14,16 +14,6 @@ namespace Retlang.Channels
         private readonly InternalChannel<T> _channel = new InternalChannel<T>();
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.SubscribeOnProducerThreads(IProducerThreadSubscriber{T})"/>
-        /// </summary>
-        /// <param name="subscriber"></param>
-        /// <returns></returns>
-        public IDisposable SubscribeOnProducerThreads(IProducerThreadSubscriber<T> subscriber)
-        {
-            return SubscribeOnProducerThreads(subscriber.ReceiveOnProducerThread);
-        }
-
-        /// <summary>
         /// <see cref="ISubscriber{T}.SubscribeOnProducerThreads(Action{T})"/>
         /// </summary>
         /// <param name="receiveOnProducerThread"></param>

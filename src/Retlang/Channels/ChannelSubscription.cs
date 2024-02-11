@@ -8,7 +8,7 @@ namespace Retlang.Channels
     /// Subscribe to messages on this channel. The provided action will be invoked via a Action on the provided executor.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ChannelSubscription<T> : IProducerThreadSubscriber<T>
+    public class ChannelSubscription<T>
     {
         private readonly Action<T> _receiver;
         private readonly IFiber _fiber;
@@ -34,15 +34,15 @@ namespace Retlang.Channels
         /// <returns>For unsubscriptions.</returns>
         public IDisposable Subscribe(ISubscriber<T> channel)
         {
-            var disposable = channel.SubscribeOnProducerThreads(this);
+            var disposable = channel.SubscribeOnProducerThreads(ReceiveOnProducerThread);
             return _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
         }
 
         /// <summary>
-        /// <see cref="IProducerThreadSubscriber{T}.ReceiveOnProducerThread"/>
+        /// Message receiving function.
         /// </summary>
         /// <param name="msg"></param>
-        public void ReceiveOnProducerThread(T msg)
+        void ReceiveOnProducerThread(T msg)
         {
             if (_filter?.PassesProducerThreadFilter(msg) ?? true)
             {
