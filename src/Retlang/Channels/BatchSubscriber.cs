@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Retlang.Core;
+using Retlang.Fibers;
 
 namespace Retlang.Channels
 {
@@ -15,11 +16,10 @@ namespace Retlang.Channels
     {
         private readonly object _batchLock = new object();
 
-        private readonly IExecutionContext _fiber;
+        private readonly IFiber _fiber;
         private readonly Action<IList<T>> _receive;
         private readonly long _intervalInMs;
         private readonly IMessageFilter<T> _filter;
-        private readonly ISubscriptionRegistry _fallbackRegistry;
 
         private List<T> _pending;
 
@@ -30,14 +30,23 @@ namespace Retlang.Channels
         /// <param name="receive"></param>
         /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
         /// <param name="filter"></param>
-        /// <param name="fallbackRegistry"></param>
-        public BatchSubscriber(IExecutionContext fiber, Action<IList<T>> receive, long intervalInMs, IMessageFilter<T> filter = null, ISubscriptionRegistry fallbackRegistry = null)
+        public BatchSubscriber(IFiber fiber, Action<IList<T>> receive, long intervalInMs, IMessageFilter<T> filter = null)
         {
             _fiber = fiber;
             _receive = receive;
             _intervalInMs = intervalInMs;
             _filter = filter;
-            _fallbackRegistry = fallbackRegistry;
+        }
+
+        /// <summary>
+        /// Start subscribing to the channel.
+        /// </summary>
+        /// <param name="channel">Target channel.</param>
+        /// <returns>For unsubscriptions.</returns>
+        public IDisposable Subscribe(ISubscriber<T> channel)
+        {
+            var disposable = channel.SubscribeOnProducerThreads(this);
+            return _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
         }
 
         /// <summary>
@@ -63,7 +72,7 @@ namespace Retlang.Channels
                 if (_pending == null)
                 {
                     _pending = new List<T>();
-                    TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite, _fallbackRegistry);
+                    TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite, _fiber.FallbackDisposer);
                 }
                 _pending.Add(msg);
             }

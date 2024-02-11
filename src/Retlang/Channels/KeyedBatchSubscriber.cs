@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Retlang.Core;
+using Retlang.Fibers;
 
 namespace Retlang.Channels
 {
@@ -16,10 +17,9 @@ namespace Retlang.Channels
 
         private readonly Action<IDictionary<K, T>> _target;
         private readonly Converter<T, K> _keyResolver;
-        private readonly IExecutionContext _fiber;
+        private readonly IFiber _fiber;
         private readonly long _intervalInMs;
         private readonly IMessageFilter<T> _filter;
-        private readonly ISubscriptionRegistry _fallbackRegistry;
 
         private Dictionary<K, T> _pending;
 
@@ -31,15 +31,24 @@ namespace Retlang.Channels
         /// <param name="fiber"></param>
         /// <param name="intervalInMs"></param>
         /// <param name="filter"></param>
-        /// <param name="fallbackRegistry"></param>
-        public KeyedBatchSubscriber(Converter<T, K> keyResolver, Action<IDictionary<K, T>> target, IExecutionContext fiber, long intervalInMs, IMessageFilter<T> filter = null, ISubscriptionRegistry fallbackRegistry = null)
+        public KeyedBatchSubscriber(Converter<T, K> keyResolver, Action<IDictionary<K, T>> target, IFiber fiber, long intervalInMs, IMessageFilter<T> filter = null)
         {
             _keyResolver = keyResolver;
             _fiber = fiber;
             _target = target;
             _intervalInMs = intervalInMs;
             _filter = filter;
-            _fallbackRegistry = fallbackRegistry;
+        }
+
+        /// <summary>
+        /// Start subscribing to the channel.
+        /// </summary>
+        /// <param name="channel">Target channel.</param>
+        /// <returns>For unsubscriptions.</returns>
+        public IDisposable Subscribe(ISubscriber<T> channel)
+        {
+            var disposable = channel.SubscribeOnProducerThreads(this);
+            return _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
         }
 
         /// <summary>
@@ -66,7 +75,7 @@ namespace Retlang.Channels
                 if (_pending == null)
                 {
                     _pending = new Dictionary<K, T>();
-                    TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite, _fallbackRegistry);
+                    TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite, _fiber.FallbackDisposer);
                 }
                 _pending[key] = msg;
             }

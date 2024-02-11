@@ -56,8 +56,8 @@ namespace RetlangTests.Examples
                 _name = name;
                 _inboundChannel = inboundChannel;
                 _outboundChannel = outboundChannel;
-                var disposable = _inboundChannel.SubscribeOnProducerThreads(new ChannelSubscription<IntPair>(fiber, CalculateNext));
-                fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+                var subscriber = new ChannelSubscription<IntPair>(fiber, CalculateNext);
+                subscriber.Subscribe(_inboundChannel);
                 _limit = limit;
             }
 

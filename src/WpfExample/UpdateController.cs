@@ -15,8 +15,8 @@ namespace WpfExample
         {
             channels = winChannels;
             var threadFiber = new ThreadFiber();
-            var disposable = channels.StartChannel.SubscribeOnProducerThreads(new ChannelSubscription<RoutedEventArgs>(threadFiber, OnStart));
-            threadFiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+            var subscriber = new ChannelSubscription<RoutedEventArgs>(threadFiber, OnStart);
+            subscriber.Subscribe(channels.StartChannel);
             threadFiber.Start();
             fiber = threadFiber;
         }

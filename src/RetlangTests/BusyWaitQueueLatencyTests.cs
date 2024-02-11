@@ -70,8 +70,8 @@ namespace RetlangTests
                                          };
 
                     var fiber = fibers[i];
-                    var disposable = channels[prior].SubscribeOnProducerThreads(new ChannelSubscription<Msg>(fiber, cb));
-                    fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+                    var subscriber = new ChannelSubscription<Msg>(fiber, cb);
+                    subscriber.Subscribe(channels[prior]);
                 }
             }
 

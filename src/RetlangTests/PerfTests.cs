@@ -64,8 +64,8 @@ namespace RetlangTests
                         reset.Set();
                     }
                 };
-                var disposable = channel.SubscribeOnProducerThreads(new ChannelSubscription<MsgStruct>(fiber, onMsg));
-                fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+                var subscriber = new ChannelSubscription<MsgStruct>(fiber, onMsg);
+                subscriber.Subscribe(channel);
                 using (new PerfTimer(max))
                 {
                     for (var i = 0; i <= max; i++)
@@ -93,8 +93,8 @@ namespace RetlangTests
                                                       reset.Set();
                                                   }
                                               };
-                var disposable = channel.SubscribeOnProducerThreads(new ChannelSubscription<MsgStruct>(fiber, onMsg));
-                fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+                var subscriber = new ChannelSubscription<MsgStruct>(fiber, onMsg);
+                subscriber.Subscribe(channel);
                 using (new PerfTimer(max))
                 {
                     for (var i = 0; i <= max; i++)
@@ -123,8 +123,8 @@ namespace RetlangTests
                                                 reset.Set();
                                             }
                                         };
-                var disposable = channel.SubscribeOnProducerThreads(new ChannelSubscription<int>(fiber, onMsg));
-                fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+                var subscriber = new ChannelSubscription<int>(fiber, onMsg);
+                subscriber.Subscribe(channel);
                 using (new PerfTimer(max))
                 {
                     for (var i = 0; i <= max; i++)
@@ -154,8 +154,8 @@ namespace RetlangTests
                                                    reset.Set();
                                                }
                                            };
-                var disposable = channel.SubscribeOnProducerThreads(new ChannelSubscription<object>(fiber, onMsg));
-                fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+                var subscriber = new ChannelSubscription<object>(fiber, onMsg);
+                subscriber.Subscribe(channel);
                 using (new PerfTimer(max))
                 {
                     var msg = new object();

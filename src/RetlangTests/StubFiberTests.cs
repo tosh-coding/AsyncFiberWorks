@@ -80,7 +80,7 @@ namespace RetlangTests
             var channel = new Channel<int>();
             const int count = 4;
 
-            var disposable = channel.SubscribeOnProducerThreads(new ChannelSubscription<int>(sut, delegate (int x)
+            var subscriber = new ChannelSubscription<int>(sut, delegate (int x)
             {
                 if (x == count)
                 {
@@ -89,8 +89,8 @@ namespace RetlangTests
 
                 channel.Publish(x + 1);
                 msgs.Add(x);
-            }));
-            sut.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+            });
+            subscriber.Subscribe(channel);
 
             channel.Publish(0);
             sut.ExecuteAllPendingUntilEmpty();
@@ -110,8 +110,8 @@ namespace RetlangTests
 
             sut.Schedule(() => { }, 1000);
             sut.ExecuteAllPending();
-            var disposable = channel.SubscribeOnProducerThreads(new ChannelSubscription<int>(sut, x => { }));
-            sut.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+            var subscriber = new ChannelSubscription<int>(sut, x => { });
+            subscriber.Subscribe(channel);
             channel.Publish(2);
 
             Assert.AreEqual(2, sut.FallbackDisposer.NumSubscriptions);

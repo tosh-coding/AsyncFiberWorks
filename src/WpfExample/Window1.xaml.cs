@@ -18,8 +18,8 @@ namespace WpfExample
             InitializeComponent();
             fiber = new DispatcherFiber(Dispatcher);
 
-            var disposable = channels.TimeUpdate.SubscribeOnProducerThreads(new LastSubscriber<DateTime>(OnTimeUpdate, fiber, 0, null, fiber.FallbackDisposer));
-            fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+            var subscriber = new LastSubscriber<DateTime>(OnTimeUpdate, fiber, 0, null);
+            subscriber.Subscribe(channels.TimeUpdate);
             new UpdateController(channels);
         }
 

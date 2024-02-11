@@ -1,5 +1,5 @@
 using System;
-using Retlang.Core;
+using Retlang.Fibers;
 
 namespace Retlang.Channels
 {
@@ -11,7 +11,7 @@ namespace Retlang.Channels
     public class ChannelSubscription<T> : IProducerThreadSubscriber<T>
     {
         private readonly Action<T> _receiver;
-        private readonly IExecutionContext _fiber;
+        private readonly IFiber _fiber;
         private readonly IMessageFilter<T> _filter;
 
         /// <summary>
@@ -20,11 +20,22 @@ namespace Retlang.Channels
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="receiver"></param>
         /// <param name="filter"></param>
-        public ChannelSubscription(IExecutionContext fiber, Action<T> receiver, IMessageFilter<T> filter = null)
+        public ChannelSubscription(IFiber fiber, Action<T> receiver, IMessageFilter<T> filter = null)
         {
             _fiber = fiber;
             _receiver = receiver;
             _filter = filter;
+        }
+
+        /// <summary>
+        /// Start subscribing to the channel.
+        /// </summary>
+        /// <param name="channel">Target channel.</param>
+        /// <returns>For unsubscriptions.</returns>
+        public IDisposable Subscribe(ISubscriber<T> channel)
+        {
+            var disposable = channel.SubscribeOnProducerThreads(this);
+            return _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
         }
 
         /// <summary>

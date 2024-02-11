@@ -20,8 +20,8 @@ namespace RetlangTests.Examples
                 var channel = new Channel<string>();
 
                 var reset = new AutoResetEvent(false);
-                var disposable = channel.SubscribeOnProducerThreads(new ChannelSubscription<string>(fiber, delegate { reset.Set(); }));
-                fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+                var subscriber = new ChannelSubscription<string>(fiber, delegate { reset.Set(); });
+                subscriber.Subscribe(channel);
                 channel.Publish("hello");
 
                 Assert.IsTrue(reset.WaitOne(5000, false));
@@ -37,8 +37,8 @@ namespace RetlangTests.Examples
                 var channel = new Channel<string>();
 
                 var reset = new AutoResetEvent(false);
-                var disposable = channel.SubscribeOnProducerThreads(new ChannelSubscription<string>(fiber, delegate { reset.Set(); }));
-                fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+                var subscriber = new ChannelSubscription<string>(fiber, delegate { reset.Set(); });
+                subscriber.Subscribe(channel);
                 channel.Publish("hello");
 
                 Assert.IsTrue(reset.WaitOne(5000, false));
@@ -64,8 +64,8 @@ namespace RetlangTests.Examples
                 };
                 var filter = new MessageFilter<int>();
                 filter.AddFilterOnProducerThread(x => x % 2 == 0);
-                var sub = new ChannelSubscription<int>(fiber, onMsg, filter);
-                channel.SubscribeOnProducerThreads(sub);
+                var subscriber = new ChannelSubscription<int>(fiber, onMsg, filter);
+                subscriber.Subscribe(channel);
                 channel.Publish(1);
                 channel.Publish(2);
                 channel.Publish(3);
@@ -93,8 +93,8 @@ namespace RetlangTests.Examples
                                                 }
                                             };
 
-                var disposable = counter.SubscribeOnProducerThreads(new BatchSubscriber<int>(fiber, cb, 1, null, fiber.FallbackDisposer));
-                fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+                var subscriber = new BatchSubscriber<int>(fiber, cb, 1, null);
+                subscriber.Subscribe(counter);
 
                 for (var i = 0; i < 10; i++)
                 {
@@ -122,8 +122,8 @@ namespace RetlangTests.Examples
                 };
 
                 Converter<int, String> keyResolver = x => x.ToString();
-                var disposable = counter.SubscribeOnProducerThreads(new KeyedBatchSubscriber<string, int>(keyResolver, cb, fiber, 0, null, fiber.FallbackDisposer));
-                fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+                var subscriber = new KeyedBatchSubscriber<string, int>(keyResolver, cb, fiber, 0, null);
+                subscriber.Subscribe(counter);
 
                 for (var i = 0; i < 10; i++)
                 {
@@ -260,8 +260,8 @@ namespace RetlangTests.Examples
 
             Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
-            var disposable = channel.SubscribeOnProducerThreads(new ChannelSubscription<int>(fiber, x => { }));
-            fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+            var subscriber = new ChannelSubscription<int>(fiber, x => { });
+            subscriber.Subscribe(channel);
 
             Assert.AreEqual(1, fiber.FallbackDisposer.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
@@ -280,8 +280,8 @@ namespace RetlangTests.Examples
 
             Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
-            var disposable = channel.SubscribeOnProducerThreads(new ChannelSubscription<int>(fiber, x => { }));
-            fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+            var subscriber = new ChannelSubscription<int>(fiber, x => { });
+            subscriber.Subscribe(channel);
 
             Assert.AreEqual(1, fiber.FallbackDisposer.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
@@ -299,8 +299,8 @@ namespace RetlangTests.Examples
 
             Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
-            var disposable = channel.SubscribeOnProducerThreads(new ChannelSubscription<int>(fiber, x => { }));
-            fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
+            var subscriber = new ChannelSubscription<int>(fiber, x => { });
+            subscriber.Subscribe(channel);
 
             Assert.AreEqual(1, fiber.FallbackDisposer.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
@@ -319,8 +319,8 @@ namespace RetlangTests.Examples
             Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
 
-            var disposable = channel.SubscribeOnProducerThreads(new ChannelSubscription<int>(fiber, x => { }));
-            var unsubscriber = fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
+            var subscriber = new ChannelSubscription<int>(fiber, x => { });
+            var unsubscriber = subscriber.Subscribe(channel);
 
             Assert.AreEqual(1, fiber.FallbackDisposer.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
