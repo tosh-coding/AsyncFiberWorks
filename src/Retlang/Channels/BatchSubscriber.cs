@@ -7,6 +7,8 @@ namespace Retlang.Channels
 {
     /// <summary>
     /// Batches actions for the consuming thread.
+    /// Subscribes to actions on the channel in batch form. The events will be batched if the consumer is unable to process the events 
+    /// faster than the arrival rate.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class BatchSubscriber<T> : IProducerThreadSubscriber<T>
@@ -24,9 +26,9 @@ namespace Retlang.Channels
         /// <summary>
         /// Construct new instance.
         /// </summary>
-        /// <param name="fiber"></param>
+        /// <param name="fiber">The target context to execute the action</param>
         /// <param name="receive"></param>
-        /// <param name="intervalInMs"></param>
+        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
         /// <param name="filter"></param>
         /// <param name="fallbackRegistry"></param>
         public BatchSubscriber(IExecutionContext fiber, Action<IList<T>> receive, long intervalInMs, IMessageFilter<T> filter = null, ISubscriptionRegistry fallbackRegistry = null)

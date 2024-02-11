@@ -6,6 +6,8 @@ namespace Retlang.Channels
 {
     /// <summary>
     /// Subscribes to last action received on the channel. 
+    /// Subscription that delivers the latest message to the consuming thread.  If a newer message arrives before the consuming thread
+    /// has a chance to process the message, the pending message is replaced by the newer message. The old message is discarded.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class LastSubscriber<T> : IProducerThreadSubscriber<T>

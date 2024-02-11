@@ -5,6 +5,7 @@ namespace Retlang.Channels
 {
     /// <summary>
     /// Subscription for actions on a channel.
+    /// Subscribe to messages on this channel. The provided action will be invoked via a Action on the provided executor.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class ChannelSubscription<T> : IProducerThreadSubscriber<T>
@@ -16,7 +17,7 @@ namespace Retlang.Channels
         /// <summary>
         /// Construct the subscription
         /// </summary>
-        /// <param name="fiber"></param>
+        /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="receiver"></param>
         /// <param name="filter"></param>
         public ChannelSubscription(IExecutionContext fiber, Action<T> receiver, IMessageFilter<T> filter = null)

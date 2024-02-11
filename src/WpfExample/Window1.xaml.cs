@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using Retlang.Channels;
 using Retlang.Fibers;
 
 namespace WpfExample
@@ -16,7 +17,9 @@ namespace WpfExample
         {
             InitializeComponent();
             fiber = new DispatcherFiber(Dispatcher);
-            channels.TimeUpdate.SubscribeToLast(fiber, OnTimeUpdate, 0);
+
+            var disposable = channels.TimeUpdate.SubscribeOnProducerThreads(new LastSubscriber<DateTime>(OnTimeUpdate, fiber, 0, null, fiber.FallbackDisposer));
+            fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
             new UpdateController(channels);
         }
 

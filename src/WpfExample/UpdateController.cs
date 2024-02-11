@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using Retlang.Channels;
 using Retlang.Fibers;
 
 namespace WpfExample
@@ -14,7 +15,8 @@ namespace WpfExample
         {
             channels = winChannels;
             var threadFiber = new ThreadFiber();
-            channels.StartChannel.Subscribe(threadFiber, OnStart);
+            var disposable = channels.StartChannel.SubscribeOnProducerThreads(new ChannelSubscription<RoutedEventArgs>(threadFiber, OnStart));
+            threadFiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
             threadFiber.Start();
             fiber = threadFiber;
         }

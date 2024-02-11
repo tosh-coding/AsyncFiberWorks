@@ -150,7 +150,8 @@ namespace RetlangTests.Examples
             public QuadraticSolver(IFiber fiber, ISubscriber<Quadratic> channel, IChannel<SolvedQuadratic> solvedChannel)
             {
                 _solvedChannel = solvedChannel;
-                channel.Subscribe(fiber, ProcessReceivedQuadratic);
+                var disposable = channel.SubscribeOnProducerThreads(new ChannelSubscription<Quadratic>(fiber, ProcessReceivedQuadratic));
+                fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
             }
 
             private void ProcessReceivedQuadratic(Quadratic quadratic)
@@ -199,7 +200,8 @@ namespace RetlangTests.Examples
                 _fiber = fiber;
                 _numberToOutput = numberToOutput;
 
-                solvedChannel.Subscribe(fiber, PrintSolution);
+                var disposable = solvedChannel.SubscribeOnProducerThreads(new ChannelSubscription<SolvedQuadratic>(fiber, PrintSolution));
+                fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable);
             }
 
             private void PrintSolution(SolvedQuadratic solvedQuadratic)
