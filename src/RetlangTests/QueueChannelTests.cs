@@ -28,7 +28,8 @@ namespace RetlangTests
                         reset.Set();
                     }
                 };
-                channel.Subscribe(one, onMsg);
+                var consumer = new QueueConsumer<int>(one, onMsg);
+                consumer.Subscribe(channel);
                 for (var i = 0; i < 20; i++)
                 {
                     channel.Publish(i);
@@ -54,7 +55,8 @@ namespace RetlangTests
                     }
                     reset.Set();
                 };
-                channel.Subscribe(one, onMsg);
+                var consumer = new QueueConsumer<int>(one, onMsg);
+                consumer.Subscribe(channel);
                 channel.Publish(0);
                 channel.Publish(1);
                 Assert.IsTrue(reset.WaitOne(10000, false));
@@ -88,7 +90,8 @@ namespace RetlangTests
                                             };
                 var fiber = new PoolFiber();
                 queues.Add(fiber);
-                channel.Subscribe(fiber, onReceive);
+                var consumer = new QueueConsumer<int>(fiber, onReceive);
+                consumer.Subscribe(channel);
             }
             for (var i = 0; i < messageCount; i++)
             {

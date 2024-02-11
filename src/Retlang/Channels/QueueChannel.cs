@@ -29,26 +29,13 @@ namespace Retlang.Channels
         /// <summary>
         /// Subscribe to executor messages. 
         /// </summary>
-        /// <param name="fiber"></param>
-        /// <param name="onMessage"></param>
-        /// <param name="registry"></param>
+        /// <param name="action"></param>
+        /// <param name="outQueue"></param>
         /// <returns></returns>
-        public IDisposable Subscribe(IExecutionContext fiber, Action<T> onMessage, ISubscriptionRegistry registry)
+        public IDisposable OnSubscribe(Action<byte> action, out IMessageQueue<T> outQueue)
         {
-            var consumer = new QueueConsumer<T>(fiber, onMessage, _queue);
-            var disposable = _channel.SubscribeOnProducerThreads(consumer.Signal);
-            return registry?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
-        }
-
-        /// <summary>
-        /// Subscribe to executor messages. 
-        /// </summary>
-        /// <param name="fiber"></param>
-        /// <param name="onMessage"></param>
-        /// <returns></returns>
-        public IDisposable Subscribe(IFiberWithFallbackRegistry fiber, Action<T> onMessage)
-        {
-            return Subscribe(fiber, onMessage, fiber.FallbackDisposer);
+            outQueue = _queue;
+            return _channel.SubscribeOnProducerThreads(action);
         }
 
         /// <summary>

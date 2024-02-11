@@ -1,20 +1,26 @@
 using System;
-using Retlang.Core;
+using Retlang.Fibers;
 
 namespace Retlang.Channels
 {
     internal class QueueConsumer<T>
     {
         private bool _flushPending;
-        private readonly IExecutionContext _target;
+        private readonly IFiberWithFallbackRegistry _fiber;
         private readonly Action<T> _callback;
-        private readonly IMessageQueue<T> _queue;
+        private IMessageQueue<T> _queue;
 
-        public QueueConsumer(IExecutionContext target, Action<T> callback, IMessageQueue<T> queue)
+        public QueueConsumer(IFiberWithFallbackRegistry fiber, Action<T> callback)
         {
-            _target = target;
+            _fiber = fiber;
             _callback = callback;
-            _queue = queue;
+            _queue = null;
+        }
+
+        public IDisposable Subscribe(QueueChannel<T> channel)
+        {
+            var disposable = channel.OnSubscribe(Signal, out _queue);
+            return _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
         }
 
         public void Signal(byte dummy)
@@ -25,7 +31,7 @@ namespace Retlang.Channels
                 {
                     return;
                 }
-                _target.Enqueue(ConsumeNext);
+                _fiber.Enqueue(ConsumeNext);
                 _flushPending = true;
             }
         }
@@ -50,7 +56,7 @@ namespace Retlang.Channels
                     }
                     else
                     {
-                        _target.Enqueue(ConsumeNext);
+                        _fiber.Enqueue(ConsumeNext);
                     }
                 }
             }
