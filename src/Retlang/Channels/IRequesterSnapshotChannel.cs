@@ -13,10 +13,7 @@ namespace Retlang.Channels
         ///<summary>
         /// Subscribes for an initial snapshot and then incremental update.
         ///</summary>
-        ///<param name="fiber">the target executor to receive the message</param>
-        ///<param name="control"></param>
-        ///<param name="receive"></param>
-        ///<param name="timeoutInMs"></param>
-        IDisposable PrimedSubscribe(IFiberWithFallbackRegistry fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs);
+        ///<param name="requester"></param>
+        void OnPrimedSubscribe(SnapshotRequest<T> requester);
     }
 }

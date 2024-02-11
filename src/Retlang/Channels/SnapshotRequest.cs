@@ -1,19 +1,48 @@
-﻿using Retlang.Core;
+﻿using Retlang.Fibers;
 using System;
 
 namespace Retlang.Channels
 {
-    internal class SnapshotRequest<T> : IDisposable
+    /// <summary>
+    /// Subscribes for an initial snapshot and then incremental update.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class SnapshotRequest<T> : IDisposable
     {
         private readonly object _lock = new object();
-        private readonly IExecutionContext _fiber;
+        private readonly IFiberWithFallbackRegistry _fiber;
         private readonly Action<SnapshotRequestControlEvent> _control;
+        private readonly Action<T> _receive;
+        private readonly int _timeoutInMs;
 
         private IReply<T> _reply;
         private bool _disposed = false;
         private IDisposable _disposableOfReceiver = null;
 
-        public SnapshotRequest(RequestReplyChannel<object, T> requestChannel, InternalChannel<T> _updatesChannel, IExecutionContext fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs, ISubscriptionRegistry registry)
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="fiber">the target executor to receive the message</param>
+        /// <param name="control"></param>
+        /// <param name="receive"></param>
+        /// <param name="timeoutInMs">For initial snapshot</param>
+        public SnapshotRequest(IFiberWithFallbackRegistry fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs)
+        {
+            _fiber = fiber;
+            _control = control;
+            _receive = receive;
+            _timeoutInMs = timeoutInMs;
+        }
+
+        /// <summary>
+        /// Start subscribing to the channel.
+        /// </summary>
+        public void Subscribe(SnapshotChannel<T> channel)
+        {
+            channel.OnPrimedSubscribe(this);
+        }
+
+        internal void OnSubscribe(RequestReplyChannel<object, T> requestChannel, InternalChannel<T> _updatesChannel)
         {
             var reply = requestChannel.SendRequest(new object());
             if (reply == null)
@@ -21,10 +50,8 @@ namespace Retlang.Channels
                 throw new ArgumentException(typeof(T).Name + " synchronous request has no reply subscriber.");
             }
             _reply = reply;
-            _fiber = fiber;
-            _control = control;
 
-            reply.SetCallbackOnReceive(timeoutInMs, null, (_) =>
+            reply.SetCallbackOnReceive(_timeoutInMs, null, (_) =>
             {
                 T result;
                 bool successToFirstReceive = reply.TryReceive(out result);
@@ -36,18 +63,18 @@ namespace Retlang.Channels
 
                 if (!successToFirstReceive)
                 {
-                    fiber.Enqueue(() => control(SnapshotRequestControlEvent.Timeout));
+                    _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Timeout));
                     return;
                 }
-                fiber.Enqueue(() => control(SnapshotRequestControlEvent.Connecting));
+                _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Connecting));
 
                 Action<T> action = (msg) =>
                 {
-                    fiber.Enqueue(() => receive(msg));
+                    _fiber.Enqueue(() => _receive(msg));
                 };
                 action(result);
                 var disposableOfReceiver = _updatesChannel.SubscribeOnProducerThreads(action);
-                disposableOfReceiver = registry?.RegisterSubscriptionAndCreateDisposable(disposableOfReceiver) ?? disposableOfReceiver;
+                disposableOfReceiver = _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposableOfReceiver) ?? disposableOfReceiver;
                 lock (_lock)
                 {
                     if (_disposed)
@@ -58,7 +85,7 @@ namespace Retlang.Channels
                     else
                     {
                         _disposableOfReceiver = disposableOfReceiver;
-                        fiber.Enqueue(() => control(SnapshotRequestControlEvent.Connected));
+                        _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Connected));
                     }
                 }
             });

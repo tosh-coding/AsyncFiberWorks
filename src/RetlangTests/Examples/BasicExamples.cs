@@ -245,8 +245,9 @@ namespace RetlangTests.Examples
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
                 };
-                var handleReceive = channel.PrimedSubscribe(
-                    fiberRequest, actionControl, actionReceive, 5000);
+                var requester = new SnapshotRequest<int>(fiberRequest, actionControl, actionReceive, 5000);
+                requester.Subscribe(channel);
+                var handleReceive = requester;
 
                 FiberRequestConsumer.Run();
                 handleReceive.Dispose();
