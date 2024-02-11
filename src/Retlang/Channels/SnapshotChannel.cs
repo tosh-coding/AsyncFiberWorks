@@ -21,24 +21,10 @@ namespace Retlang.Channels
         ///<param name="control"></param>
         ///<param name="receive"></param>
         ///<param name="timeoutInMs">For initial snapshot</param>
-        ///<param name="registry"></param>
-        /// <returns></returns>
-        public IDisposable PrimedSubscribe(IExecutionContext fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs, ISubscriptionRegistry registry)
-        {
-            return new SnapshotRequest<T>(_requestChannel, _updatesChannel, fiber, control, receive, timeoutInMs, registry);
-        }
-
-        ///<summary>
-        /// Subscribes for an initial snapshot and then incremental update.
-        ///</summary>
-        ///<param name="fiber">the target executor to receive the message</param>
-        ///<param name="control"></param>
-        ///<param name="receive"></param>
-        ///<param name="timeoutInMs">For initial snapshot</param>
         /// <returns></returns>
         public IDisposable PrimedSubscribe(IFiberWithFallbackRegistry fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs)
         {
-            return PrimedSubscribe(fiber, control, receive, timeoutInMs, fiber.FallbackDisposer);
+            return new SnapshotRequest<T>(_requestChannel, _updatesChannel, fiber, control, receive, timeoutInMs, fiber.FallbackDisposer);
         }
 
         ///<summary>
