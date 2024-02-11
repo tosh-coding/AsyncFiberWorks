@@ -20,7 +20,8 @@ namespace RetlangTests
             var timeCheck = new RequestReplyChannel<string, DateTime>();
             var now = DateTime.Now;
             Action<IRequest<string, DateTime>> onRequest = req => req.SendReply(now);
-            timeCheck.Subscribe(responder, onRequest);
+            var subscriber = new RequestReplyChannelSubscriber<string, DateTime>(responder, onRequest);
+            subscriber.Subscribe(timeCheck);
 
             {
                 var requesterThread = new ConsumingThread();
@@ -55,7 +56,8 @@ namespace RetlangTests
                         req.SendReply(i);
                     allSent.Set();
                 };
-            countChannel.Subscribe(responder, onRequest);
+            var subscriber = new RequestReplyChannelSubscriber<string, int>(responder, onRequest);
+            subscriber.Subscribe(countChannel);
 
             {
                 var requesterThread = new ConsumingThread();
@@ -142,7 +144,8 @@ namespace RetlangTests
                         req.SendReply(-1);
                     }
                 };
-            countChannel.Subscribe(responder, onRequest);
+            var subscriber = new RequestReplyChannelSubscriber<string, int>(responder, onRequest);
+            subscriber.Subscribe(countChannel);
 
             var requests = new List<string>();
             requests.AddRange(dic.Keys);
@@ -217,7 +220,8 @@ namespace RetlangTests
                         }
                     });
                 };
-            countChannel.Subscribe(responder, onRequest);
+            var subscriber = new RequestReplyChannelSubscriber<string, int>(responder, onRequest);
+            subscriber.Subscribe(countChannel);
 
             var requests = new List<string>();
             requests.AddRange(dic.Keys);

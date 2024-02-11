@@ -16,17 +16,11 @@ namespace Retlang.Channels
         /// <summary>
         /// Subscribe to requests.
         /// </summary>
-        /// <param name="fiber"></param>
-        /// <param name="onRequest"></param>
+        /// <param name="action"></param>
         /// <returns></returns>
-        public IDisposable Subscribe(IFiberWithFallbackRegistry fiber, Action<IRequest<R, M>> onRequest)
+        public IDisposable OnSubscribe(Action<IRequest<R, M>> action)
         {
-            Action<IRequest<R, M>> action = (msg) =>
-            {
-                fiber.Enqueue(() => onRequest(msg));
-            };
-            var disposable = _requestChannel.SubscribeOnProducerThreads(action);
-            return fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
+            return _requestChannel.SubscribeOnProducerThreads(action);
         }
 
         /// <summary>

@@ -143,8 +143,9 @@ namespace RetlangTests.Examples
             using (var fiber = new PoolFiber())
             {
                 var channel = new RequestReplyChannel<string, string>();
-                channel.Subscribe(fiber, req => req.SendReply("bye"));
-                
+                var subscriber = new RequestReplyChannelSubscriber<string, string>(fiber, req => req.SendReply("bye"));
+                subscriber.Subscribe(channel);
+
                 var reply = channel.SendRequest("hello");
                 reply.SetCallbackOnReceive(10000, testFiber, (_) =>
                 {

@@ -14,9 +14,8 @@ namespace Retlang.Channels
         /// <summary>
         /// Subscribe to a request on the channel.
         /// </summary>
-        /// <param name="fiber"></param>
-        /// <param name="onRequest"></param>
+        /// <param name="action"></param>
         /// <returns></returns>
-        IDisposable Subscribe(IFiberWithFallbackRegistry fiber, Action<IRequest<R, M>> onRequest);
+        IDisposable OnSubscribe(Action<IRequest<R, M>> action);
     }
 }
