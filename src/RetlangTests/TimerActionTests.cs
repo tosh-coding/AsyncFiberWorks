@@ -15,13 +15,13 @@ namespace RetlangTests
             var stubFiber = new StubFiber();
             var executionCount = 0;
             Action action = () => executionCount++;
-            var timer = new TimerAction(stubFiber, action, 1, 2);
-            timer.ExecuteOnFiberThread();
-            Assert.AreEqual(1, executionCount);
+            var timer = new TimerAction(() => stubFiber.Enqueue(action), 1, 2);
+            Thread.Sleep(10);
+            stubFiber.ExecuteAllPending();
+            Assert.AreEqual(0, executionCount);
             timer.Dispose();
-            timer.ExecuteOnFiberThread();
-
-            Assert.AreEqual(1, executionCount);
+            stubFiber.ExecuteAllPending();
+            Assert.AreEqual(0, executionCount);
         }
 
         [Test]
@@ -30,7 +30,7 @@ namespace RetlangTests
             var stubFiber = new StubFiber();
             long counter = 0;
             Action action = () => { counter++; };
-            var timer = new TimerAction(stubFiber, action, 2);
+            var timer = new TimerAction(() => stubFiber.Enqueue(action), 2);
             timer.Start();
 
             Thread.Sleep(20);
@@ -46,7 +46,7 @@ namespace RetlangTests
             var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
-            var timer = new TimerAction(stubFiber, actionOnTimer, 2, 100);
+            var timer = new TimerAction(() => stubFiber.Enqueue(actionOnTimer), 2, 100);
             timer.Start();
 
             Thread.Sleep(20);
@@ -65,7 +65,7 @@ namespace RetlangTests
             var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
-            var timer = new TimerAction(stubFiber, actionOnTimer, 2);
+            var timer = new TimerAction(() => stubFiber.Enqueue(actionOnTimer), 2);
             timer.Start();
 
             timer.Dispose();

@@ -61,7 +61,7 @@ namespace Retlang.Channels
                 if (_pending == null)
                 {
                     _pending = new List<T>();
-                    TimerAction.StartNew(_fiber, Flush, _intervalInMs, Timeout.Infinite, _fallbackRegistry);
+                    TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite, _fallbackRegistry);
                 }
                 _pending.Add(msg);
             }

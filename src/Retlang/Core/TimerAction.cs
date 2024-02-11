@@ -10,13 +10,12 @@ namespace Retlang.Core
         private readonly Action _action;
         private readonly long _firstIntervalInMs;
         private readonly long _intervalInMs;
-        private readonly IExecutionContext _fiber;
         private readonly Action<TimerAction> _callbackOnDispose;
 
         private Timer _timer = null;
         private bool _canceled = false;
 
-        public TimerAction(IExecutionContext fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite, Action<TimerAction> callbackOnDispose = null)
+        public TimerAction(Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite, Action<TimerAction> callbackOnDispose = null)
         {
             if (firstIntervalInMs < 0)
             {
@@ -29,20 +28,19 @@ namespace Retlang.Core
             _action = action;
             _firstIntervalInMs = firstIntervalInMs;
             _intervalInMs = intervalInMs;
-            _fiber = fiber;
             _callbackOnDispose = callbackOnDispose;
         }
 
-        public static TimerAction StartNew(IExecutionContext fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite, ISubscriptionRegistry fallbackDisposer = null)
+        public static TimerAction StartNew(Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite, ISubscriptionRegistry fallbackDisposer = null)
         {
             if (fallbackDisposer == null)
             {
-                return StartNew(fiber, action, firstIntervalInMs, intervalInMs);
+                return StartNew(action, firstIntervalInMs, intervalInMs);
             }
 
             var unsubscriber = new Unsubscriber((x) => { });
             fallbackDisposer.RegisterSubscription(unsubscriber);
-            var timerAction = new TimerAction(fiber, action, firstIntervalInMs, intervalInMs, (x) =>
+            var timerAction = new TimerAction(action, firstIntervalInMs, intervalInMs, (x) =>
             {
                 unsubscriber.Dispose();
             });
@@ -55,9 +53,9 @@ namespace Retlang.Core
             return timerAction;
         }
 
-        public static TimerAction StartNew(IExecutionContext fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
+        public static TimerAction StartNew(Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
         {
-            var timerAction = new TimerAction(fiber, action, firstIntervalInMs, intervalInMs);
+            var timerAction = new TimerAction(action, firstIntervalInMs, intervalInMs);
             timerAction.Start();
             return timerAction;
         }
@@ -75,19 +73,6 @@ namespace Retlang.Core
         }
 
         private void ExecuteOnTimerThread()
-        {
-            lock (_lock)
-            {
-                if (_canceled)
-                {
-                    return;
-                }
-            }
-
-            _fiber.Enqueue(ExecuteOnFiberThread);
-        }
-
-        public void ExecuteOnFiberThread()
         {
             lock (_lock)
             {
