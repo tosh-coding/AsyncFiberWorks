@@ -20,7 +20,7 @@ namespace Retlang.Channels
         {
             _subscribers += action;
 
-            var unsubscriber = new Unsubscriber((x) => {
+            var unsubscriber = new Unsubscriber(() => {
                 this._subscribers -= action;
             });
 

@@ -5,16 +5,16 @@ namespace Retlang.Channels
     internal class Unsubscriber: IDisposable
     {
         private readonly object _lock = new object();
-        private Action<Unsubscriber> _actionUnsubscribe;
+        private Action _actionUnsubscribe;
 
         private bool _disposed;
 
-        public Unsubscriber(Action<Unsubscriber> action)
+        public Unsubscriber(Action action)
         {
             _actionUnsubscribe = action;
         }
 
-        public void Add(Action<Unsubscriber> action)
+        public void Add(Action action)
         {
             bool added = false;
             lock (_lock)
@@ -27,7 +27,7 @@ namespace Retlang.Channels
             }
             if (!added)
             {
-                action(this);
+                action();
             }
         }
 
@@ -41,7 +41,7 @@ namespace Retlang.Channels
                 }
                 _disposed = true;
             }
-            _actionUnsubscribe(this);
+            _actionUnsubscribe();
         }
     }
 }

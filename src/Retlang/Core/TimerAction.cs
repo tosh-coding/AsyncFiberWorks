@@ -38,13 +38,13 @@ namespace Retlang.Core
                 return StartNew(action, firstIntervalInMs, intervalInMs);
             }
 
-            var unsubscriber = new Unsubscriber((x) => { });
+            var unsubscriber = new Unsubscriber(() => { });
             var deregisterSubscription = fallbackDisposer.RegisterSubscription(unsubscriber);
             var timerAction = new TimerAction(action, firstIntervalInMs, intervalInMs, (x) =>
             {
                 unsubscriber.Dispose();
             });
-            unsubscriber.Add((x) =>
+            unsubscriber.Add(() =>
             {
                 deregisterSubscription.Dispose();
                 timerAction.Dispose();

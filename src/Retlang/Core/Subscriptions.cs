@@ -32,7 +32,7 @@ namespace Retlang.Core
             }
             if (added)
             {
-                var unsubscriber = new Unsubscriber((x) =>
+                var unsubscriber = new Unsubscriber(() =>
                 {
                     this.DeregisterSubscription(toAdd);
                 });
@@ -41,7 +41,7 @@ namespace Retlang.Core
             else
             {
                 toAdd.Dispose();
-                return new Unsubscriber((x) => { });
+                return new Unsubscriber(() => { });
             }
         }
 
@@ -52,11 +52,8 @@ namespace Retlang.Core
         /// <returns>The caller of DeregisterSubscription and the IDisposable.</returns>
         public IDisposable RegisterSubscriptionAndCreateDisposable(IDisposable toAdd)
         {
-            var unsubscriber = new Unsubscriber((x) =>
-            {
-                toAdd.Dispose();
-                this.DeregisterSubscription(x);
-            });
+            var unsubscriber = new Unsubscriber(() => { toAdd.Dispose(); });
+            unsubscriber.Add(() => this.DeregisterSubscription(unsubscriber));
             this.RegisterSubscription(unsubscriber);
             return unsubscriber;
         }
