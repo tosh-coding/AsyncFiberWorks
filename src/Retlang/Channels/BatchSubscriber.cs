@@ -50,7 +50,12 @@ namespace Retlang.Channels
                 throw new InvalidOperationException("Already subscribed.");
             }
             var disposable = channel.SubscribeOnProducerThreads(ReceiveOnProducerThread);
-            _disposable = _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
+            var unsubscriber = _fiber.FallbackDisposer?.CreateUnsubscriber();
+            if (unsubscriber != null)
+            {
+                unsubscriber.Add(() => disposable.Dispose());
+            }
+            _disposable = unsubscriber ?? disposable;
         }
 
         public void Dispose()

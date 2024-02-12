@@ -2,7 +2,7 @@ using System;
 
 namespace Retlang.Channels
 {
-    internal class Unsubscriber: IDisposable
+    public class Unsubscriber: IDisposable
     {
         private readonly object _lock = new object();
         private Action _actionUnsubscribe;

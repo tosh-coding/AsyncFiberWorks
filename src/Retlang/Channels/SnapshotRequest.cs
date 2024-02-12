@@ -74,7 +74,13 @@ namespace Retlang.Channels
                 };
                 action(result);
                 var disposableOfReceiver = _updatesChannel.SubscribeOnProducerThreads(action);
-                disposableOfReceiver = _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposableOfReceiver) ?? disposableOfReceiver;
+                var unsubscriber = _fiber.FallbackDisposer?.CreateUnsubscriber();
+                if (unsubscriber != null)
+                {
+                    unsubscriber.Add(() => disposableOfReceiver.Dispose());
+                    disposableOfReceiver = unsubscriber;
+                }
+
                 lock (_lock)
                 {
                     if (_disposed)

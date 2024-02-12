@@ -46,17 +46,14 @@ namespace Retlang.Core
         }
 
         /// <summary>
-        /// Register subscription to be unsubcribed from when the fiber is disposed.
+        /// Create an unsubscriber who unsubscribes when the fiber is discarded.
         /// </summary>
-        /// <param name="toAdd"></param>
-        /// <returns>The caller of DeregisterSubscription and the IDisposable.</returns>
-        public IDisposable RegisterSubscriptionAndCreateDisposable(IDisposable toAdd)
+        /// <returns>Unsubscriber with the unregister process as an element.</returns>
+        public Unsubscriber CreateUnsubscriber()
         {
             var unsubscriber = new Unsubscriber();
             var disposable = this.RegisterSubscription(unsubscriber);
             unsubscriber.Add(() => disposable.Dispose());
-
-            unsubscriber.Add(() => toAdd.Dispose());
             return unsubscriber;
         }
 

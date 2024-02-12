@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Retlang.Channels;
+using System;
 
 namespace Retlang.Core
 {
@@ -15,11 +16,10 @@ namespace Retlang.Core
         IDisposable RegisterSubscription(IDisposable toAdd);
 
         /// <summary>
-        /// Register subscription to be unsubcribed from when the fiber is disposed.
+        /// Create an unsubscriber who unsubscribes when the fiber is discarded.
         /// </summary>
-        /// <param name="toAdd"></param>
-        /// <returns>The caller of DeregisterSubscription and the IDisposable.</returns>
-        IDisposable RegisterSubscriptionAndCreateDisposable(IDisposable toAdd);
+        /// <returns>Unsubscriber with the unregister process as an element.</returns>
+        Unsubscriber CreateUnsubscriber();
 
         /// <summary>
         /// Add Disposable. It will be unsubscribed when the fiber is discarded.
