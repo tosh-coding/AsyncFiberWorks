@@ -9,6 +9,11 @@ namespace Retlang.Channels
 
         private bool _disposed;
 
+        public Unsubscriber()
+        {
+            _actionUnsubscribe = null;
+        }
+
         public Unsubscriber(Action action)
         {
             _actionUnsubscribe = action;
