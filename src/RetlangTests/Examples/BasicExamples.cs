@@ -171,13 +171,15 @@ namespace RetlangTests.Examples
                 int currentValue = 0;
 
                 // Set up responder. 
-                channel.ReplyToPrimingRequest(fiberReply, () =>
+                Func<int> reply = () =>
                 {
                     lock (lockerResponseValue)
                     {
                         return currentValue;
                     }
-                });
+                };
+                var subscriber = new RequestReplyChannelSubscriber<object, int>(fiberReply, request => request.SendReply(reply()));
+                channel.ReplyToPrimingRequest(subscriber);
                 Assert.AreEqual(1, channel.NumSubscribers);
 
                 // Start changing values.

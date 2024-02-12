@@ -1,7 +1,3 @@
-using System;
-using Retlang.Core;
-using Retlang.Fibers;
-
 namespace Retlang.Channels
 {
     /// <summary>
@@ -13,10 +9,8 @@ namespace Retlang.Channels
         /// <summary>
         /// Responds to the request for an initial snapshot.
         /// </summary>
-        /// <param name="fiber">the target executor to receive the message</param>
-        /// <param name="reply">returns the snapshot update</param>
-        /// <returns></returns>
-        IDisposable ReplyToPrimingRequest(IFiberWithFallbackRegistry fiber, Func<T> reply);
+        /// <param name="subscriber"></param>
+        void ReplyToPrimingRequest(RequestReplyChannelSubscriber<object, T> subscriber);
 
         /// <summary>
         /// Publish a message to all subscribers. Returns true if any subscribers are registered.
