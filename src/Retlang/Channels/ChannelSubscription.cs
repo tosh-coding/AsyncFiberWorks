@@ -8,11 +8,12 @@ namespace Retlang.Channels
     /// Subscribe to messages on this channel. The provided action will be invoked via a Action on the provided executor.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ChannelSubscription<T>
+    public class ChannelSubscription<T> : IDisposable
     {
         private readonly Action<T> _receiver;
         private readonly IFiber _fiber;
         private readonly IMessageFilter<T> _filter;
+        private IDisposable _disposable;
 
         /// <summary>
         /// Construct the subscription
@@ -31,11 +32,19 @@ namespace Retlang.Channels
         /// Start subscribing to the channel.
         /// </summary>
         /// <param name="channel">Target channel.</param>
-        /// <returns>For unsubscriptions.</returns>
-        public IDisposable Subscribe(ISubscriber<T> channel)
+        public void Subscribe(ISubscriber<T> channel)
         {
             var disposable = channel.SubscribeOnProducerThreads(ReceiveOnProducerThread);
-            return _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
+            _disposable = _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
+        }
+
+        public void Dispose()
+        {
+            if (_disposable != null)
+            {
+                _disposable.Dispose();
+                _disposable = null;
+            }
         }
 
         /// <summary>

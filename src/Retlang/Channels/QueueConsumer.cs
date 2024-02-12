@@ -3,12 +3,13 @@ using Retlang.Fibers;
 
 namespace Retlang.Channels
 {
-    internal class QueueConsumer<T>
+    internal class QueueConsumer<T> : IDisposable
     {
         private bool _flushPending;
         private readonly IFiberWithFallbackRegistry _fiber;
         private readonly Action<T> _callback;
         private IMessageQueue<T> _queue;
+        private IDisposable _disposable;
 
         public QueueConsumer(IFiberWithFallbackRegistry fiber, Action<T> callback)
         {
@@ -17,10 +18,19 @@ namespace Retlang.Channels
             _queue = null;
         }
 
-        public IDisposable Subscribe(QueueChannel<T> channel)
+        public void Subscribe(QueueChannel<T> channel)
         {
             var disposable = channel.OnSubscribe(Signal, out _queue);
-            return _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
+            _disposable = _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
+        }
+
+        public void Dispose()
+        {
+            if (_disposable != null)
+            {
+                _disposable.Dispose();
+                _disposable = null;
+            }
         }
 
         public void Signal(byte dummy)

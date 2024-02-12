@@ -3,10 +3,11 @@ using System;
 
 namespace Retlang.Channels
 {
-    public class RequestReplyChannelSubscriber<R, M>
+    public class RequestReplyChannelSubscriber<R, M> : IDisposable
     {
         private readonly IFiberWithFallbackRegistry _fiber;
         private readonly Action<IRequest<R, M>> _onRequest;
+        private IDisposable _disposable;
 
         public RequestReplyChannelSubscriber(IFiberWithFallbackRegistry fiber, Action<IRequest<R, M>> onRequest)
         {
@@ -14,10 +15,19 @@ namespace Retlang.Channels
             _onRequest = onRequest;
         }
 
-        public IDisposable Subscribe(RequestReplyChannel<R, M> channel)
+        public void Subscribe(RequestReplyChannel<R, M> channel)
         {
             var disposable = channel.OnSubscribe(OnReceive);
-            return _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
+            _disposable = _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
+        }
+
+        public void Dispose()
+        {
+            if (_disposable != null)
+            {
+                _disposable.Dispose();
+                _disposable = null;
+            }
         }
 
         public void OnReceive(IRequest<R, M> msg)

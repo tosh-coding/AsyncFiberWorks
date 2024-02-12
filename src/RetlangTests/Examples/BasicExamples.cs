@@ -322,11 +322,11 @@ namespace RetlangTests.Examples
             Assert.AreEqual(0, channel.NumSubscribers);
 
             var subscriber = new ChannelSubscription<int>(fiber, x => { });
-            var unsubscriber = subscriber.Subscribe(channel);
+            subscriber.Subscribe(channel);
 
             Assert.AreEqual(1, fiber.FallbackDisposer.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
-            unsubscriber.Dispose();
+            subscriber.Dispose();
 
             Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);

@@ -46,7 +46,8 @@ namespace Retlang.Channels
                 throw new InvalidOperationException("Only one responder can be handled within a single channel.");
             }
             var subscriber = new RequestReplyChannelSubscriber<object, T>(fiber, request => request.SendReply(reply()));
-            return subscriber.Subscribe(_requestChannel);
+            subscriber.Subscribe(_requestChannel);
+            return subscriber;
         }
 
         ///<summary>

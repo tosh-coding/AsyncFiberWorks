@@ -12,7 +12,7 @@ namespace Retlang.Channels
     /// faster than the arrival rate.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class BatchSubscriber<T>
+    public class BatchSubscriber<T> : IDisposable
     {
         private readonly object _batchLock = new object();
 
@@ -22,6 +22,7 @@ namespace Retlang.Channels
         private readonly IMessageFilter<T> _filter;
 
         private List<T> _pending;
+        private IDisposable _disposable;
 
         /// <summary>
         /// Construct new instance.
@@ -42,11 +43,23 @@ namespace Retlang.Channels
         /// Start subscribing to the channel.
         /// </summary>
         /// <param name="channel">Target channel.</param>
-        /// <returns>For unsubscriptions.</returns>
-        public IDisposable Subscribe(ISubscriber<T> channel)
+        public void Subscribe(ISubscriber<T> channel)
         {
+            if (_disposable != null)
+            {
+                throw new InvalidOperationException("Already subscribed.");
+            }
             var disposable = channel.SubscribeOnProducerThreads(ReceiveOnProducerThread);
-            return _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
+            _disposable = _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
+        }
+
+        public void Dispose()
+        {
+            if (_disposable != null)
+            {
+                _disposable.Dispose();
+                _disposable = null;
+            }
         }
 
         /// <summary>

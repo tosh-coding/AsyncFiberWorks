@@ -11,7 +11,7 @@ namespace Retlang.Channels
     /// has a chance to process the message, the pending message is replaced by the newer message. The old message is discarded.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class LastSubscriber<T>
+    public class LastSubscriber<T> : IDisposable
     {
         private readonly object _batchLock = new object();
         private readonly Action<T> _target;
@@ -21,6 +21,7 @@ namespace Retlang.Channels
 
         private bool _flushPending;
         private T _pending;
+        private IDisposable _disposable;
 
         /// <summary>
         /// New instance.
@@ -41,11 +42,19 @@ namespace Retlang.Channels
         /// Start subscribing to the channel.
         /// </summary>
         /// <param name="channel">Target channel.</param>
-        /// <returns>For unsubscriptions.</returns>
-        public IDisposable Subscribe(ISubscriber<T> channel)
+        public void Subscribe(ISubscriber<T> channel)
         {
             var disposable = channel.SubscribeOnProducerThreads(ReceiveOnProducerThread);
-            return _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
+            _disposable = _fiber.FallbackDisposer?.RegisterSubscriptionAndCreateDisposable(disposable) ?? disposable;
+        }
+
+        public void Dispose()
+        {
+            if (_disposable != null)
+            {
+                _disposable.Dispose();
+                _disposable = null;
+            }
         }
 
         /// <summary>
