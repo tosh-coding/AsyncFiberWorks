@@ -58,28 +58,6 @@ namespace Retlang.Core
         }
 
         /// <summary>
-        /// Add Disposable. It will be unsubscribed when the fiber is discarded.
-        /// It is destroyed at the last.
-        /// </summary>
-        /// <param name="toAdd"></param>
-        public void RegisterSubscriptionLast(IDisposable toAdd)
-        {
-            bool added = false;
-            lock (_lock)
-            {
-                if (_running)
-                {
-                    _items.AddLast(toAdd);
-                    added = true;
-                }
-            }
-            if (!added)
-            {
-                toAdd.Dispose();
-            }
-        }
-
-        /// <summary>
         /// Remove Disposable.
         /// </summary>
         /// <param name="toRemove"></param>

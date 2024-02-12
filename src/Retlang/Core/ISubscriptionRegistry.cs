@@ -22,13 +22,6 @@ namespace Retlang.Core
         Unsubscriber CreateUnsubscriber();
 
         /// <summary>
-        /// Add Disposable. It will be unsubscribed when the fiber is discarded.
-        /// It is destroyed at the last.
-        /// </summary>
-        /// <param name="toAdd"></param>
-        void RegisterSubscriptionLast(IDisposable toAdd);
-
-        /// <summary>
         /// Number of registered disposables.
         /// </summary>
         int NumSubscriptions { get; }
