@@ -18,7 +18,8 @@ namespace Retlang.Core
         /// Add Disposable. It will be unsubscribed when the fiber is discarded.
         /// </summary>
         /// <param name="toAdd"></param>
-        public void RegisterSubscription(IDisposable toAdd)
+        /// <returns>A disposer to unregister the subscription.</returns>
+        public IDisposable RegisterSubscription(IDisposable toAdd)
         {
             bool added = false;
             lock (_lock)
@@ -29,9 +30,18 @@ namespace Retlang.Core
                     added = true;
                 }
             }
-            if (!added)
+            if (added)
+            {
+                var unsubscriber = new Unsubscriber((x) =>
+                {
+                    this.DeregisterSubscription(toAdd);
+                });
+                return unsubscriber;
+            }
+            else
             {
                 toAdd.Dispose();
+                return new Unsubscriber((x) => { });
             }
         }
 
@@ -78,7 +88,7 @@ namespace Retlang.Core
         /// </summary>
         /// <param name="toRemove"></param>
         /// <returns></returns>
-        public bool DeregisterSubscription(IDisposable toRemove)
+        private bool DeregisterSubscription(IDisposable toRemove)
         {
             lock (_lock)
             {

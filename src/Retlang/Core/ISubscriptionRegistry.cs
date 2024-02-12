@@ -11,7 +11,8 @@ namespace Retlang.Core
         /// Register subscription to be unsubcribed from when the fiber is disposed.
         ///</summary>
         ///<param name="toAdd"></param>
-        void RegisterSubscription(IDisposable toAdd);
+        /// <returns>A disposer to unregister the subscription.</returns>
+        IDisposable RegisterSubscription(IDisposable toAdd);
 
         /// <summary>
         /// Register subscription to be unsubcribed from when the fiber is disposed.
@@ -26,13 +27,6 @@ namespace Retlang.Core
         /// </summary>
         /// <param name="toAdd"></param>
         void RegisterSubscriptionLast(IDisposable toAdd);
-
-        ///<summary>
-        /// Deregister a subscription.
-        ///</summary>
-        ///<param name="toRemove"></param>
-        ///<returns></returns>
-        bool DeregisterSubscription(IDisposable toRemove);
 
         /// <summary>
         /// Number of registered disposables.
