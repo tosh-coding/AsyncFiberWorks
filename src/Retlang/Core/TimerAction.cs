@@ -1,3 +1,4 @@
+using Retlang.Channels;
 using System;
 using System.Threading;
 
@@ -10,12 +11,12 @@ namespace Retlang.Core
         private readonly long _firstIntervalInMs;
         private readonly long _intervalInMs;
         private readonly IExecutionContext _fiber;
-        private readonly ISubscriptionRegistry _fallbackDisposer;
+        private readonly Action<TimerAction> _callbackOnDispose;
 
         private Timer _timer = null;
         private bool _canceled = false;
 
-        public TimerAction(IExecutionContext fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite, ISubscriptionRegistry fallbackDisposer = null)
+        public TimerAction(IExecutionContext fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite, Action<TimerAction> callbackOnDispose = null)
         {
             if (firstIntervalInMs < 0)
             {
@@ -29,13 +30,34 @@ namespace Retlang.Core
             _firstIntervalInMs = firstIntervalInMs;
             _intervalInMs = intervalInMs;
             _fiber = fiber;
-            _fallbackDisposer = fallbackDisposer;
-            fallbackDisposer?.RegisterSubscription(this);
+            _callbackOnDispose = callbackOnDispose;
         }
 
         public static TimerAction StartNew(IExecutionContext fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite, ISubscriptionRegistry fallbackDisposer = null)
         {
-            var timerAction = new TimerAction(fiber, action, firstIntervalInMs, intervalInMs, fallbackDisposer);
+            if (fallbackDisposer == null)
+            {
+                return StartNew(fiber, action, firstIntervalInMs, intervalInMs);
+            }
+
+            var unsubscriber = new Unsubscriber((x) => { });
+            fallbackDisposer.RegisterSubscription(unsubscriber);
+            var timerAction = new TimerAction(fiber, action, firstIntervalInMs, intervalInMs, (x) =>
+            {
+                unsubscriber.Dispose();
+            });
+            unsubscriber.Add((x) =>
+            {
+                fallbackDisposer.DeregisterSubscription(unsubscriber);
+                timerAction.Dispose();
+            });
+            timerAction.Start();
+            return timerAction;
+        }
+
+        public static TimerAction StartNew(IExecutionContext fiber, Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
+        {
+            var timerAction = new TimerAction(fiber, action, firstIntervalInMs, intervalInMs);
             timerAction.Start();
             return timerAction;
         }
@@ -96,7 +118,7 @@ namespace Retlang.Core
             {
                 _timer.Dispose();
             }
-            _fallbackDisposer?.DeregisterSubscription(this);
+            _callbackOnDispose?.Invoke(this);
         }
     }
 }
