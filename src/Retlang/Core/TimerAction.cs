@@ -10,12 +10,12 @@ namespace Retlang.Core
         private readonly Action _action;
         private readonly long _firstIntervalInMs;
         private readonly long _intervalInMs;
-        private readonly Action<TimerAction> _callbackOnDispose;
+        private readonly Action _callbackOnDispose;
 
         private Timer _timer = null;
         private bool _canceled = false;
 
-        public TimerAction(Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite, Action<TimerAction> callbackOnDispose = null)
+        public TimerAction(Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite, Action callbackOnDispose = null)
         {
             if (firstIntervalInMs < 0)
             {
@@ -31,26 +31,9 @@ namespace Retlang.Core
             _callbackOnDispose = callbackOnDispose;
         }
 
-        public static TimerAction StartNew(Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite, ISubscriptionRegistry fallbackDisposer = null)
+        public static TimerAction StartNew(Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite, Action cbOnDispose = null)
         {
-            if (fallbackDisposer == null)
-            {
-                return StartNew(action, firstIntervalInMs, intervalInMs);
-            }
-
-            var unsubscriber = fallbackDisposer.CreateUnsubscriber();
-            var timerAction = new TimerAction(action, firstIntervalInMs, intervalInMs, (x) =>
-            {
-                unsubscriber.Dispose();
-            });
-            unsubscriber.Add(() => timerAction.Dispose());
-            timerAction.Start();
-            return timerAction;
-        }
-
-        public static TimerAction StartNew(Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
-        {
-            var timerAction = new TimerAction(action, firstIntervalInMs, intervalInMs);
+            var timerAction = new TimerAction(action, firstIntervalInMs, intervalInMs, cbOnDispose);
             timerAction.Start();
             return timerAction;
         }
@@ -98,7 +81,7 @@ namespace Retlang.Core
             {
                 _timer.Dispose();
             }
-            _callbackOnDispose?.Invoke(this);
+            _callbackOnDispose?.Invoke();
         }
     }
 }

@@ -89,7 +89,10 @@ namespace Retlang.Channels
                 if (_pending == null)
                 {
                     _pending = new Dictionary<K, T>();
-                    TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite, _fiber.FallbackDisposer);
+                    var unsubscriber = _fiber.FallbackDisposer.CreateUnsubscriber();
+                    Action cbOnTimerDisposing = () => { unsubscriber.Dispose(); };
+                    var timerAction = TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite, cbOnTimerDisposing);
+                    unsubscriber.Add(() => timerAction.Dispose());
                 }
                 _pending[key] = msg;
             }
