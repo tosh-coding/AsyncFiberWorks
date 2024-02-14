@@ -11,7 +11,7 @@ namespace Retlang.Channels
     public class ChannelSubscription<T> : IDisposable
     {
         private readonly Action<T> _receiver;
-        private readonly IFiber _fiber;
+        private readonly IFiberWithFallbackRegistry _fiber;
         private readonly IMessageFilter<T> _filter;
         private IDisposable _disposable;
 
@@ -21,7 +21,7 @@ namespace Retlang.Channels
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="receiver"></param>
         /// <param name="filter"></param>
-        public ChannelSubscription(IFiber fiber, Action<T> receiver, IMessageFilter<T> filter = null)
+        public ChannelSubscription(IFiberWithFallbackRegistry fiber, Action<T> receiver, IMessageFilter<T> filter = null)
         {
             _fiber = fiber;
             _receiver = receiver;
