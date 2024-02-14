@@ -1,5 +1,4 @@
 ﻿using Retlang.Channels;
-using System;
 
 namespace Retlang.Core
 {
@@ -13,10 +12,5 @@ namespace Retlang.Core
         /// </summary>
         /// <returns>Unsubscriber with the unregister process as an element.</returns>
         Unsubscriber CreateSubscription();
-
-        /// <summary>
-        /// Number of registered disposables.
-        /// </summary>
-        int NumSubscriptions { get; }
     }
 }
