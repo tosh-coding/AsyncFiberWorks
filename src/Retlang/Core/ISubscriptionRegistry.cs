@@ -12,7 +12,7 @@ namespace Retlang.Core
         /// Create an unsubscriber who unsubscribes when the fiber is discarded.
         /// </summary>
         /// <returns>Unsubscriber with the unregister process as an element.</returns>
-        Unsubscriber CreateUnsubscriber();
+        Unsubscriber CreateSubscription();
 
         /// <summary>
         /// Number of registered disposables.

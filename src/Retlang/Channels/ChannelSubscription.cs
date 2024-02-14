@@ -35,7 +35,7 @@ namespace Retlang.Channels
         public void Subscribe(ISubscriber<T> channel)
         {
             var disposable = channel.SubscribeOnProducerThreads(ReceiveOnProducerThread);
-            var unsubscriber = _fiber.FallbackDisposer?.CreateUnsubscriber();
+            var unsubscriber = _fiber.FallbackDisposer?.CreateSubscription();
             if (unsubscriber != null)
             {
                 unsubscriber.Add(() => disposable.Dispose());
