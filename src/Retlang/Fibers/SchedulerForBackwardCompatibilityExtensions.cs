@@ -18,7 +18,7 @@ namespace Retlang.Fibers
         /// <returns>a handle to cancel the timer.</returns>
         public static IDisposable Schedule(this IFiberWithFallbackRegistry fiber, Action action, long firstInMs)
         {
-            var unsubscriber = fiber.FallbackDisposer.CreateSubscription();
+            var unsubscriber = fiber.CreateSubscription();
             Action cbOnTimerDisposing = () => { unsubscriber.Dispose(); };
             var timerAction = TimerAction.StartNew(() => fiber.Enqueue(action), firstInMs, Timeout.Infinite, cbOnTimerDisposing);
             unsubscriber.Add(() => timerAction.Dispose());
@@ -35,7 +35,7 @@ namespace Retlang.Fibers
         /// <returns>a handle to cancel the timer.</returns>
         public static IDisposable ScheduleOnInterval(this IFiberWithFallbackRegistry fiber, Action action, long firstInMs, long regularInMs)
         {
-            var unsubscriber = fiber.FallbackDisposer.CreateSubscription();
+            var unsubscriber = fiber.CreateSubscription();
             Action cbOnTimerDisposing = () => { unsubscriber.Dispose(); };
             var timerAction = TimerAction.StartNew(() => fiber.Enqueue(action), firstInMs, regularInMs, cbOnTimerDisposing);
             unsubscriber.Add(() => timerAction.Dispose());

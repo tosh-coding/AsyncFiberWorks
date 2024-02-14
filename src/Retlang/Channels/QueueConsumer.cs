@@ -21,7 +21,7 @@ namespace Retlang.Channels
         public void Subscribe(QueueChannel<T> channel)
         {
             var disposable = channel.OnSubscribe(Signal, out _queue);
-            var unsubscriber = _fiber.FallbackDisposer?.CreateSubscription();
+            var unsubscriber = _fiber.CreateSubscription();
             if (unsubscriber != null)
             {
                 unsubscriber.Add(() => disposable.Dispose());

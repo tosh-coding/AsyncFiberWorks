@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Threading;
+using Retlang.Channels;
 using Retlang.Core;
 using Retlang.Fibers;
 
@@ -89,11 +90,19 @@ namespace WpfExample
         }
 
         /// <summary>
-        /// <see cref="ISubscriptionRegistryGetter.FallbackDisposer"/>
+        /// <see cref="ISubscriptionRegistry.CreateSubscription"/>
         /// </summary>
-        public ISubscriptionRegistry FallbackDisposer
+        public Unsubscriber CreateSubscription()
         {
-            get { return _fiber.FallbackDisposer; }
+            return _fiber.CreateSubscription();
+        }
+
+        /// <summary>
+        /// <see cref="ISubscriptionRegistry.NumSubscriptions"/>
+        /// </summary>
+        public int NumSubscriptions
+        {
+            get { return _fiber.NumSubscriptions; }
         }
 
         /// <summary>

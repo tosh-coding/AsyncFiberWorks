@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using Retlang.Channels;
 using Retlang.Core;
 
 namespace Retlang.Fibers
@@ -55,12 +56,21 @@ namespace Retlang.Fibers
             base.Dispose();
         }
 
+
         /// <summary>
-        /// <see cref="ISubscriptionRegistryGetter.FallbackDisposer"/>
+        /// <see cref="ISubscriptionRegistry.CreateSubscription"/>
         /// </summary>
-        public ISubscriptionRegistry FallbackDisposer
+        public Unsubscriber CreateSubscription()
         {
-            get { return _subscriptions; }
+            return _subscriptions.CreateSubscription();
+        }
+
+        /// <summary>
+        /// <see cref="ISubscriptionRegistry.NumSubscriptions"/>
+        /// </summary>
+        public int NumSubscriptions
+        {
+            get { return _subscriptions.NumSubscriptions; }
         }
     }
 }

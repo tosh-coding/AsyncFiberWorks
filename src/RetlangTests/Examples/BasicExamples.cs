@@ -262,16 +262,16 @@ namespace RetlangTests.Examples
             var fiber = new PoolFiber();
             var channel = new Channel<int>();
 
-            Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
+            Assert.AreEqual(0, fiber.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
             var subscriber = new ChannelSubscription<int>(fiber, x => { });
             subscriber.Subscribe(channel);
 
-            Assert.AreEqual(1, fiber.FallbackDisposer.NumSubscriptions);
+            Assert.AreEqual(1, fiber.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
             fiber.Dispose();
 
-            Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
+            Assert.AreEqual(0, fiber.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
         }
 
@@ -282,16 +282,16 @@ namespace RetlangTests.Examples
             fiber.Start();
             var channel = new Channel<int>();
 
-            Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
+            Assert.AreEqual(0, fiber.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
             var subscriber = new ChannelSubscription<int>(fiber, x => { });
             subscriber.Subscribe(channel);
 
-            Assert.AreEqual(1, fiber.FallbackDisposer.NumSubscriptions);
+            Assert.AreEqual(1, fiber.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
             fiber.Dispose();
 
-            Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
+            Assert.AreEqual(0, fiber.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
         }
 
@@ -301,16 +301,16 @@ namespace RetlangTests.Examples
             var fiber = new StubFiber();
             var channel = new Channel<int>();
 
-            Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
+            Assert.AreEqual(0, fiber.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
             var subscriber = new ChannelSubscription<int>(fiber, x => { });
             subscriber.Subscribe(channel);
 
-            Assert.AreEqual(1, fiber.FallbackDisposer.NumSubscriptions);
+            Assert.AreEqual(1, fiber.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
             fiber.Dispose();
 
-            Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
+            Assert.AreEqual(0, fiber.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
         }
 
@@ -320,17 +320,17 @@ namespace RetlangTests.Examples
             var fiber = new PoolFiber();
             var channel = new Channel<int>();
 
-            Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
+            Assert.AreEqual(0, fiber.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
 
             var subscriber = new ChannelSubscription<int>(fiber, x => { });
             subscriber.Subscribe(channel);
 
-            Assert.AreEqual(1, fiber.FallbackDisposer.NumSubscriptions);
+            Assert.AreEqual(1, fiber.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
             subscriber.Dispose();
 
-            Assert.AreEqual(0, fiber.FallbackDisposer.NumSubscriptions);
+            Assert.AreEqual(0, fiber.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
         }
     }

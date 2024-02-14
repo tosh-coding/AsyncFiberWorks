@@ -48,7 +48,7 @@ namespace Retlang.Channels
         public void Subscribe(ISubscriber<T> channel)
         {
             var disposable = channel.SubscribeOnProducerThreads(ReceiveOnProducerThread);
-            var unsubscriber = _fiber.FallbackDisposer?.CreateSubscription();
+            var unsubscriber = _fiber.CreateSubscription();
             if (unsubscriber != null)
             {
                 unsubscriber.Add(() => disposable.Dispose());
@@ -89,7 +89,7 @@ namespace Retlang.Channels
                 if (_pending == null)
                 {
                     _pending = new Dictionary<K, T>();
-                    var unsubscriber = _fiber.FallbackDisposer.CreateSubscription();
+                    var unsubscriber = _fiber.CreateSubscription();
                     Action cbOnTimerDisposing = () => { unsubscriber.Dispose(); };
                     var timerAction = TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite, cbOnTimerDisposing);
                     unsubscriber.Add(() => timerAction.Dispose());
