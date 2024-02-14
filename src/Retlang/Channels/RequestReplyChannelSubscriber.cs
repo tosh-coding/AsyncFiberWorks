@@ -5,11 +5,11 @@ namespace Retlang.Channels
 {
     public class RequestReplyChannelSubscriber<R, M> : IDisposable
     {
-        private readonly IFiberWithFallbackRegistry _fiber;
+        private readonly IExecutionContextWithPossibleStoppage _fiber;
         private readonly Action<IRequest<R, M>> _onRequest;
         private IDisposable _disposable;
 
-        public RequestReplyChannelSubscriber(IFiberWithFallbackRegistry fiber, Action<IRequest<R, M>> onRequest)
+        public RequestReplyChannelSubscriber(IExecutionContextWithPossibleStoppage fiber, Action<IRequest<R, M>> onRequest)
         {
             _fiber = fiber;
             _onRequest = onRequest;

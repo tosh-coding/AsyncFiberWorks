@@ -15,7 +15,7 @@ namespace Retlang.Channels
     {
         private readonly object _batchLock = new object();
         private readonly Action<T> _target;
-        private readonly IFiberWithFallbackRegistry _fiber;
+        private readonly IExecutionContextWithPossibleStoppage _fiber;
         private readonly long _intervalInMs;
         private readonly IMessageFilter<T> _filter;
 
@@ -30,7 +30,7 @@ namespace Retlang.Channels
         /// <param name="fiber"></param>
         /// <param name="intervalInMs"></param>
         /// <param name="filter"></param>
-        public LastSubscriber(Action<T> target, IFiberWithFallbackRegistry fiber, long intervalInMs, IMessageFilter<T> filter = null)
+        public LastSubscriber(Action<T> target, IExecutionContextWithPossibleStoppage fiber, long intervalInMs, IMessageFilter<T> filter = null)
         {
             _fiber = fiber;
             _target = target;
