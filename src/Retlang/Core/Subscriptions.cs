@@ -15,7 +15,7 @@ namespace Retlang.Core
         private readonly LinkedList<IDisposable> _items = new LinkedList<IDisposable>();
 
         /// <summary>
-        /// Add Disposable. It will be unsubscribed when the fiber is discarded.
+        /// Register subscription to be unsubcribed from when the fiber is disposed.
         /// </summary>
         /// <param name="toAdd"></param>
         /// <returns>A disposer to unregister the subscription.</returns>
