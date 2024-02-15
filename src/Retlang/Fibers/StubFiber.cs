@@ -10,7 +10,7 @@ namespace Retlang.Fibers
     /// </summary>
     public class StubFiber : IFiber, IConsumingContext
     {
-        private readonly StubFiberSlim _stubFiberSlim;
+        private readonly StubWorkerThread _stubFiberSlim;
         private readonly Subscriptions _subscriptions = new Subscriptions();
 
         /// <summary>
@@ -18,7 +18,7 @@ namespace Retlang.Fibers
         /// </summary>
         public StubFiber()
         {
-            _stubFiberSlim = new StubFiberSlim();
+            _stubFiberSlim = new StubWorkerThread();
         }
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace Retlang.Fibers
         /// <param name="executor"></param>
         public StubFiber(IExecutor executor)
         {
-            _stubFiberSlim = new StubFiberSlim(executor);
+            _stubFiberSlim = new StubWorkerThread(executor);
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace Retlang.Fibers
         /// <param name="action"></param>
         public void Enqueue(Action action)
         {
-            _stubFiberSlim.Enqueue(action);
+            _stubFiberSlim.Queue((_) => action());
         }
 
         /// <summary>

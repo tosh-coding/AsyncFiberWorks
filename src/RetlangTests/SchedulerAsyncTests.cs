@@ -13,7 +13,7 @@ namespace RetlangTests
         [Test]
         public void CallbackFromTimer()
         {
-            var stubFiber = new StubFiberSlim();
+            var stubFiber = new StubFiber();
             long counter = 0;
             Action action = () => { counter++; };
             var timerTask = stubFiber.ScheduleAsync(action, 2);
@@ -28,7 +28,7 @@ namespace RetlangTests
         [Test]
         public void CallbackFromIntervalTimerWithCancel()
         {
-            var stubFiber = new StubFiberSlim();
+            var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
             var cancellation = new CancellationTokenSource();
@@ -47,7 +47,7 @@ namespace RetlangTests
         [Test]
         public void CallbackFromTimerWithCancel()
         {
-            var stubFiber = new StubFiberSlim();
+            var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
             var cancellation = new CancellationTokenSource();
