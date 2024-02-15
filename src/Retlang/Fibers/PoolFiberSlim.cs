@@ -7,7 +7,7 @@ namespace Retlang.Fibers
     /// <summary>
     /// Fiber implementation backed by shared threads. Mainly thread pool.
     /// </summary>
-    public class PoolFiberSlim : IExecutionContext
+    public sealed class PoolFiberSlim : IExecutionContext
     {
         private readonly object _lock = new object();
         private readonly IThreadPool _pool;

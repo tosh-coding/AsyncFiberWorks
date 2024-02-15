@@ -7,7 +7,7 @@ namespace Retlang.Fibers
     /// <summary>
     /// Fiber implementation backed by a dedicated thread.
     /// </summary>
-    public class ThreadFiberSlim : IExecutionContext, IDisposable
+    public sealed class ThreadFiberSlim : IExecutionContext, IDisposable
     {
         private static int THREAD_COUNT;
         private readonly Thread _thread;
@@ -98,7 +98,7 @@ namespace Retlang.Fibers
         /// <summary>
         /// Stops the thread.
         /// </summary>
-        public virtual void Dispose()
+        public void Dispose()
         {
             _queue.Stop();
         }

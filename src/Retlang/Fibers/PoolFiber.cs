@@ -1,13 +1,15 @@
 ﻿using Retlang.Channels;
 using Retlang.Core;
+using System;
 
 namespace Retlang.Fibers
 {
     /// <summary>
     /// Fiber implementation backed by shared threads. Mainly thread pool.
     /// </summary>
-    public class PoolFiber : PoolFiberSlim, IFiber
+    public class PoolFiber : IFiber
     {
+        private readonly PoolFiberSlim _poolFiberSlim;
         private readonly Subscriptions _subscriptions = new Subscriptions();
 
         /// <summary>
@@ -16,24 +18,24 @@ namespace Retlang.Fibers
         /// <param name="pool"></param>
         /// <param name="executor"></param>
         public PoolFiber(IThreadPool pool, IExecutor executor)
-            : base(pool, executor)
         {
+            _poolFiberSlim = new PoolFiberSlim(pool, executor);
         }
 
         /// <summary>
         /// Create a pool fiber with the default thread pool.
         /// </summary>
-        public PoolFiber(IExecutor executor) 
-            : base(executor)
+        public PoolFiber(IExecutor executor)
         {
+            _poolFiberSlim = new PoolFiberSlim(executor);
         }
 
         /// <summary>
         /// Create a pool fiber with the default thread pool and default executor.
         /// </summary>
         public PoolFiber()
-            : base()
         {
+            _poolFiberSlim = new PoolFiberSlim();
         }
 
         /// <summary>
@@ -58,6 +60,42 @@ namespace Retlang.Fibers
         public int NumSubscriptions
         {
             get { return _subscriptions.NumSubscriptions; }
+        }
+
+        /// <summary>
+        /// Enqueue a single action.
+        /// </summary>
+        /// <param name="action"></param>
+        public void Enqueue(Action action)
+        {
+            _poolFiberSlim.Enqueue(action);
+        }
+
+        /// <summary>
+        /// Paused. After the Pause, and before the Resume.
+        /// </summary>
+        public bool IsPaused
+        {
+            get { return _poolFiberSlim.IsPaused; }
+        }
+
+        /// <summary>
+        /// Pauses the consumption of the task queue.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Pause was called twice.</exception>
+        public void Pause()
+        {
+            _poolFiberSlim.Pause();
+        }
+
+        /// <summary>
+        /// Resumes consumption of a paused task queue.
+        /// </summary>
+        /// <param name="action">The action to be taken immediately after the resume.</param>
+        /// <exception cref="InvalidOperationException">Resume was called in the unpaused state.</exception>
+        public void Resume(Action action)
+        {
+            _poolFiberSlim.Resume(action);
         }
     }
 }
