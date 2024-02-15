@@ -50,7 +50,7 @@ namespace RetlangTests
         [Test]
         public void SwitchToFiberSlim()
         {
-            var consumingThread = new ConsumingThread();
+            var consumingThread = new ConsumingWorkerThread();
             var t = SwitchToFiberSlimAsync(consumingThread);
             try
             {
@@ -62,7 +62,7 @@ namespace RetlangTests
             t.Wait();
         }
 
-        public async Task SwitchToFiberSlimAsync(ConsumingThread consumingThread)
+        public async Task SwitchToFiberSlimAsync(ConsumingWorkerThread consumingThread)
         {
             await Task.Yield();
 
@@ -153,14 +153,14 @@ namespace RetlangTests
 
             Assert.Greater(idListOfUserPoolB1.Intersect(idListOfUserPoolB2).Count(), 0);
 
-            // Stop the ConsumingThread.
+            // Stop the ConsumingWorkerThread.
             consumingThread.Stop();
         }
 
         [Test]
         public void SwitchToFiber()
         {
-            var consumingThread = new ConsumingThread();
+            var consumingThread = new ConsumingWorkerThread();
             var t = SwitchToFiberAsync(consumingThread);
             try
             {
@@ -172,7 +172,7 @@ namespace RetlangTests
             t.Wait();
         }
 
-        public async Task SwitchToFiberAsync(ConsumingThread consumingThread)
+        public async Task SwitchToFiberAsync(ConsumingWorkerThread consumingThread)
         {
             await Task.Yield();
 
@@ -262,7 +262,7 @@ namespace RetlangTests
 
             Assert.Greater(idListOfUserPoolB1.Intersect(idListOfUserPoolB2).Count(), 0);
 
-            // Stop the ConsumingThread.
+            // Stop the ConsumingWorkerThread.
             consumingThread.Stop();
         }
     }

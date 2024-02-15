@@ -5,10 +5,10 @@ using System.Threading;
 namespace Retlang.Core
 {
     /// <summary>
-    /// ConsumingThread does not use a backing thread or a thread pool for execution.
+    /// ConsumingWorkerThread is an alternative implementation of worker threads for the thread pool.
     /// Actions can be executed synchronously by the calling thread.
     /// </summary>
-    public class ConsumingThread : IThreadPool
+    public class ConsumingWorkerThread : IThreadPool
     {
         private readonly object _lock = new object();
         private readonly BlockingCollection<Action> _queue= new BlockingCollection<Action>();

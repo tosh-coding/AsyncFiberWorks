@@ -24,7 +24,7 @@ namespace RetlangTests
             subscriber.Subscribe(timeCheck);
 
             {
-                var requesterThread = new ConsumingThread();
+                var requesterThread = new ConsumingWorkerThread();
                 var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
                 requesterFiber.Pause();
                 var response = timeCheck.SendRequest("hello");
@@ -60,7 +60,7 @@ namespace RetlangTests
             subscriber.Subscribe(countChannel);
 
             {
-                var requesterThread = new ConsumingThread();
+                var requesterThread = new ConsumingWorkerThread();
                 var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
                 requesterFiber.Pause();
                 var response = countChannel.SendRequest("hello");
@@ -154,7 +154,7 @@ namespace RetlangTests
 
             int timeoutInMs = 500;
             IReply<int> response = null;
-            var mainFiberConsumer = new ConsumingThread();
+            var mainFiberConsumer = new ConsumingWorkerThread();
             var mainFiber = new PoolFiber(mainFiberConsumer, new DefaultExecutor());
             var ownAction = new List<Action>();
             Action action = () =>
