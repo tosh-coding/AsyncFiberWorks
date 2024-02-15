@@ -62,12 +62,12 @@ namespace RetlangTests
         [Test]
         public void ResumeInDotNetThreadPool()
         {
-            var fiber = new ThreadFiberSlim();
+            var fiber = new ThreadFiber();
             fiber.Start();
             ResumeInDotNetThreadPoolAsync(fiber).Wait();
         }
 
-        public async Task ResumeInDotNetThreadPoolAsync(ThreadFiberSlim fiber)
+        public async Task ResumeInDotNetThreadPoolAsync(ThreadFiber fiber)
         {
             await fiber.SwitchTo();
             var threadIdFiber = Thread.CurrentThread.ManagedThreadId;

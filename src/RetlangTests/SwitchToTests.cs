@@ -71,9 +71,10 @@ namespace RetlangTests
             var defaultThreadPool = new DefaultThreadPool();
             var userThreadPoolA = UserThreadPool.StartNew();
             var userThreadPoolB = UserThreadPool.StartNew();
+            var userWorkerThread = new UserWorkerThread();
+            userWorkerThread.Start();
 
-            var threadFiber = new ThreadFiberSlim();
-            threadFiber.Start();
+            var threadFiber = new PoolFiberSlim(userWorkerThread, new DefaultExecutor());
             var dotnetPoolFiber1 = new PoolFiberSlim(defaultThreadPool, new DefaultExecutor());
             var dotnetPoolFiber2 = new PoolFiberSlim();
             var userPoolFiberA1 = new PoolFiberSlim(userThreadPoolA, new DefaultExecutor());

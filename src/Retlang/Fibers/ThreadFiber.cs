@@ -10,7 +10,7 @@ namespace Retlang.Fibers
     /// </summary>
     public class ThreadFiber : IFiber
     {
-        private readonly ThreadFiberSlim _threadFiberSlim;
+        private readonly UserWorkerThread _workerThread;
         private readonly Subscriptions _subscriptions = new Subscriptions();
 
         /// <summary>
@@ -18,7 +18,7 @@ namespace Retlang.Fibers
         /// </summary>
         public ThreadFiber()
         {
-            _threadFiberSlim = new ThreadFiberSlim();
+            _workerThread = new UserWorkerThread();
         }
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace Retlang.Fibers
         /// <param name="queue"></param>
         public ThreadFiber(IQueue queue)
         {
-            _threadFiberSlim = new ThreadFiberSlim(queue);
+            _workerThread = new UserWorkerThread(queue);
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace Retlang.Fibers
         /// /// <param name="threadName"></param>
         public ThreadFiber(string threadName)
         {
-            _threadFiberSlim = new ThreadFiberSlim(threadName);
+            _workerThread = new UserWorkerThread(threadName);
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace Retlang.Fibers
         /// <param name="priority"></param>
         public ThreadFiber(IQueue queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
-            _threadFiberSlim = new ThreadFiberSlim(queue, threadName, isBackground, priority);
+            _workerThread = new UserWorkerThread(queue, threadName, isBackground, priority);
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Retlang.Fibers
         /// </summary>
         public void Start()
         {
-            _threadFiberSlim.Start();
+            _workerThread.Start();
         }
 
         ///<summary>
@@ -64,7 +64,7 @@ namespace Retlang.Fibers
         ///</summary>
         public void Join()
         {
-            _threadFiberSlim.Join();
+            _workerThread.Join();
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace Retlang.Fibers
         public void Dispose()
         {
             _subscriptions?.Dispose();
-            _threadFiberSlim.Dispose();
+            _workerThread.Dispose();
         }
 
 
@@ -99,7 +99,7 @@ namespace Retlang.Fibers
         /// </summary>
         public Thread Thread
         {
-            get { return _threadFiberSlim.Thread; }
+            get { return _workerThread.Thread; }
         }
 
         /// Enqueue a single action.
@@ -107,7 +107,7 @@ namespace Retlang.Fibers
         /// <param name="action"></param>
         public void Enqueue(Action action)
         {
-            _threadFiberSlim.Enqueue(action);
+            _workerThread.Queue((x) => action());
         }
     }
 }
