@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Threading;
-using Retlang.Core;
 
-namespace Retlang.Fibers
+namespace Retlang.Core
 {
     /// <summary>
     /// A thread pool implementation with only one worker thread.
