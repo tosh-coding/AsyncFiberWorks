@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using Retlang.Core;
 
-namespace Retlang.Fibers
+namespace Retlang.Core
 {
     /// <summary>
     /// StubWorkerThread is an alternative implementation of worker threads for the thread pool.
