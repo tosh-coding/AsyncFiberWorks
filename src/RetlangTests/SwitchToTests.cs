@@ -50,7 +50,7 @@ namespace RetlangTests
         [Test]
         public void SwitchToFiberSlim()
         {
-            var consumingThread = new ConsumingWorkerThread();
+            var consumingThread = new ThreadPoolAdaptorFromQueueForThread();
             var t = SwitchToFiberSlimAsync(consumingThread);
             try
             {
@@ -62,7 +62,7 @@ namespace RetlangTests
             t.Wait();
         }
 
-        public async Task SwitchToFiberSlimAsync(ConsumingWorkerThread consumingThread)
+        public async Task SwitchToFiberSlimAsync(ThreadPoolAdaptorFromQueueForThread consumingThread)
         {
             await Task.Yield();
 
@@ -145,7 +145,7 @@ namespace RetlangTests
         [Test]
         public void SwitchToFiber()
         {
-            var consumingThread = new ConsumingWorkerThread();
+            var consumingThread = new ThreadPoolAdaptorFromQueueForThread();
             var t = SwitchToFiberAsync(consumingThread);
             try
             {
@@ -157,7 +157,7 @@ namespace RetlangTests
             t.Wait();
         }
 
-        public async Task SwitchToFiberAsync(ConsumingWorkerThread consumingThread)
+        public async Task SwitchToFiberAsync(ThreadPoolAdaptorFromQueueForThread consumingThread)
         {
             await Task.Yield();
 

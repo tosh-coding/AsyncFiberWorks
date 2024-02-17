@@ -1,27 +1,25 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Threading;
 
 namespace Retlang.Core
 {
     /// <summary>
-    /// ConsumingWorkerThread is an alternative implementation of worker threads for the thread pool.
-    /// Actions can be executed synchronously by the calling thread.
+    /// Simple queue for actions.
     /// </summary>
-    public class ConsumingWorkerThread : IThreadPool
+    public class BlockingCollectionQueue : IQueueForThread
     {
         private readonly object _lock = new object();
-        private readonly BlockingCollection<Action> _queue= new BlockingCollection<Action>();
+        private readonly BlockingCollection<Action> _queue = new BlockingCollection<Action>();
 
         private bool _running = true;
 
         /// <summary>
-        /// Enqueues action.
+        /// Enqueue a single action.
         /// </summary>
-        /// <param name="callback"></param>
-        public void Queue(WaitCallback callback)
+        /// <param name="action"></param>
+        public void Enqueue(Action action)
         {
-            _queue.Add(() => callback(null));
+            _queue.Add(action);
         }
 
         private bool IsRunning
@@ -60,7 +58,7 @@ namespace Retlang.Core
             lock (_lock)
             {
                 _running = false;
-                Queue((_) => { });
+                Enqueue(() => { });
             }
         }
     }

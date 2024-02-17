@@ -137,7 +137,7 @@ namespace RetlangTests.Examples
         [Test]
         public void RequestReply()
         {
-            var testThread = new ConsumingWorkerThread();
+            var testThread = new ThreadPoolAdaptorFromQueueForThread();
             var testFiber = new PoolFiber(testThread, new DefaultExecutor());
 
             using (var fiber = new PoolFiber())
@@ -196,7 +196,7 @@ namespace RetlangTests.Examples
                 }
 
                 // Start requesting.
-                var FiberRequestConsumer = new ConsumingWorkerThread();
+                var FiberRequestConsumer = new ThreadPoolAdaptorFromQueueForThread();
                 var fiberRequest = new PoolFiber(FiberRequestConsumer, new DefaultExecutor());
                 var receivedValues = new List<int>();
                 Action<SnapshotRequestControlEvent> actionControl = (controlEvent) =>
