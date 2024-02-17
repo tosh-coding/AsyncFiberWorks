@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Retlang.Core
 {
     /// <summary>
     /// A thread pool implementation with only one worker thread.
     /// </summary>
-    public sealed class UserWorkerThread : IDisposable
+    public sealed class UserWorkerThread : IConsumerThread
     {
         private static int THREAD_COUNT;
         private readonly Thread _thread;
         private readonly IQueueForThread _queue;
+        private readonly TaskCompletionSource<bool> _taskCompletionSource;
 
         /// <summary>
         /// Create a worker thread with the default queue.
@@ -49,6 +51,7 @@ namespace Retlang.Core
             _thread.Name = threadName;
             _thread.IsBackground = isBackground;
             _thread.Priority = priority;
+            _taskCompletionSource = new TaskCompletionSource<bool>();
         }
 
         /// <summary>
@@ -66,16 +69,23 @@ namespace Retlang.Core
 
         private void RunThread()
         {
-            _queue.Run();
+            try
+            {
+                _queue.Run();
+            }
+            finally
+            {
+                _taskCompletionSource.SetResult(true);
+            }
         }
 
         /// <summary>
         /// Enqueue a single action.
         /// </summary>
-        /// <param name="action"></param>
-        public void Queue(WaitCallback callback)
+        /// <param name="action">An action.</param>
+        public void Enqueue(Action action)
         {
-            _queue.Enqueue(() => callback(null));
+            _queue.Enqueue(action);
         }
 
         /// <summary>
@@ -86,18 +96,18 @@ namespace Retlang.Core
             _thread.Start();
         }
 
-        ///<summary>
-        /// Calls join on the thread.
-        ///</summary>
-        public void Join()
+        /// <summary>
+        /// Returns a task waiting for thread termination.
+        /// </summary>
+        public Task Join()
         {
-            _thread.Join();
+            return _taskCompletionSource.Task;
         }
 
         /// <summary>
-        /// Stops the thread.
+        /// Stop the thread.
         /// </summary>
-        public void Dispose()
+        public void Stop()
         {
             _queue.Stop();
         }

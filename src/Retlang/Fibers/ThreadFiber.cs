@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Retlang.Channels;
 using Retlang.Core;
 
@@ -10,8 +11,9 @@ namespace Retlang.Fibers
     /// </summary>
     public class ThreadFiber : IFiber
     {
-        private readonly UserWorkerThread _workerThread;
+        private readonly IConsumerThread _workerThread;
         private readonly Subscriptions _subscriptions = new Subscriptions();
+        private bool _stopped = false;
 
         /// <summary>
         /// Create a thread fiber with the default queue.
@@ -52,6 +54,15 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
+        /// Creates a thread fiber.
+        /// </summary>
+        /// <param name="consumerThread">A consumer thread.</param>
+        public ThreadFiber(IConsumerThread consumerThread)
+        {
+            _workerThread = consumerThread;
+        }
+
+        /// <summary>
         /// Start the thread.
         /// </summary>
         public void Start()
@@ -59,12 +70,25 @@ namespace Retlang.Fibers
             _workerThread.Start();
         }
 
+        /// <summary>
+        /// Clear all subscriptions and schedules. Then stop threads.
+        /// </summary>
+        public void Stop()
+        {
+            if (!_stopped)
+            {
+                _subscriptions.Dispose();
+                _workerThread.Stop();
+                _stopped = true;
+            }
+        }
+
         ///<summary>
         /// Calls join on the thread.
         ///</summary>
-        public void Join()
+        public Task Join()
         {
-            _workerThread.Join();
+            return _workerThread.Join();
         }
 
         /// <summary>
@@ -72,10 +96,8 @@ namespace Retlang.Fibers
         /// </summary>
         public void Dispose()
         {
-            _subscriptions?.Dispose();
-            _workerThread.Dispose();
+            Stop();
         }
-
 
         /// <summary>
         /// <see cref="ISubscriptionRegistry.CreateSubscription"/>
@@ -94,20 +116,12 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// The dedicated thread.
-        /// </summary>
-        public Thread Thread
-        {
-            get { return _workerThread.Thread; }
-        }
-
-        /// <summary>
         /// Enqueue a single action.
         /// </summary>
         /// <param name="action"></param>
         public void Enqueue(Action action)
         {
-            _workerThread.Queue((x) => action());
+            _workerThread.Enqueue(action);
         }
     }
 }

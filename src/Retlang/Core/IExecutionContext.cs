@@ -3,14 +3,14 @@ using System;
 namespace Retlang.Core
 {
     /// <summary>
-    /// A fiber for executing asynchronous actions.
+    /// Sequential executor of actions.
     /// </summary>
     public interface IExecutionContext
     {
         /// <summary>
-        /// Enqueue action to the fiber for execution.
+        /// Enqueue a single action. It is executed sequentially.
         /// </summary>
-        /// <param name="action"></param>
+        /// <param name="action">Action to be executed.</param>
         void Enqueue(Action action);
     }
 }
