@@ -23,22 +23,22 @@ namespace RetlangTests
         [Test]
         public void EnqueueToDefaultThreadPool()
         {
-            EnqueueToThreadPool(new DefaultThreadPool());
+            EnqueueToThreadPool(new DefaultThreadPool(), 2);
         }
 
         [Test]
         public void EnqueueToUserThreadPool()
         {
-            using (var pool = UserThreadPool.Create())
+            using (var pool = UserThreadPool.Create(2))
             {
                 pool.Start();
-                EnqueueToThreadPool(pool);
+                EnqueueToThreadPool(pool, pool.ThreadList.Length);
                 pool.Stop();
                 pool.Join();
             }
         }
 
-        public void EnqueueToThreadPool(IThreadPool threadPool, int minThreads = 2)
+        public void EnqueueToThreadPool(IThreadPool threadPool, int minThreads)
         {
             int loopCount = 100;
             int sleepMs = 15;

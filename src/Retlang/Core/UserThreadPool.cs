@@ -20,7 +20,7 @@ namespace Retlang.Core
         /// <summary>
         /// Create a thread pool with the default number of worker threads.
         /// </summary>
-        public static UserThreadPool Create(int numberOfThread = 2, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public static UserThreadPool Create(int numberOfThread = 1, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
             var creator = new SharingQueueAndConsumerCreator(numberOfThread);
             return new UserThreadPool(creator.Queue, creator.Consumers, poolName, isBackground, priority);
