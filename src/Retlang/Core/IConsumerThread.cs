@@ -6,7 +6,7 @@ namespace Retlang.Core
     /// <summary>
     /// A thread that consume actions sequentially.
     /// </summary>
-    public interface IConsumerThread : IExecutionContext
+    public interface IConsumerThread
     {
         /// <summary>
         /// Start the thread.

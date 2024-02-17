@@ -11,31 +11,8 @@ namespace Retlang.Core
     {
         private static int THREAD_COUNT;
         private readonly Thread _thread;
-        private readonly IQueueForThread _queue;
+        private readonly IConsumerQueueForThread _queue;
         private readonly TaskCompletionSource<bool> _taskCompletionSource;
-
-        /// <summary>
-        /// Create a worker thread with the default queue.
-        /// </summary>
-        public UserWorkerThread() 
-            : this(new DefaultQueue())
-        {}
-
-        /// <summary>
-        /// Creates a worker thread with the specified queue.
-        /// </summary>
-        /// <param name="queue"></param>
-        public UserWorkerThread(IQueueForThread queue) 
-            : this(queue, "UserWorkerThread-" + GetNextThreadId())
-        {}
-
-        /// <summary>
-        /// Creates a worker thread with the specified name.
-        /// </summary>
-        /// /// <param name="threadName"></param>
-        public UserWorkerThread(string threadName)
-            : this(new DefaultQueue(), threadName)
-        {}
 
         /// <summary>
         /// Creates a worker thread.
@@ -44,8 +21,13 @@ namespace Retlang.Core
         /// <param name="threadName"></param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
-        public UserWorkerThread(IQueueForThread queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public UserWorkerThread(IConsumerQueueForThread queue, string threadName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
+            if (threadName == null)
+            {
+                threadName = "UserWorkerThread-" + GetNextThreadId();
+            }
+
             _queue = queue;
             _thread = new Thread(RunThread);
             _thread.Name = threadName;
@@ -77,15 +59,6 @@ namespace Retlang.Core
             {
                 _taskCompletionSource.SetResult(true);
             }
-        }
-
-        /// <summary>
-        /// Enqueue a single action.
-        /// </summary>
-        /// <param name="action">An action.</param>
-        public void Enqueue(Action action)
-        {
-            _queue.Enqueue(action);
         }
 
         /// <summary>

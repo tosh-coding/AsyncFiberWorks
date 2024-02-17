@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Retlang.Core;
 using Retlang.Fibers;
@@ -27,14 +28,14 @@ namespace RetlangTests
         }
 
         [Test]
-        public void EnqueueToUserThreadPool()
+        public async Task EnqueueToUserThreadPool()
         {
             using (var pool = UserThreadPool.Create(2))
             {
                 pool.Start();
                 EnqueueToThreadPool(pool, pool.ThreadList.Length);
                 pool.Stop();
-                pool.Join();
+                await pool.Join();
             }
         }
 
@@ -71,7 +72,7 @@ namespace RetlangTests
         }
 
         [Test]
-        public void JoinUserThreadPool()
+        public async Task JoinUserThreadPool()
         {
             var pool = UserThreadPool.Create();
             pool.Start();
@@ -81,7 +82,7 @@ namespace RetlangTests
                 pool.Stop();
             });
             var sw = Stopwatch.StartNew();
-            pool.Join();
+            await pool.Join();
             var elapsedMs = sw.ElapsedMilliseconds;
             Assert.Greater(elapsedMs, 500);
         }

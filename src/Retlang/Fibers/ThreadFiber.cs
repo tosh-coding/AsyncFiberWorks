@@ -11,6 +11,7 @@ namespace Retlang.Fibers
     /// </summary>
     public class ThreadFiber : IFiber
     {
+        private readonly IQueuingContextForThread _queue;
         private readonly IConsumerThread _workerThread;
         private readonly Subscriptions _subscriptions = new Subscriptions();
         private bool _stopped = false;
@@ -19,8 +20,8 @@ namespace Retlang.Fibers
         /// Create a thread fiber with the default queue.
         /// </summary>
         public ThreadFiber()
+            : this(new DefaultQueue())
         {
-            _workerThread = new UserWorkerThread();
         }
 
         /// <summary>
@@ -28,8 +29,8 @@ namespace Retlang.Fibers
         /// </summary>
         /// <param name="queue"></param>
         public ThreadFiber(IQueueForThread queue)
+            : this(queue, null)
         {
-            _workerThread = new UserWorkerThread(queue);
         }
 
         /// <summary>
@@ -37,8 +38,8 @@ namespace Retlang.Fibers
         /// </summary>
         /// <param name="threadName"></param>
         public ThreadFiber(string threadName)
+            : this(new DefaultQueue(), threadName)
         {
-            _workerThread = new UserWorkerThread(threadName);
         }
 
         /// <summary>
@@ -48,8 +49,9 @@ namespace Retlang.Fibers
         /// <param name="threadName"></param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
-        public ThreadFiber(IQueueForThread queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public ThreadFiber(IQueueForThread queue, string threadName, bool isBackground = false, ThreadPriority priority = ThreadPriority.Normal)
         {
+            _queue = queue;
             _workerThread = new UserWorkerThread(queue, threadName, isBackground, priority);
         }
 
@@ -121,7 +123,7 @@ namespace Retlang.Fibers
         /// <param name="action"></param>
         public void Enqueue(Action action)
         {
-            _workerThread.Enqueue(action);
+            _queue.Enqueue(action);
         }
     }
 }

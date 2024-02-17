@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Retlang.Core
 {
@@ -13,8 +14,7 @@ namespace Retlang.Core
         private static int POOL_COUNT = 0;
         private readonly string _poolName;
         private readonly IQueuingContextForThread _queuingContext;
-        private readonly IConsumerQueueForThread[] _consumerList;
-        private Thread[] _threadList = null;
+        private UserWorkerThread[] _threadList = null;
         private long _executionStateLong;
 
         /// <summary>
@@ -59,9 +59,9 @@ namespace Retlang.Core
                 throw new ArgumentNullException(nameof(consumers));
             }
 
-            _consumerList = consumers.ToArray();
+            var consumersArray = consumers.ToArray();
 
-            if (_consumerList.Length <= 0)
+            if (consumersArray.Length <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(consumers));
             }
@@ -73,14 +73,11 @@ namespace Retlang.Core
             _queuingContext = queuingContext;
             ExecutionState = ExecutionStateEnum.Created;
 
-            int numberOfThread = _consumerList.Length;
-            _threadList = new Thread[numberOfThread];
+            _threadList = new UserWorkerThread[consumersArray.Length];
             for (int i = 0; i < _threadList.Length; i++)
             {
-                var th = new Thread(new ThreadStart(_consumerList[i].Run));
-                th.Name = poolName + "-" + i;
-                th.IsBackground = isBackground;
-                th.Priority = priority;
+                string threadName = poolName + "-" + i;
+                var th = new UserWorkerThread(consumersArray[i], threadName, isBackground, priority);
                 _threadList[i] = th;
             }
         }
@@ -105,7 +102,7 @@ namespace Retlang.Core
         /// </summary>
         public Thread[] ThreadList
         {
-            get { return _threadList; }
+            get { return _threadList.Select(x => x.Thread).ToArray(); }
         }
 
         /// <summary>
@@ -174,9 +171,9 @@ namespace Retlang.Core
             else if (ExecutionState == ExecutionStateEnum.Running)
             {
                 ExecutionState = ExecutionStateEnum.Stopped;
-                for (int i = 0; i < _consumerList.Length; i++)
+                for (int i = 0; i < _threadList.Length; i++)
                 {
-                    _consumerList[i].Stop();
+                    _threadList[i].Stop();
                 }
             }
             else if (ExecutionState == ExecutionStateEnum.Stopped)
@@ -192,12 +189,9 @@ namespace Retlang.Core
         ///<summary>
         /// Call join on the threads.
         ///</summary>
-        public void Join()
+        public Task Join()
         {
-            for (int i = 0; i < _threadList.Length; i++)
-            {
-                _threadList[i].Join();
-            }
+            return Task.WhenAll(_threadList.Select(x => x.Join()).ToArray());
         }
 
         /// <summary>
