@@ -12,25 +12,30 @@ namespace RetlangTests
     [TestFixture]
     public class ThreadPoolTests
     {
+        static int NumberOfMinThreads = 2;
+
         [OneTimeSetUp]
         public void Init()
         {
             // Wake up the threads. Assume there are at least two.
-            ThreadPool.QueueUserWorkItem((_) => Thread.Sleep(600));
-            ThreadPool.QueueUserWorkItem((_) => Thread.Sleep(600));
+            for (int i = 0; i < NumberOfMinThreads; i++)
+            {
+                ThreadPool.QueueUserWorkItem((_) => Thread.Sleep(600));
+                ThreadPool.QueueUserWorkItem((_) => Thread.Sleep(600));
+            }
             Thread.Sleep(1300);
         }
 
         [Test]
         public void EnqueueToDefaultThreadPool()
         {
-            EnqueueToThreadPool(new DefaultThreadPool(), 2);
+            EnqueueToThreadPool(new DefaultThreadPool(), NumberOfMinThreads);
         }
 
         [Test]
         public async Task EnqueueToUserThreadPool()
         {
-            using (var pool = UserThreadPool.Create(2))
+            using (var pool = UserThreadPool.Create(NumberOfMinThreads))
             {
                 pool.Start();
                 EnqueueToThreadPool(pool, pool.ThreadList.Length);
