@@ -25,7 +25,7 @@ namespace Retlang.Fibers
         /// Creates a thread fiber with a specified queue.
         /// </summary>
         /// <param name="queue"></param>
-        public ThreadFiber(IQueue queue)
+        public ThreadFiber(IQueueForThread queue)
         {
             _workerThread = new UserWorkerThread(queue);
         }
@@ -46,7 +46,7 @@ namespace Retlang.Fibers
         /// <param name="threadName"></param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
-        public ThreadFiber(IQueue queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public ThreadFiber(IQueueForThread queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
             _workerThread = new UserWorkerThread(queue, threadName, isBackground, priority);
         }

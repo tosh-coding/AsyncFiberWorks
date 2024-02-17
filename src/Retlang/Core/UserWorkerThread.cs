@@ -10,7 +10,7 @@ namespace Retlang.Core
     {
         private static int THREAD_COUNT;
         private readonly Thread _thread;
-        private readonly IQueue _queue;
+        private readonly IQueueForThread _queue;
 
         /// <summary>
         /// Create a worker thread with the default queue.
@@ -23,7 +23,7 @@ namespace Retlang.Core
         /// Creates a worker thread with the specified queue.
         /// </summary>
         /// <param name="queue"></param>
-        public UserWorkerThread(IQueue queue) 
+        public UserWorkerThread(IQueueForThread queue) 
             : this(queue, "UserWorkerThread-" + GetNextThreadId())
         {}
 
@@ -42,7 +42,7 @@ namespace Retlang.Core
         /// <param name="threadName"></param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
-        public UserWorkerThread(IQueue queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public UserWorkerThread(IQueueForThread queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
             _queue = queue;
             _thread = new Thread(RunThread);

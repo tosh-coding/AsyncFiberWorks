@@ -7,7 +7,7 @@ namespace Retlang.Core
     /// <summary>
     /// Default implementation.
     /// </summary>
-    public class DefaultQueue : IQueue
+    public class DefaultQueue : IQueueForThread
     {
         private readonly object _lock = new object();
         private readonly IExecutor _executor;

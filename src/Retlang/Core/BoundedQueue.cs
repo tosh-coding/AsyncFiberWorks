@@ -7,7 +7,7 @@ namespace Retlang.Core
     /// <summary>
     /// Queue with bounded capacity.  Will throw exception if capacity does not recede prior to wait time.
     /// </summary>
-    public class BoundedQueue : IQueue
+    public class BoundedQueue : IQueueForThread
     {
         private readonly object _lock = new object();
         private readonly IExecutor _executor;
