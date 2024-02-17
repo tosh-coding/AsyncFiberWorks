@@ -6,7 +6,7 @@ namespace Retlang.Core
     /// <summary>
     /// A thread pool implementation with only one worker thread.
     /// </summary>
-    public sealed class UserWorkerThread : IThreadPool, IDisposable
+    public sealed class UserWorkerThread : IDisposable
     {
         private static int THREAD_COUNT;
         private readonly Thread _thread;

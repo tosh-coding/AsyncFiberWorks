@@ -71,10 +71,7 @@ namespace RetlangTests
             var defaultThreadPool = new DefaultThreadPool();
             var userThreadPoolA = UserThreadPool.StartNew();
             var userThreadPoolB = UserThreadPool.StartNew();
-            var userWorkerThread = new UserWorkerThread();
-            userWorkerThread.Start();
 
-            var threadFiber = new PoolFiberSlim(userWorkerThread, new DefaultExecutor());
             var dotnetPoolFiber1 = new PoolFiberSlim(defaultThreadPool, new DefaultExecutor());
             var dotnetPoolFiber2 = new PoolFiberSlim();
             var userPoolFiberA1 = new PoolFiberSlim(userThreadPoolA, new DefaultExecutor());
@@ -83,7 +80,6 @@ namespace RetlangTests
             var userPoolFiberB2 = new PoolFiberSlim(userThreadPoolB, new DefaultExecutor());
 
             var idListOfStub = new HashSet<int>();
-            var idListOfThread = new HashSet<int>();
             var idListOfDotnetPool1 = new HashSet<int>();
             var idListOfDotnetPool2 = new HashSet<int>();
             var idListOfUserPoolA1 = new HashSet<int>();
@@ -94,9 +90,6 @@ namespace RetlangTests
             {
                 await mainFiber.SwitchTo();
                 idListOfStub.Add(Thread.CurrentThread.ManagedThreadId);
-
-                await threadFiber.SwitchTo();
-                idListOfThread.Add(Thread.CurrentThread.ManagedThreadId);
 
                 await dotnetPoolFiber1.SwitchTo();
                 idListOfDotnetPool1.Add(Thread.CurrentThread.ManagedThreadId);
@@ -118,20 +111,12 @@ namespace RetlangTests
             }
             await Task.Yield();
 
-            Assert.AreEqual(0, idListOfStub.Intersect(idListOfThread).Count());
             Assert.AreEqual(0, idListOfStub.Intersect(idListOfDotnetPool1).Count());
             Assert.AreEqual(0, idListOfStub.Intersect(idListOfDotnetPool2).Count());
             Assert.AreEqual(0, idListOfStub.Intersect(idListOfUserPoolA1).Count());
             Assert.AreEqual(0, idListOfStub.Intersect(idListOfUserPoolA2).Count());
             Assert.AreEqual(0, idListOfStub.Intersect(idListOfUserPoolB1).Count());
             Assert.AreEqual(0, idListOfStub.Intersect(idListOfUserPoolB2).Count());
-
-            Assert.AreEqual(0, idListOfThread.Intersect(idListOfDotnetPool1).Count());
-            Assert.AreEqual(0, idListOfThread.Intersect(idListOfDotnetPool2).Count());
-            Assert.AreEqual(0, idListOfThread.Intersect(idListOfUserPoolA1).Count());
-            Assert.AreEqual(0, idListOfThread.Intersect(idListOfUserPoolA2).Count());
-            Assert.AreEqual(0, idListOfThread.Intersect(idListOfUserPoolB1).Count());
-            Assert.AreEqual(0, idListOfThread.Intersect(idListOfUserPoolB2).Count());
 
             Assert.Greater(idListOfDotnetPool1.Intersect(idListOfDotnetPool2).Count(), 0);
             Assert.AreEqual(0, idListOfDotnetPool1.Intersect(idListOfUserPoolA1).Count());
