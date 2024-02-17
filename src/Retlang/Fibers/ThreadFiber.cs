@@ -22,7 +22,7 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// Creates a thread fiber with a specified queue.
+        /// Create a thread fiber with the specified queue.
         /// </summary>
         /// <param name="queue"></param>
         public ThreadFiber(IQueueForThread queue)
@@ -31,9 +31,9 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// Creates a thread fiber with a specified name.
+        /// Create a thread fiber with the specified thread name.
         /// </summary>
-        /// /// <param name="threadName"></param>
+        /// <param name="threadName"></param>
         public ThreadFiber(string threadName)
         {
             _workerThread = new UserWorkerThread(threadName);
@@ -68,8 +68,7 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// Stops the thread.
-        /// Clears all subscriptions, scheduled.
+        /// Clear all subscriptions and schedules. Then stop threads.
         /// </summary>
         public void Dispose()
         {
@@ -102,6 +101,7 @@ namespace Retlang.Fibers
             get { return _workerThread.Thread; }
         }
 
+        /// <summary>
         /// Enqueue a single action.
         /// </summary>
         /// <param name="action"></param>
