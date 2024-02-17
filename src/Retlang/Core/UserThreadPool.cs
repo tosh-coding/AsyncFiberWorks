@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace Retlang.Core
@@ -11,42 +12,72 @@ namespace Retlang.Core
     {
         private static int POOL_COUNT = 0;
         private readonly string _poolName;
-        private readonly BlockingCollection<Action> _actions = new BlockingCollection<Action>();
+        private readonly IQueuingContextForThread _queuingContext;
+        private readonly IConsumerQueueForThread[] _consumerList;
         private Thread[] _threadList = null;
         private long _executionStateLong;
 
         /// <summary>
         /// Create a thread pool with the default number of worker threads.
         /// </summary>
-        public UserThreadPool()
-            : this(2)
-        {}
+        public static UserThreadPool Create(int numberOfThread = 2, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        {
+            var creator = new SharingQueueAndConsumerCreator(numberOfThread);
+            return new UserThreadPool(creator.Queue, creator.Consumers, poolName, isBackground, priority);
+        }
 
         /// <summary>
         /// Create a thread pool.
         /// </summary>
-        /// <param name="numberOfThread"></param>
+        /// <param name="queue"></param>
         /// <param name="poolName"></param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
         /// <exception cref="ArgumentOutOfRangeException">The numberOfThread must be at least 1.</exception>
-        public UserThreadPool(int numberOfThread, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public UserThreadPool(IQueueForThread queue, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+            : this(queue, new IConsumerQueueForThread[] { queue }, poolName, isBackground, priority)
         {
-            if (numberOfThread <= 0)
+        }
+
+        /// <summary>
+        /// Create a thread pool.
+        /// </summary>
+        /// <param name="queuingContext"></param>
+        /// <param name="consumers"></param>
+        /// <param name="poolName"></param>
+        /// <param name="isBackground"></param>
+        /// <param name="priority"></param>
+        /// <exception cref="ArgumentOutOfRangeException">The numberOfThread must be at least 1.</exception>
+        public UserThreadPool(IQueuingContextForThread queuingContext, IEnumerable<IConsumerQueueForThread> consumers, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        {
+            if (queuingContext == null)
             {
-                throw new ArgumentOutOfRangeException(nameof(numberOfThread));
+                throw new ArgumentNullException(nameof(queuingContext));
+            }
+            if (consumers == null)
+            {
+                throw new ArgumentNullException(nameof(consumers));
+            }
+
+            _consumerList = consumers.ToArray();
+
+            if (_consumerList.Length <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(consumers));
             }
             if (poolName == null)
             {
                 poolName = "UserThreadPool" + GetNextPoolId();
             }
             _poolName = poolName;
+            _queuingContext = queuingContext;
             ExecutionState = ExecutionStateEnum.Created;
 
+            int numberOfThread = _consumerList.Length;
             _threadList = new Thread[numberOfThread];
-            for (int i = 0; i < numberOfThread; i++)
+            for (int i = 0; i < _threadList.Length; i++)
             {
-                var th = new Thread(new ThreadStart(RunThread));
+                var th = new Thread(new ThreadStart(_consumerList[i].Run));
                 th.Name = poolName + "-" + i;
                 th.IsBackground = isBackground;
                 th.Priority = priority;
@@ -64,7 +95,7 @@ namespace Retlang.Core
         /// <returns></returns>
         public static UserThreadPool StartNew(int numberOfThread = 2, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
-            var pool = new UserThreadPool(numberOfThread, poolName, isBackground, priority);
+            var pool = UserThreadPool.Create(numberOfThread, poolName, isBackground, priority);
             pool.Start();
             return pool;
         }
@@ -96,15 +127,6 @@ namespace Retlang.Core
             return Interlocked.Increment(ref POOL_COUNT);
         }
 
-        private void RunThread()
-        {
-            while (ExecutionState == ExecutionStateEnum.Running)
-            {
-                var act = _actions.Take();
-                act();
-            }
-        }
-
         /// <summary>
         /// Enqueues action.
         /// </summary>
@@ -120,7 +142,7 @@ namespace Retlang.Core
         /// <param name="action"></param>
         public void Enqueue(Action action)
         {
-            _actions.Add(action);
+            _queuingContext.Enqueue(action);
         }
 
         /// <summary>
@@ -152,9 +174,9 @@ namespace Retlang.Core
             else if (ExecutionState == ExecutionStateEnum.Running)
             {
                 ExecutionState = ExecutionStateEnum.Stopped;
-                for (int i = 0; i < _threadList.Length; i++)
+                for (int i = 0; i < _consumerList.Length; i++)
                 {
-                    Enqueue(() => { });
+                    _consumerList[i].Stop();
                 }
             }
             else if (ExecutionState == ExecutionStateEnum.Stopped)

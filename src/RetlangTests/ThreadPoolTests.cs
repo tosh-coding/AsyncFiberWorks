@@ -29,7 +29,7 @@ namespace RetlangTests
         [Test]
         public void EnqueueToUserThreadPool()
         {
-            using (var pool = new UserThreadPool())
+            using (var pool = UserThreadPool.Create())
             {
                 pool.Start();
                 EnqueueToThreadPool(pool);
@@ -73,7 +73,7 @@ namespace RetlangTests
         [Test]
         public void JoinUserThreadPool()
         {
-            var pool = new UserThreadPool();
+            var pool = UserThreadPool.Create();
             pool.Start();
             pool.Enqueue(() =>
             {
@@ -89,8 +89,8 @@ namespace RetlangTests
         [Test]
         public void SetNameOfUserThreadPool()
         {
-            var pool1 = new UserThreadPool(2, poolName: "AbcPool");
-            var pool2 = new UserThreadPool(2, poolName: "DefPool");
+            var pool1 = UserThreadPool.Create(2, poolName: "AbcPool");
+            var pool2 = UserThreadPool.Create(2, poolName: "DefPool");
             Assert.AreEqual("DefPool", pool2.PoolName);
             Assert.AreEqual("AbcPool", pool1.PoolName);
         }
@@ -98,10 +98,10 @@ namespace RetlangTests
         [Test]
         public void SetNumberOfThreadsOfUserThreadPool()
         {
-            var pool1 = new UserThreadPool(1);
-            var pool2 = new UserThreadPool(2);
-            var pool4 = new UserThreadPool(4);
-            var pool13 = new UserThreadPool(13);
+            var pool1 = UserThreadPool.Create(1);
+            var pool2 = UserThreadPool.Create(2);
+            var pool4 = UserThreadPool.Create(4);
+            var pool13 = UserThreadPool.Create(13);
             Assert.AreEqual(13, pool13.ThreadList.Length);
             Assert.AreEqual(4, pool4.ThreadList.Length);
             Assert.AreEqual(2, pool2.ThreadList.Length);
@@ -115,9 +115,9 @@ namespace RetlangTests
             long counter1 = 0;
             long counter2 = 0;
             long counter3 = 0;
-            using (var pool1 = new UserThreadPool(1, poolName: "Pool1"))
-            using (var pool2 = new UserThreadPool(2, poolName: "Pool2"))
-            using (var pool3 = new UserThreadPool(3, poolName: "Pool3"))
+            using (var pool1 = UserThreadPool.Create(1, poolName: "Pool1"))
+            using (var pool2 = UserThreadPool.Create(2, poolName: "Pool2"))
+            using (var pool3 = UserThreadPool.Create(3, poolName: "Pool3"))
             {
                 pool1.Start();
                 pool2.Start();
@@ -155,7 +155,7 @@ namespace RetlangTests
         [Test]
         public void PoolFiberWithUserThreadPool()
         {
-            using (var pool = new UserThreadPool(4))
+            using (var pool = UserThreadPool.Create(4))
             {
                 pool.Start();
                 using (var fiber1 = new PoolFiber(pool, new DefaultExecutor()))
