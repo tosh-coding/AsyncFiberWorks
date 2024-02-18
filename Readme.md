@@ -1,6 +1,6 @@
 https://github.com/github-tosh/RetlangFiberSwitcher
 
-# AsyncFiberWorks #
+# AsyncFiberWorks (Old name: RetlangFiberSwitcher) #
 This is a fiber-based C# threading library. The goal is to make it easy to combine fiber and asynchronous methods.
 
 In addition to enqueueing actions to a fiber, the execution context of the asynchronous method can be changed to within a fiber.
