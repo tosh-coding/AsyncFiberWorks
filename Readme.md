@@ -92,7 +92,7 @@ Forked from [Retlang](https://code.google.com/archive/p/retlang/). I'm refactori
 This is still in the process of major design changes. The namespace is still Retlang.
 
 # API Documentation #
-See https://tosh-coding.github.io/AsyncFiberWorks/api//api/
+See https://tosh-coding.github.io/AsyncFiberWorks/api/
 
 [Unit tests](https://github.com/tosh-coding/AsyncFiberWorks/tree/main/src/RetlangTests) can also be used as a code sample.
 
