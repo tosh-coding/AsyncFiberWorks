@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows;
-using Retlang.Channels;
-using Retlang.Fibers;
+using AsyncFiberWorks.Channels;
+using AsyncFiberWorks.Fibers;
 
 namespace WpfExample
 {

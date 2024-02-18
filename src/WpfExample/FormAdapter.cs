@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Threading;
-using Retlang.Core;
+using AsyncFiberWorks.Core;
 
 namespace WpfExample
 {

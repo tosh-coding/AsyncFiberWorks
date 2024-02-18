@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Windows.Threading;
-using Retlang.Channels;
-using Retlang.Core;
-using Retlang.Fibers;
+using AsyncFiberWorks.Channels;
+using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Fibers;
 
 namespace WpfExample
 {
