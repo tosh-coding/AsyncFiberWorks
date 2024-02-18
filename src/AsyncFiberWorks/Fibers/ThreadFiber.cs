@@ -49,7 +49,7 @@ namespace AsyncFiberWorks.Fibers
         /// <param name="threadName"></param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
-        public ThreadFiber(IQueueForThread queue, string threadName, bool isBackground = false, ThreadPriority priority = ThreadPriority.Normal)
+        public ThreadFiber(IQueueForThread queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
             _queue = queue;
             _workerThread = new UserWorkerThread(queue, threadName, isBackground, priority);
