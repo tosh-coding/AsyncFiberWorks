@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <OutputType>Library</OutputType>
-    <RootNamespace>Retlang</RootNamespace>
-    <AssemblyName>RetlangFiberSwitcher</AssemblyName>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>RetlangFiberSwitcher.snk</AssemblyOriginatorKeyFile>
+    <RootNamespace>RetlangTests</RootNamespace>
+    <AssemblyName>AsyncFiberWorksTests</AssemblyName>
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>AsyncFiberWorksTests.snk</AssemblyOriginatorKeyFile>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -21,24 +21,21 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <AssemblyTitle>RetlangFiberSwitcher</AssemblyTitle>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <AssemblyTitle>AsyncFiberWorksTests</AssemblyTitle>
     <Description>*</Description>
     <Configuration>*</Configuration>
     <Company>*</Company>
-    <Product>RetlangFiberSwitcher</Product>
-    <Copyright>tosh Copyright © 2023</Copyright>
-    <AssemblyVersion>1.0.7.0</AssemblyVersion>
-    <FileVersion>1.0.7.0</FileVersion>
+    <Product>AsyncFiberWorksTests</Product>
+    <Copyright>Copyright ©  2007</Copyright>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DocumentationFile>bin\Release\\netstandard2.0\RetlangFiberSwitcher.xml</DocumentationFile>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
+  <ItemGroup>
+    <Reference Update="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+  </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
@@ -72,18 +69,21 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="RhinoMocks" Version="3.6.1" />
+  </ItemGroup>
+  <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.InteropServices.ComVisibleAttribute">
       <_Parameter1>false</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.InteropServices.GuidAttribute">
-    <_Parameter1>5481019c-9e35-4726-b706-62b8680a8108</_Parameter1>
+    <_Parameter1>5a38c82f-eaf9-40f8-9791-3a6be985cd3d</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
   <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>RetlangFiberSwitcherTests, PublicKey=0024000004800000940000000602000000240000525341310004000001000100ddb15926e9fa1c6fda270730b8f56b827cfb75da5cae7b35d9de1f6b129d50368a89a9c049f351017543395dc60007546180884533342bd64a804e21fa300b88b04ff15f8eeba44ecc17033bee3d5dd8f263116fb0b325f25aaebca3e8daad2e6dcef78b281aeafe404a51ccbf4c503a4ee96602981e03e47d9752a05a4b33ca</_Parameter1>
-    </AssemblyAttribute>
+    <ProjectReference Include="..\Retlang\AsyncFiberWorks.csproj" />
   </ItemGroup>
 </Project>
