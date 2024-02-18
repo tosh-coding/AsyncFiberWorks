@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Concurrent;
+using Retlang.Core;
 
-namespace Retlang.Core
+namespace Retlang.Fibers
 {
     /// <summary>
     /// This is a fiber that needs to be pumped manually.
