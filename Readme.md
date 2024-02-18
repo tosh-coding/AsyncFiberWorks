@@ -80,7 +80,7 @@ async Task SampleAsync()
 ```
 
 # Features #
-  * The main thread is available from the fiber.
+  * The main thread is available from Fibers.
   * Fiber with high affinity for asynchronous methods.
   * Ready-to-use user thread pool.
   * .NET Standard 2.0.3 compliant simple dependencies.
