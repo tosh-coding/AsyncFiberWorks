@@ -1,9 +1,9 @@
 https://github.com/github-tosh/RetlangFiberSwitcher
 
-# RetlangFiberSwitcher #
-This is a fiber-based C# threading library. Forked from [Retlang](https://code.google.com/archive/p/retlang/). It is currently in the process of being refactored with significant design changes. The goal is to make it easy to combine fiber and asynchronous methods.
+# AsyncFiberWorks #
+This is a fiber-based C# threading library. The goal is to make it easy to combine fiber and asynchronous methods.
 
-In addition to Enqueueing the Action to the fiber, the execution context of the asynchronous method can be changed to within the fiber.
+In addition to enqueueing actions to a fiber, the execution context of the asynchronous method can be changed to within a fiber.
 
 ```csharp
 async Task SampleAsync()
@@ -47,6 +47,12 @@ async Task Sample2Async()
   * Fiber with high affinity for asynchronous methods.
   * Ready-to-use user thread pool.
   * .NET Standard 2.0.3 compliant simple dependencies.
+
+# Background #
+
+Forked from [Retlang](https://code.google.com/archive/p/retlang/).  I'm refactoring it to suit my personal taste. This is still in the process of major design changes.
+
+The project name was RetlangFiberSwitcher, but refactoring changed the design from Retlang and made it no longer backward compatible. Therefore, the name was changed to AsyncFiberWorks. URLs and namespaces are still out of date.
 
 # API Documentation #
 See https://github-tosh.github.io/RetlangFiberSwitcher/api/
