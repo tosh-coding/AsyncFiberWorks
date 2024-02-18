@@ -78,38 +78,44 @@ namespace RetlangTests
                             Assert.IsTrue(received);
                             Assert.AreEqual(result, i);
                             i += 1;
-                            if (i < 5)
+                            requesterFiber.Enqueue(() =>
                             {
-                                requesterFiber.Pause();
-                                response.SetCallbackOnReceive(1000, new PoolFiber(), (_) =>
+                                if (i < 5)
                                 {
-                                    receivingArray[0].Invoke();
-                                });
-                            }
-                            else
-                            {
-                                requesterFiber.Pause();
-                                response.SetCallbackOnReceive(3000, new PoolFiber(), (_) =>
-                                {
-                                    requesterFiber.Resume(() =>
+                                    requesterFiber.Pause();
+                                    response.SetCallbackOnReceive(1000, new PoolFiber(), (_) =>
                                     {
-                                        received = response.TryReceive(out result);
-                                        Assert.IsTrue(received);
-                                        Assert.AreEqual(5, result);
-
-                                        requesterFiber.Pause();
-                                        response.SetCallbackOnReceive(3000, new PoolFiber(), (dummy) =>
+                                        receivingArray[0].Invoke();
+                                    });
+                                }
+                                else
+                                {
+                                    requesterFiber.Pause();
+                                    response.SetCallbackOnReceive(3000, new PoolFiber(), (_) =>
+                                    {
+                                        requesterFiber.Resume(() =>
                                         {
-                                            requesterFiber.Resume(() =>
+                                            requesterFiber.Enqueue(() =>
                                             {
                                                 received = response.TryReceive(out result);
-                                                Assert.IsFalse(received);
-                                                requesterThread.Stop();
+                                                Assert.IsTrue(received);
+                                                Assert.AreEqual(5, result);
+
+                                                requesterFiber.Pause();
+                                                response.SetCallbackOnReceive(3000, new PoolFiber(), (dummy) =>
+                                                {
+                                                    requesterFiber.Resume(() =>
+                                                    {
+                                                        received = response.TryReceive(out result);
+                                                        Assert.IsFalse(received);
+                                                        requesterThread.Stop();
+                                                    });
+                                                });
                                             });
                                         });
                                     });
-                                });
-                            }
+                                }
+                            });
                         });
                     };
                     receivingArray[0] = receiving;

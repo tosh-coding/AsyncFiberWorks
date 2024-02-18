@@ -72,14 +72,6 @@ namespace Retlang.Fibers
         }
 
         /// <summary>
-        /// Paused. After the Pause, and before the Resume.
-        /// </summary>
-        public bool IsPaused
-        {
-            get { return _poolFiberSlim.IsPaused; }
-        }
-
-        /// <summary>
         /// Pauses the consumption of the task queue.
         /// </summary>
         /// <exception cref="InvalidOperationException">Pause was called twice.</exception>

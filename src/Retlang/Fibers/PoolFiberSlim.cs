@@ -17,7 +17,7 @@ namespace Retlang.Fibers
         private Queue<Action> _toPass = new Queue<Action>();
 
         private bool _flushPending;
-        private bool _paused = false;
+        private int _paused = 0;
 
         /// <summary>
         /// Create a pool fiber with the specified thread pool and specified executor.
@@ -55,10 +55,6 @@ namespace Retlang.Fibers
             lock (_lock)
             {
                 _queue.Enqueue(action);
-                if (_paused)
-                {
-                    return;
-                }
                 if (!_flushPending)
                 {
                     _pool.Queue(Flush);
@@ -77,18 +73,17 @@ namespace Retlang.Fibers
                     Action action = toExecute.Dequeue();
                     _executor.Execute(action);
 
-                    if (IsPaused)
+                    lock (_lock)
                     {
-                        break;
+                        if (_paused != 0)
+                        {
+                            return;
+                        }
                     }
                 }
                 lock (_lock)
                 {
-                    if (_paused)
-                    {
-                        _flushPending = false;
-                    }
-                    else if (_queue.Count > 0)
+                    if (_queue.Count > 0)
                     {
                         // don't monopolize thread.
                         _pool.Queue(Flush);
@@ -105,9 +100,8 @@ namespace Retlang.Fibers
         {
             lock (_lock)
             {
-                if (_paused)
+                if (_paused != 0)
                 {
-                    _flushPending = false;
                     return null;
                 }
                 if (_toPass.Count > 0)
@@ -120,22 +114,7 @@ namespace Retlang.Fibers
                     return null;
                 }
                 Queues.Swap(ref _queue, ref _toPass);
-                _queue.Clear();
                 return _toPass;
-            }
-        }
-
-        /// <summary>
-        /// Paused. After the Pause, and before the Resume.
-        /// </summary>
-        public bool IsPaused
-        {
-            get
-            {
-                lock (_lock)
-                {
-                    return _paused;
-                }
             }
         }
 
@@ -147,11 +126,11 @@ namespace Retlang.Fibers
         {
             lock (_lock)
             {
-                if (_paused)
+                if (_paused != 0)
                 {
                     throw new InvalidOperationException("Pause was called twice.");
                 }
-                _paused = true;
+                _paused = 1;
             }
         }
 
@@ -164,13 +143,31 @@ namespace Retlang.Fibers
         {
             lock (_lock)
             {
-                if (!_paused)
+                if (_paused == 0)
                 {
                     throw new InvalidOperationException("Resume was called in the unpaused state.");
                 }
-                _paused = false;
+                if (_paused != 1)
+                {
+                    throw new InvalidOperationException("Resume was called twice.");
+                }
+                _paused = 2;
+            }
 
+            try
+            {
                 action();
+            }
+            finally
+            {
+                lock (_lock)
+                {
+                    _paused = 0;
+                    if (_flushPending)
+                    {
+                        _pool.Queue(Flush);
+                    }
+                }
             }
         }
     }
