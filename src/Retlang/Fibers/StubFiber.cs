@@ -5,12 +5,14 @@ using System;
 namespace Retlang.Fibers
 {
     /// <summary>
-    /// StubFiber does not use a backing thread or a thread pool for execution. Actions are added to pending
-    /// lists for execution. These actions can be executed synchronously by the calling thread.
+    /// This is a fiber that needs to be pumped manually.
+    /// Queued actions are added to the pending list.
+    /// Consume them by periodically calling methods for execution.
+    /// Periodically call a method for execution. They are executed on their calling thread.
     /// </summary>
-    public class StubFiber : IFiber, IConsumingContext
+    public class StubFiber : IFiber
     {
-        private readonly StubWorkerThread _stubFiberSlim;
+        private readonly StubFiberSlim _stubFiberSlim;
         private readonly Subscriptions _subscriptions = new Subscriptions();
 
         /// <summary>
@@ -18,7 +20,7 @@ namespace Retlang.Fibers
         /// </summary>
         public StubFiber()
         {
-            _stubFiberSlim = new StubWorkerThread();
+            _stubFiberSlim = new StubFiberSlim();
         }
 
         /// <summary>
@@ -27,7 +29,7 @@ namespace Retlang.Fibers
         /// <param name="executor"></param>
         public StubFiber(IExecutor executor)
         {
-            _stubFiberSlim = new StubWorkerThread(executor);
+            _stubFiberSlim = new StubFiberSlim(executor);
         }
 
         /// <summary>
@@ -61,23 +63,23 @@ namespace Retlang.Fibers
         /// <param name="action"></param>
         public void Enqueue(Action action)
         {
-            _stubFiberSlim.Queue((_) => action());
+            _stubFiberSlim.Enqueue(action);
         }
 
         /// <summary>
-        /// Execute all actions in the pending list.  If any of the executed actions enqueue more actions, execute those as well.
+        /// Execute until there are no more pending actions.
         /// </summary>
-        public int ExecuteAllPendingUntilEmpty()
+        public int ExecuteAll()
         {
-            return _stubFiberSlim.ExecuteAllPendingUntilEmpty();
+            return _stubFiberSlim.ExecuteAll();
         }
 
         /// <summary>
-        /// Execute all actions in the pending list.
+        /// Execute only what is pending now.
         /// </summary>
-        public int ExecuteAllPending()
+        public int ExecuteOnlyPendingNow()
         {
-            return _stubFiberSlim.ExecuteAllPending();
+            return _stubFiberSlim.ExecuteOnlyPendingNow();
         }
     }
 }

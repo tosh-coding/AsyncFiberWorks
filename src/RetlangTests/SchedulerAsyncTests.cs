@@ -19,9 +19,9 @@ namespace RetlangTests
             var timerTask = stubFiber.ScheduleAsync(action, 2);
 
             Thread.Sleep(20);
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             Thread.Sleep(140);
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             Assert.AreEqual(1, counter);
         }
 
@@ -35,12 +35,12 @@ namespace RetlangTests
             var timerTask = stubFiber.ScheduleOnIntervalAsync(actionOnTimer, 2, 100, cancellation.Token);
 
             Thread.Sleep(20);
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             Thread.Sleep(140);
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             cancellation.Cancel();
             Thread.Sleep(100);
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             Assert.AreEqual(2, counterOnTimer);
         }
 
@@ -55,7 +55,7 @@ namespace RetlangTests
 
             cancellation.Cancel();
             Thread.Sleep(20);
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             Assert.AreEqual(0, counterOnTimer);
         }
 

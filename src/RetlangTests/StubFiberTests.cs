@@ -32,7 +32,7 @@ namespace RetlangTests
             sut.Enqueue(command1);
             sut.Enqueue(command2);
 
-            sut.ExecuteAllPendingUntilEmpty();
+            sut.ExecuteAll();
             Assert.AreEqual(new[] { fired1, fired2, fired3 }, actionMarkers.ToArray());
         }
 
@@ -52,13 +52,13 @@ namespace RetlangTests
 
             // Both firstInMs have passed.
             Thread.Sleep(300);
-            sut.ExecuteAllPending();
+            sut.ExecuteOnlyPendingNow();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(1, scheduleOnIntervalFired);
 
             // The regularInMs has passed.
             Thread.Sleep(400);
-            sut.ExecuteAllPending();
+            sut.ExecuteOnlyPendingNow();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(2, scheduleOnIntervalFired);
 
@@ -66,7 +66,7 @@ namespace RetlangTests
 
             // The regularInMs has passed after dispose.
             Thread.Sleep(500);
-            sut.ExecuteAllPending();
+            sut.ExecuteOnlyPendingNow();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(2, scheduleOnIntervalFired);
         }
@@ -93,7 +93,7 @@ namespace RetlangTests
             subscriber.Subscribe(channel);
 
             channel.Publish(0);
-            sut.ExecuteAllPendingUntilEmpty();
+            sut.ExecuteAll();
 
             Assert.AreEqual(count, msgs.Count);
             for (var i = 0; i < msgs.Count; i++)
@@ -109,7 +109,7 @@ namespace RetlangTests
             var channel = new Channel<int>();
 
             sut.Schedule(() => { }, 1000);
-            sut.ExecuteAllPending();
+            sut.ExecuteOnlyPendingNow();
             var subscriber = new ChannelSubscription<int>(sut, x => { });
             subscriber.Subscribe(channel);
             channel.Publish(2);

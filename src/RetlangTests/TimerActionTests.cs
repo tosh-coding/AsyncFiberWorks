@@ -17,10 +17,10 @@ namespace RetlangTests
             Action action = () => executionCount++;
             var timer = new TimerAction(() => stubFiber.Enqueue(action), 1, 2);
             Thread.Sleep(10);
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             Assert.AreEqual(0, executionCount);
             timer.Dispose();
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             Assert.AreEqual(0, executionCount);
         }
 
@@ -34,9 +34,9 @@ namespace RetlangTests
             timer.Start();
 
             Thread.Sleep(20);
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             Thread.Sleep(140);
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             Assert.AreEqual(1, counter);
         }
 
@@ -50,12 +50,12 @@ namespace RetlangTests
             timer.Start();
 
             Thread.Sleep(20);
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             Thread.Sleep(140);
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             timer.Dispose();
             Thread.Sleep(100);
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             Assert.AreEqual(2, counterOnTimer);
         }
 
@@ -70,7 +70,7 @@ namespace RetlangTests
 
             timer.Dispose();
             Thread.Sleep(20);
-            stubFiber.ExecuteAllPending();
+            stubFiber.ExecuteOnlyPendingNow();
             Assert.AreEqual(0, counterOnTimer);
         }
     }
