@@ -3,54 +3,93 @@ https://github.com/github-tosh/RetlangFiberSwitcher
 # AsyncFiberWorks (Old name: RetlangFiberSwitcher) #
 This is a fiber-based C# threading library. The goal is to make it easy to combine fiber and asynchronous methods.
 
-In addition to enqueueing actions to a fiber, the execution context of the asynchronous method can be changed to within a fiber.
+The main thread can be handled via fiber.
 
 ```csharp
-async Task SampleAsync()
+using Retlang.Core;
+
+namespace Sample
 {
-    // Create a fiber that uses the .NET ThreadPool.
-    var fiber = new PoolFiber();
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // Create an adapter.
+            var mainThreadAdaptor = new ThreadPoolAdaptorFromQueueForThread();
 
-    // Enqueue actions to the fiber.
-    int counter = 0;
-    fiber.Enqueue(() => counter += 1);
-    fiber.Enqueue(() => counter += 2);
+            // Starts an asynchronous operation. Pass the adapter.
+            RunAsync(mainThreadAdaptor);
 
-    // Switch context to the fiber and perform the action.
-    await fiber.SwitchTo();
-    counter += 3;
+            // Run the adapter on the main thread. It does not return until Stop is called.
+            mainThreadAdaptor.Run();
+        }
+    }
 
-    // Switch context to a .NET ThreadPool worker thread.
-    await Task.Yield();
+    async void RunAsync(ThreadPoolAdaptorFromQueueForThread mainThreadAdaptor)
+    {
+        await Task.Yield();
+
+        // Create a pool fiber backed the main thread.
+        var mainFiber = new PoolFiber(mainThreadAdaptor, new DefaultExecutor());
+
+        // Enqueue actions to the main thread via fiber.
+        int counter = 0;
+        mainFiber.Enqueue(() => counter += 1);
+        mainFiber.Enqueue(() => counter += 2);
+
+        // Switch the context to the main thread.
+        await mainFiber.SwitchTo();
+        counter += 3;
+        counter += 4;
+
+        // Switch the context to a .NET ThreadPool worker thread.
+        await Task.Yield();
+
+        // Stop the Run method on the main thread.
+        mainThreadAdaptor.Stop();
+    }
 }
 ```
 
-The default is to use .NET ThreadPool, but user-created thread pools are also available.
+A user-created thread pool is also available. This is useful to avoid the execution of blocking functions on .NET ThreadPool.
 
 ```csharp
-async Task Sample2Async()
+async Task SampleAsync()
 {
     // Create a user thread pool and its fiber.
     var userThreadPool = UserThreadPool.StartNew(2);
     var fiber = new PoolFiber(userThreadPool, new DefaultExecutor());
 
-    // Enqueue actions to the fiber. They are executed on worker threads in the user thread pool.
+    // Enqueue actions to a user thread pool via fiber.
+    int counter = 0;
     fiber.Enqueue(() => counter += 1);
     fiber.Enqueue(() => counter += 2);
-    ...
+
+    // Switch the context to a user thread.
+    await fiber.SwitchTo();
+
+    // It calls a blocking function, but it doesn't affect .NET ThreadPool because it's on a user thread.
+    var result = SomeBlockingFunction();
+
+    // Switch the context to a .NET ThreadPool worker thread. And use the result.
+    await Task.Yield();
+    Console.WriteLine($"result={result}");
 
     userThreadPool.Dispose();
 }
 ```
 
 # Features #
+  * The main thread is available from the fiber.
   * Fiber with high affinity for asynchronous methods.
   * Ready-to-use user thread pool.
   * .NET Standard 2.0.3 compliant simple dependencies.
 
 # Background #
 
-Forked from [Retlang](https://code.google.com/archive/p/retlang/).  I'm refactoring it to suit my personal taste. This is still in the process of major design changes.
+Forked from [Retlang](https://code.google.com/archive/p/retlang/). I'm refactoring it to suit my personal taste. I use it for my hobby game development.
+
+This is still in the process of major design changes.
 
 The project name was RetlangFiberSwitcher, but refactoring changed the design from Retlang and made it no longer backward compatible. Therefore, the name was changed to AsyncFiberWorks. URLs and namespaces are still out of date.
 
@@ -76,7 +115,7 @@ ThreadFiber does not support pause. It is specifically intended for performance-
 ## ThreadPools ##
  * _[DefaultThreadPool](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Core/DefaultThreadPool.cs)_ - Default implementation that uses the .NET thread pool.
  * _[UserThreadPool](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Core/UserThreadPool.cs)_ - Another thread pool implementation, using the Thread class to create a thread pool.  If you need to use blocking functions, you should use the user thread pool. This does not disturb the .NET ThreadPool.
- * _[ThreadPoolAdaptorFromQueueForThread](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Core/UserThreadPool.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
+ * _[ThreadPoolAdaptorFromQueueForThread](https://github.com/github-tosh/RetlangFiberSwitcher/blob/master/src/Retlang/Core/ThreadPoolAdaptorFromQueueForThread.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
 
 ## Channels ##
 The channel function has not changed much from the original Retlang design concept. The following explanation is quoted from Retlang.
