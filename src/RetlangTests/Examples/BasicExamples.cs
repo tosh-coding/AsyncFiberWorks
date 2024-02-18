@@ -196,8 +196,8 @@ namespace RetlangTests.Examples
                 }
 
                 // Start requesting.
-                var FiberRequestConsumer = new ThreadPoolAdaptorFromQueueForThread();
-                var fiberRequest = new PoolFiber(FiberRequestConsumer, new DefaultExecutor());
+                var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
+                var fiberRequest = new PoolFiber(requesterThread, new DefaultExecutor());
                 var receivedValues = new List<int>();
                 Action<SnapshotRequestControlEvent> actionControl = (controlEvent) =>
                 {
@@ -238,7 +238,7 @@ namespace RetlangTests.Examples
                                 Assert.AreEqual(expectedReceiveValues[i], receivedValues[i]);
                             }
 
-                            FiberRequestConsumer.Stop();
+                            requesterThread.Stop();
                         }, 200);
                     }
                 };
@@ -251,7 +251,7 @@ namespace RetlangTests.Examples
                 requester.Subscribe(channel);
                 var handleReceive = requester;
 
-                FiberRequestConsumer.Run();
+                requesterThread.Run();
                 handleReceive.Dispose();
             }
         }

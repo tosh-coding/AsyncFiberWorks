@@ -50,11 +50,11 @@ namespace RetlangTests
         [Test]
         public void SwitchToFiberSlim()
         {
-            var consumingThread = new ThreadPoolAdaptorFromQueueForThread();
-            var t = SwitchToFiberSlimAsync(consumingThread);
+            var mainThread = new ThreadPoolAdaptorFromQueueForThread();
+            var t = SwitchToFiberSlimAsync(mainThread);
             try
             {
-                consumingThread.Run();
+                mainThread.Run();
             }
             catch (OperationCanceledException)
             {
@@ -62,11 +62,11 @@ namespace RetlangTests
             t.Wait();
         }
 
-        public async Task SwitchToFiberSlimAsync(ThreadPoolAdaptorFromQueueForThread consumingThread)
+        public async Task SwitchToFiberSlimAsync(ThreadPoolAdaptorFromQueueForThread mainThread)
         {
             await Task.Yield();
 
-            var mainFiber = new PoolFiberSlim(consumingThread, new DefaultExecutor());
+            var mainFiber = new PoolFiberSlim(mainThread, new DefaultExecutor());
 
             var defaultThreadPool = new DefaultThreadPool();
             var userThreadPoolA = UserThreadPool.StartNew();
@@ -138,18 +138,18 @@ namespace RetlangTests
 
             Assert.Greater(idListOfUserPoolB1.Intersect(idListOfUserPoolB2).Count(), 0);
 
-            // Stop the ConsumingWorkerThread.
-            consumingThread.Stop();
+            // Stop the consumer thread.
+            mainThread.Stop();
         }
 
         [Test]
         public void SwitchToFiber()
         {
-            var consumingThread = new ThreadPoolAdaptorFromQueueForThread();
-            var t = SwitchToFiberAsync(consumingThread);
+            var mainThread = new ThreadPoolAdaptorFromQueueForThread();
+            var t = SwitchToFiberAsync(mainThread);
             try
             {
-                consumingThread.Run();
+                mainThread.Run();
             }
             catch (OperationCanceledException)
             {
@@ -157,11 +157,11 @@ namespace RetlangTests
             t.Wait();
         }
 
-        public async Task SwitchToFiberAsync(ThreadPoolAdaptorFromQueueForThread consumingThread)
+        public async Task SwitchToFiberAsync(ThreadPoolAdaptorFromQueueForThread mainThread)
         {
             await Task.Yield();
 
-            var mainFiber = new PoolFiber(consumingThread, new DefaultExecutor());
+            var mainFiber = new PoolFiber(mainThread, new DefaultExecutor());
 
             var defaultThreadPool = new DefaultThreadPool();
             var userThreadPoolA = UserThreadPool.StartNew();
@@ -247,8 +247,8 @@ namespace RetlangTests
 
             Assert.Greater(idListOfUserPoolB1.Intersect(idListOfUserPoolB2).Count(), 0);
 
-            // Stop the ConsumingWorkerThread.
-            consumingThread.Stop();
+            // Stop the consumer thread.
+            mainThread.Stop();
         }
     }
 }

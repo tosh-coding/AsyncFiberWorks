@@ -160,15 +160,15 @@ namespace RetlangTests
 
             int timeoutInMs = 500;
             IReply<int> response = null;
-            var mainFiberConsumer = new ThreadPoolAdaptorFromQueueForThread();
-            var mainFiber = new PoolFiber(mainFiberConsumer, new DefaultExecutor());
+            var mainThread = new ThreadPoolAdaptorFromQueueForThread();
+            var mainFiber = new PoolFiber(mainThread, new DefaultExecutor());
             var ownAction = new List<Action>();
             Action action = () =>
             {
                 response?.Dispose();
                 if (indexRequest >= requests.Count)
                 {
-                    mainFiber.Enqueue(() => { mainFiberConsumer.Stop(); });
+                    mainFiber.Enqueue(() => { mainThread.Stop(); });
                 }
                 else
                 {
@@ -193,7 +193,7 @@ namespace RetlangTests
             };
             ownAction.Add(action);
             mainFiber.Enqueue(action);
-            mainFiberConsumer.Run();
+            mainThread.Run();
             Assert.AreEqual(requests.Count, indexRequest);
         }
 
