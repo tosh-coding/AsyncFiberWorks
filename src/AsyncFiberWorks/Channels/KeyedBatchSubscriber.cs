@@ -17,7 +17,7 @@ namespace AsyncFiberWorks.Channels
 
         private readonly Action<IDictionary<K, T>> _target;
         private readonly Converter<T, K> _keyResolver;
-        private readonly IExecutionContextWithPossibleStoppage _fiber;
+        private readonly ISubscribableFiber _fiber;
         private readonly long _intervalInMs;
         private readonly IMessageFilter<T> _filter;
 
@@ -32,7 +32,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="fiber"></param>
         /// <param name="intervalInMs"></param>
         /// <param name="filter"></param>
-        public KeyedBatchSubscriber(Converter<T, K> keyResolver, Action<IDictionary<K, T>> target, IExecutionContextWithPossibleStoppage fiber, long intervalInMs, IMessageFilter<T> filter = null)
+        public KeyedBatchSubscriber(Converter<T, K> keyResolver, Action<IDictionary<K, T>> target, ISubscribableFiber fiber, long intervalInMs, IMessageFilter<T> filter = null)
         {
             _keyResolver = keyResolver;
             _fiber = fiber;

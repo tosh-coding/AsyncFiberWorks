@@ -10,7 +10,7 @@ namespace AsyncFiberWorks.Channels
     public class SnapshotRequest<T> : IDisposable
     {
         private readonly object _lock = new object();
-        private readonly IExecutionContextWithPossibleStoppage _fiber;
+        private readonly ISubscribableFiber _fiber;
         private readonly Action<SnapshotRequestControlEvent> _control;
         private readonly Action<T> _receive;
         private readonly int _timeoutInMs;
@@ -26,7 +26,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="control"></param>
         /// <param name="receive"></param>
         /// <param name="timeoutInMs">For initial snapshot</param>
-        public SnapshotRequest(IExecutionContextWithPossibleStoppage fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs)
+        public SnapshotRequest(ISubscribableFiber fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs)
         {
             _fiber = fiber;
             _control = control;

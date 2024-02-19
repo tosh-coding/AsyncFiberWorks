@@ -15,7 +15,7 @@ namespace AsyncFiberWorks.Channels
     {
         private readonly object _batchLock = new object();
         private readonly Action<T> _target;
-        private readonly IExecutionContextWithPossibleStoppage _fiber;
+        private readonly ISubscribableFiber _fiber;
         private readonly long _intervalInMs;
         private readonly IMessageFilter<T> _filter;
 
@@ -30,7 +30,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="fiber"></param>
         /// <param name="intervalInMs"></param>
         /// <param name="filter"></param>
-        public LastSubscriber(Action<T> target, IExecutionContextWithPossibleStoppage fiber, long intervalInMs, IMessageFilter<T> filter = null)
+        public LastSubscriber(Action<T> target, ISubscribableFiber fiber, long intervalInMs, IMessageFilter<T> filter = null)
         {
             _fiber = fiber;
             _target = target;

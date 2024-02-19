@@ -16,7 +16,7 @@ namespace AsyncFiberWorks.Channels
     {
         private readonly object _batchLock = new object();
 
-        private readonly IExecutionContextWithPossibleStoppage _fiber;
+        private readonly ISubscribableFiber _fiber;
         private readonly Action<IList<T>> _receive;
         private readonly long _intervalInMs;
         private readonly IMessageFilter<T> _filter;
@@ -31,7 +31,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="receive"></param>
         /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
         /// <param name="filter"></param>
-        public BatchSubscriber(IExecutionContextWithPossibleStoppage fiber, Action<IList<T>> receive, long intervalInMs, IMessageFilter<T> filter = null)
+        public BatchSubscriber(ISubscribableFiber fiber, Action<IList<T>> receive, long intervalInMs, IMessageFilter<T> filter = null)
         {
             _fiber = fiber;
             _receive = receive;

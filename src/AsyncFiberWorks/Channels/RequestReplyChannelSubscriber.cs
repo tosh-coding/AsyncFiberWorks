@@ -5,11 +5,11 @@ namespace AsyncFiberWorks.Channels
 {
     public class RequestReplyChannelSubscriber<R, M> : IDisposable
     {
-        private readonly IExecutionContextWithPossibleStoppage _fiber;
+        private readonly ISubscribableFiber _fiber;
         private readonly Action<IRequest<R, M>> _onRequest;
         private IDisposable _disposable;
 
-        public RequestReplyChannelSubscriber(IExecutionContextWithPossibleStoppage fiber, Action<IRequest<R, M>> onRequest)
+        public RequestReplyChannelSubscriber(ISubscribableFiber fiber, Action<IRequest<R, M>> onRequest)
         {
             _fiber = fiber;
             _onRequest = onRequest;

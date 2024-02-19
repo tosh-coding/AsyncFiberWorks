@@ -6,12 +6,12 @@ namespace AsyncFiberWorks.Channels
     internal class QueueConsumer<T> : IDisposable
     {
         private bool _flushPending;
-        private readonly IExecutionContextWithPossibleStoppage _fiber;
+        private readonly ISubscribableFiber _fiber;
         private readonly Action<T> _callback;
         private IMessageQueue<T> _queue;
         private IDisposable _disposable;
 
-        public QueueConsumer(IExecutionContextWithPossibleStoppage fiber, Action<T> callback)
+        public QueueConsumer(ISubscribableFiber fiber, Action<T> callback)
         {
             _fiber = fiber;
             _callback = callback;
