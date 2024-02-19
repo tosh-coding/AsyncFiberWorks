@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Channels
     /// <typeparam name="M"></typeparam>
     public class RequestReplyChannel<R, M>: IRequestReplyChannel<R,M>
     {
-        private readonly InternalChannel<IRequest<R, M>> _requestChannel = new InternalChannel<IRequest<R, M>>();
+        private readonly MessageHandlerList<IRequest<R, M>> _requestChannel = new MessageHandlerList<IRequest<R, M>>();
 
         /// <summary>
         /// Subscribe to requests.
@@ -20,7 +20,7 @@ namespace AsyncFiberWorks.Channels
         /// <returns></returns>
         public IDisposable OnSubscribe(Action<IRequest<R, M>> action)
         {
-            return _requestChannel.SubscribeOnProducerThreads(action);
+            return _requestChannel.AddHandler(action);
         }
 
         /// <summary>
@@ -37,6 +37,6 @@ namespace AsyncFiberWorks.Channels
         ///<summary>
         /// Number of subscribers
         ///</summary>
-        public int NumSubscribers { get { return _requestChannel.NumSubscribers; } }
+        public int NumSubscribers { get { return _requestChannel.Count; } }
     }
 }

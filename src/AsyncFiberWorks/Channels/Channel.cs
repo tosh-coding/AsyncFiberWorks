@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Channels
     ///<typeparam name="T"></typeparam>
     public class Channel<T> : IChannel<T>
     {
-        private readonly InternalChannel<T> _channel = new InternalChannel<T>();
+        private readonly MessageHandlerList<T> _channel = new MessageHandlerList<T>();
 
         /// <summary>
         /// <see cref="ISubscriber{T}.SubscribeOnProducerThreads(Action{T})"/>
@@ -20,7 +20,7 @@ namespace AsyncFiberWorks.Channels
         /// <returns></returns>
         public IDisposable SubscribeOnProducerThreads(Action<T> receiveOnProducerThread)
         {
-            return _channel.SubscribeOnProducerThreads(receiveOnProducerThread);
+            return _channel.AddHandler(receiveOnProducerThread);
         }
 
         /// <summary>
@@ -36,6 +36,6 @@ namespace AsyncFiberWorks.Channels
         ///<summary>
         /// Number of subscribers
         ///</summary>
-        public int NumSubscribers { get { return _channel.NumSubscribers; } }
+        public int NumSubscribers { get { return _channel.Count; } }
     }
 }

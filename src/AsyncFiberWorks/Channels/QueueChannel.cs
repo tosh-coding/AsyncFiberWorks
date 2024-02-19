@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Channels
     public class QueueChannel<T>: IQueueChannel<T>
     {
         private readonly IMessageQueue<T> _queue;
-        private readonly InternalChannel<byte> _channel = new InternalChannel<byte>();
+        private readonly MessageHandlerList<byte> _channel = new MessageHandlerList<byte>();
 
         /// <summary>
         /// Constructor.
@@ -35,7 +35,7 @@ namespace AsyncFiberWorks.Channels
         public IDisposable OnSubscribe(Action<byte> action, out IMessageQueue<T> outQueue)
         {
             outQueue = _queue;
-            return _channel.SubscribeOnProducerThreads(action);
+            return _channel.AddHandler(action);
         }
 
         /// <summary>
@@ -51,6 +51,6 @@ namespace AsyncFiberWorks.Channels
         ///<summary>
         /// Number of subscribers
         ///</summary>
-        public int NumSubscribers { get { return _channel.NumSubscribers; } }
+        public int NumSubscribers { get { return _channel.Count; } }
     }
 }

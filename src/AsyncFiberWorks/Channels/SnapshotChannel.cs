@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Channels
     ///<typeparam name="T"></typeparam>
     public class SnapshotChannel<T> : ISnapshotChannel<T>
     {
-        private readonly InternalChannel<T> _updatesChannel = new InternalChannel<T>();
+        private readonly MessageHandlerList<T> _updatesChannel = new MessageHandlerList<T>();
         private readonly RequestReplyChannel<object, T> _requestChannel = new RequestReplyChannel<object, T>();
 
         ///<summary>

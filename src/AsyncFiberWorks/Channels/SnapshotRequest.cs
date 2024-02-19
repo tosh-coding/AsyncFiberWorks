@@ -42,7 +42,7 @@ namespace AsyncFiberWorks.Channels
             channel.OnPrimedSubscribe(this);
         }
 
-        internal void OnSubscribe(RequestReplyChannel<object, T> requestChannel, InternalChannel<T> _updatesChannel)
+        internal void OnSubscribe(RequestReplyChannel<object, T> requestChannel, MessageHandlerList<T> _updatesChannel)
         {
             var reply = requestChannel.SendRequest(new object());
             if (reply == null)
@@ -73,7 +73,7 @@ namespace AsyncFiberWorks.Channels
                     _fiber.Enqueue(() => _receive(msg));
                 };
                 action(result);
-                var disposableOfReceiver = _updatesChannel.SubscribeOnProducerThreads(action);
+                var disposableOfReceiver = _updatesChannel.AddHandler(action);
                 var unsubscriber = _fiber.CreateSubscription();
                 if (unsubscriber != null)
                 {
