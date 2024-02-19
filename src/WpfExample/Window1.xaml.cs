@@ -19,7 +19,7 @@ namespace WpfExample
             fiber = new DispatcherFiber(Dispatcher);
 
             var subscriber = new LastSubscriber<DateTime>(OnTimeUpdate, fiber, 0, null);
-            subscriber.Subscribe(channels.TimeUpdate);
+            channels.TimeUpdate.Subscribe(subscriber);
             new UpdateController(channels);
         }
 

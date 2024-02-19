@@ -57,7 +57,7 @@ namespace AsyncFiberWorksTests.Examples
                 _inboundChannel = inboundChannel;
                 _outboundChannel = outboundChannel;
                 var subscriber = new ChannelSubscription<IntPair>(fiber, CalculateNext);
-                subscriber.Subscribe(_inboundChannel);
+                _inboundChannel.Subscribe(subscriber);
                 _limit = limit;
             }
 

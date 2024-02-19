@@ -71,7 +71,7 @@ namespace AsyncFiberWorksTests
 
                     var fiber = fibers[i];
                     var subscriber = new ChannelSubscription<Msg>(fiber, cb);
-                    subscriber.Subscribe(channels[prior]);
+                    channels[prior].Subscribe(subscriber);
                 }
             }
 

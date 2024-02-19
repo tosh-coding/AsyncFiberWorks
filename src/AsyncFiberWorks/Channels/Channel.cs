@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Fibers;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -14,13 +11,20 @@ namespace AsyncFiberWorks.Channels
         private readonly MessageHandlerList<T> _channel = new MessageHandlerList<T>();
 
         /// <summary>
-        /// <see cref="ISubscriber{T}.SubscribeOnProducerThreads(Action{T})"/>
+        /// Subscribe a channel.
         /// </summary>
-        /// <param name="receiveOnProducerThread"></param>
+        /// <param name="messageReceiver">Subscriber.</param>
         /// <returns></returns>
-        public IDisposable SubscribeOnProducerThreads(Action<T> receiveOnProducerThread)
+        /// <exception cref="InvalidOperationException"></exception>
+        public bool Subscribe(IMessageReceiver<T> messageReceiver)
         {
-            return _channel.AddHandler(receiveOnProducerThread);
+            var unsubscriber = this._channel.AddHandler(messageReceiver.ReceiveOnProducerThread);
+            bool started = messageReceiver.StartSubscription(this, unsubscriber);
+            if (!started)
+            {
+                throw new InvalidOperationException("Already subscribed.");
+            }
+            return started;
         }
 
         /// <summary>

@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.Channels
     /// Subscribe to messages on this channel. The provided action will be invoked via a Action on the provided executor.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ChannelSubscription<T> : IDisposable
+    public class ChannelSubscription<T> : IMessageReceiver<T>, IDisposable
     {
         private readonly Action<T> _receiver;
         private readonly ISubscribableFiber _fiber;
@@ -29,18 +29,22 @@ namespace AsyncFiberWorks.Channels
         }
 
         /// <summary>
-        /// Start subscribing to the channel.
+        /// <see cref="IMessageReceiver.StartSubscription(Channel{T}, Unsubscriber)"/>
         /// </summary>
-        /// <param name="channel">Target channel.</param>
-        public void Subscribe(ISubscriber<T> channel)
+        public bool StartSubscription(Channel<T> channel, Unsubscriber unsubscriber)
         {
-            var disposable = channel.SubscribeOnProducerThreads(ReceiveOnProducerThread);
-            var unsubscriber = _fiber.CreateSubscription();
-            if (unsubscriber != null)
+            if (_disposable != null)
             {
-                unsubscriber.Add(() => disposable.Dispose());
+                unsubscriber.Dispose();
+                return false;
             }
-            _disposable = unsubscriber ?? disposable;
+            var unsubscriberFiber = _fiber.CreateSubscription();
+            if (unsubscriberFiber != null)
+            {
+                unsubscriberFiber.Add(() => unsubscriber.Dispose());
+            }
+            _disposable = unsubscriberFiber ?? unsubscriber;
+            return true;
         }
 
         public void Dispose()
@@ -56,7 +60,7 @@ namespace AsyncFiberWorks.Channels
         /// Message receiving function.
         /// </summary>
         /// <param name="msg"></param>
-        void ReceiveOnProducerThread(T msg)
+        public void ReceiveOnProducerThread(T msg)
         {
             if (_filter?.PassesProducerThreadFilter(msg) ?? true)
             {

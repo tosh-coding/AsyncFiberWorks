@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Channels
     /// </summary>
     /// <typeparam name="K"></typeparam>
     /// <typeparam name="T"></typeparam>
-    public class KeyedBatchSubscriber<K, T> : IDisposable
+    public class KeyedBatchSubscriber<K, T> : IMessageReceiver<T>, IDisposable
     {
         private readonly object _batchLock = new object();
 
@@ -42,18 +42,22 @@ namespace AsyncFiberWorks.Channels
         }
 
         /// <summary>
-        /// Start subscribing to the channel.
+        /// <see cref="IMessageReceiver.StartSubscription(Channel{T}, Unsubscriber)"/>
         /// </summary>
-        /// <param name="channel">Target channel.</param>
-        public void Subscribe(ISubscriber<T> channel)
+        public bool StartSubscription(Channel<T> channel, Unsubscriber unsubscriber)
         {
-            var disposable = channel.SubscribeOnProducerThreads(ReceiveOnProducerThread);
-            var unsubscriber = _fiber.CreateSubscription();
-            if (unsubscriber != null)
+            if (_disposable != null)
             {
-                unsubscriber.Add(() => disposable.Dispose());
+                unsubscriber.Dispose();
+                return false;
             }
-            _disposable = unsubscriber ?? disposable;
+            var unsubscriberFiber = _fiber.CreateSubscription();
+            if (unsubscriberFiber != null)
+            {
+                unsubscriberFiber.Add(() => unsubscriber.Dispose());
+            }
+            _disposable = unsubscriberFiber ?? unsubscriber;
+            return true;
         }
 
         public void Dispose()
@@ -69,7 +73,7 @@ namespace AsyncFiberWorks.Channels
         /// Message receiving function.
         /// </summary>
         /// <param name="msg"></param>
-        void ReceiveOnProducerThread(T msg)
+        public void ReceiveOnProducerThread(T msg)
         {
             if (_filter?.PassesProducerThreadFilter(msg) ?? true)
             {

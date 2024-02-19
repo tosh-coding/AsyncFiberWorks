@@ -151,7 +151,7 @@ namespace AsyncFiberWorksTests.Examples
             {
                 _solvedChannel = solvedChannel;
                 var subscriber = new ChannelSubscription<Quadratic>(fiber, ProcessReceivedQuadratic);
-                subscriber.Subscribe(channel);
+                channel.Subscribe(subscriber);
             }
 
             private void ProcessReceivedQuadratic(Quadratic quadratic)
@@ -201,7 +201,7 @@ namespace AsyncFiberWorksTests.Examples
                 _numberToOutput = numberToOutput;
 
                 var subscriber = new ChannelSubscription<SolvedQuadratic>(fiber, PrintSolution);
-                subscriber.Subscribe(solvedChannel);
+                solvedChannel.Subscribe(subscriber);
             }
 
             private void PrintSolution(SolvedQuadratic solvedQuadratic)
