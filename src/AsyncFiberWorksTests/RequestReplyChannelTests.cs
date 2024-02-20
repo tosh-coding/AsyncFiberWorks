@@ -20,8 +20,7 @@ namespace AsyncFiberWorksTests
             var timeCheck = new RequestReplyChannel<string, DateTime>();
             var now = DateTime.Now;
             Action<IRequest<string, DateTime>> onRequest = req => req.SendReply(now);
-            var subscriber = new RequestReplyChannelSubscriber<string, DateTime>(responder, onRequest);
-            subscriber.Subscribe(timeCheck);
+            var subscriber = timeCheck.AddResponder(responder, onRequest);
 
             {
                 var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
@@ -56,8 +55,7 @@ namespace AsyncFiberWorksTests
                         req.SendReply(i);
                     allSent.Set();
                 };
-            var subscriber = new RequestReplyChannelSubscriber<string, int>(responder, onRequest);
-            subscriber.Subscribe(countChannel);
+            var subscriber = countChannel.AddResponder(responder, onRequest);
 
             {
                 var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
@@ -150,8 +148,7 @@ namespace AsyncFiberWorksTests
                         req.SendReply(-1);
                     }
                 };
-            var subscriber = new RequestReplyChannelSubscriber<string, int>(responder, onRequest);
-            subscriber.Subscribe(countChannel);
+            var subscriber = countChannel.AddResponder(responder, onRequest);
 
             var requests = new List<string>();
             requests.AddRange(dic.Keys);
@@ -226,8 +223,7 @@ namespace AsyncFiberWorksTests
                         }
                     });
                 };
-            var subscriber = new RequestReplyChannelSubscriber<string, int>(responder, onRequest);
-            subscriber.Subscribe(countChannel);
+            var subscriber = countChannel.AddResponder(responder, onRequest);
 
             var requests = new List<string>();
             requests.AddRange(dic.Keys);

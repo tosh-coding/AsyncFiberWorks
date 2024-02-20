@@ -143,8 +143,7 @@ namespace AsyncFiberWorksTests.Examples
             using (var fiber = new PoolFiber())
             {
                 var channel = new RequestReplyChannel<string, string>();
-                var subscriber = new RequestReplyChannelSubscriber<string, string>(fiber, req => req.SendReply("bye"));
-                subscriber.Subscribe(channel);
+                var subscriber = channel.AddResponder(fiber, req => req.SendReply("bye"));
 
                 var reply = channel.SendRequest("hello");
                 reply.SetCallbackOnReceive(10000, testFiber, (_) =>
@@ -178,8 +177,7 @@ namespace AsyncFiberWorksTests.Examples
                         return currentValue;
                     }
                 };
-                var subscriber = new RequestReplyChannelSubscriber<object, int>(fiberReply, request => request.SendReply(reply()));
-                channel.ReplyToPrimingRequest(subscriber);
+                channel.ReplyToPrimingRequest(fiberReply, request => request.SendReply(reply()));
                 Assert.AreEqual(1, channel.NumSubscribers);
 
                 // Start changing values.

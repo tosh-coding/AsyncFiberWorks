@@ -1,5 +1,4 @@
 using System;
-using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 
 namespace AsyncFiberWorks.Channels
@@ -12,10 +11,10 @@ namespace AsyncFiberWorks.Channels
     public interface IReplySubscriber<R, M>
     {
         /// <summary>
-        /// Subscribe to a request on the channel.
+        /// Add a responder for requests.
         /// </summary>
         /// <param name="action"></param>
         /// <returns></returns>
-        IDisposable OnSubscribe(Action<IRequest<R, M>> action);
+        IDisposable AddResponder(ISubscribableFiber fiber, Action<IRequest<R, M>> action);
     }
 }

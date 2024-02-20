@@ -1,3 +1,6 @@
+using AsyncFiberWorks.Fibers;
+using System;
+
 namespace AsyncFiberWorks.Channels
 {
     /// <summary>
@@ -9,8 +12,11 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Responds to the request for an initial snapshot.
         /// </summary>
-        /// <param name="subscriber"></param>
-        void ReplyToPrimingRequest(RequestReplyChannelSubscriber<object, T> subscriber);
+        /// <param name="fiber"></param>
+        /// <param name="onRequest"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Only one responder can be handled within a single channel.</exception>
+        IDisposable ReplyToPrimingRequest(ISubscribableFiber fiber, Action<IRequest<object, T>> onRequest);
 
         /// <summary>
         /// Publish a message to all subscribers. Returns true if any subscribers are registered.

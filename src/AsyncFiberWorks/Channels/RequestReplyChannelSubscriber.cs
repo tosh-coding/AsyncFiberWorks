@@ -3,7 +3,7 @@ using System;
 
 namespace AsyncFiberWorks.Channels
 {
-    public class RequestReplyChannelSubscriber<R, M> : IDisposable
+    internal class RequestReplyChannelSubscriber<R, M> : IDisposable
     {
         private readonly ISubscribableFiber _fiber;
         private readonly Action<IRequest<R, M>> _onRequest;
@@ -15,17 +15,6 @@ namespace AsyncFiberWorks.Channels
             _onRequest = onRequest;
         }
 
-        public void Subscribe(RequestReplyChannel<R, M> channel)
-        {
-            var disposable = channel.OnSubscribe(OnReceive);
-            var unsubscriber = _fiber.CreateSubscription();
-            if (unsubscriber != null)
-            {
-                unsubscriber.Add(() => disposable.Dispose());
-            }
-            _disposable = unsubscriber ?? disposable;
-        }
-
         public void Dispose()
         {
             if (_disposable != null)
@@ -33,6 +22,11 @@ namespace AsyncFiberWorks.Channels
                 _disposable.Dispose();
                 _disposable = null;
             }
+        }
+
+        public void SetDisposable(IDisposable disposable)
+        {
+            _disposable = disposable;
         }
 
         public void OnReceive(IRequest<R, M> msg)
