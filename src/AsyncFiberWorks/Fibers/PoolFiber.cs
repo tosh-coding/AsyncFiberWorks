@@ -47,11 +47,11 @@ namespace AsyncFiberWorks.Fibers
         }
 
         /// <summary>
-        /// <see cref="ISubscriptionRegistry.CreateSubscription"/>
+        /// <see cref="ISubscriptionRegistry.BeginSubscription"/>
         /// </summary>
-        public Unsubscriber CreateSubscription()
+        public Unsubscriber BeginSubscription()
         {
-            return _subscriptions.CreateSubscription();
+            return _subscriptions.BeginSubscription();
         }
 
         /// <summary>

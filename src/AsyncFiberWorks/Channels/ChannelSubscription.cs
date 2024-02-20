@@ -38,7 +38,7 @@ namespace AsyncFiberWorks.Channels
                 unsubscriber.Dispose();
                 return false;
             }
-            var unsubscriberFiber = _fiber.CreateSubscription();
+            var unsubscriberFiber = _fiber.BeginSubscription();
             if (unsubscriberFiber != null)
             {
                 unsubscriberFiber.Add(() => unsubscriber.Dispose());

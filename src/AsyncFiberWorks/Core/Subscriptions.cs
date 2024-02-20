@@ -46,10 +46,11 @@ namespace AsyncFiberWorks.Core
         }
 
         /// <summary>
-        /// Create an unsubscriber who unsubscribes when the fiber is discarded.
+        /// Create and register a new Unsubscriber.
+        /// It will be disposed when the subscription target ends.
         /// </summary>
-        /// <returns>Unsubscriber with the unregister process as an element.</returns>
-        public Unsubscriber CreateSubscription()
+        /// <returns>Created unsubscriber.</returns>
+        public Unsubscriber BeginSubscription()
         {
             var unsubscriber = new Unsubscriber();
             var disposable = this.RegisterSubscription(unsubscriber);

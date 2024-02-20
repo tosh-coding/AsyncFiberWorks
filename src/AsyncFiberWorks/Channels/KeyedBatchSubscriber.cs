@@ -51,7 +51,7 @@ namespace AsyncFiberWorks.Channels
                 unsubscriber.Dispose();
                 return false;
             }
-            var unsubscriberFiber = _fiber.CreateSubscription();
+            var unsubscriberFiber = _fiber.BeginSubscription();
             if (unsubscriberFiber != null)
             {
                 unsubscriberFiber.Add(() => unsubscriber.Dispose());
@@ -93,7 +93,7 @@ namespace AsyncFiberWorks.Channels
                 if (_pending == null)
                 {
                     _pending = new Dictionary<K, T>();
-                    var unsubscriber = _fiber.CreateSubscription();
+                    var unsubscriber = _fiber.BeginSubscription();
                     Action cbOnTimerDisposing = () => { unsubscriber.Dispose(); };
                     var timerAction = TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite, cbOnTimerDisposing);
                     unsubscriber.Add(() => timerAction.Dispose());

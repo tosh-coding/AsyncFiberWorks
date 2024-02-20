@@ -35,7 +35,7 @@ namespace AsyncFiberWorks.Channels
         {
             var consumer = new QueueConsumer<T>(fiber, callback, _queue);
             var disposable = _channel.AddHandler(consumer.Signal);
-            var unsubscriber = fiber.CreateSubscription();
+            var unsubscriber = fiber.BeginSubscription();
             if (unsubscriber != null)
             {
                 unsubscriber.Add(() => disposable.Dispose());

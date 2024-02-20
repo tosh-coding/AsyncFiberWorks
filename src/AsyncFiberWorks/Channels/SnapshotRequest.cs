@@ -66,7 +66,7 @@ namespace AsyncFiberWorks.Channels
                 };
                 action(result);
                 var disposableOfReceiver = _updatesChannel.AddHandler(action);
-                var unsubscriber = _fiber.CreateSubscription();
+                var unsubscriber = _fiber.BeginSubscription();
                 if (unsubscriber != null)
                 {
                     unsubscriber.Add(() => disposableOfReceiver.Dispose());

@@ -90,11 +90,11 @@ namespace WpfExample
         }
 
         /// <summary>
-        /// <see cref="ISubscriptionRegistry.CreateSubscription"/>
+        /// <see cref="ISubscriptionRegistry.BeginSubscription"/>
         /// </summary>
-        public Unsubscriber CreateSubscription()
+        public Unsubscriber BeginSubscription()
         {
-            return _fiber.CreateSubscription();
+            return _fiber.BeginSubscription();
         }
 
         /// <summary>
