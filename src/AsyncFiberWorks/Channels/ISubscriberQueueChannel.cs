@@ -1,21 +1,20 @@
-﻿using System;
-using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Fibers;
+﻿using AsyncFiberWorks.Fibers;
+using System;
 
 namespace AsyncFiberWorks.Channels
 {
     /// <summary>
-    /// The interface for QueueChannel subscribers.
+    /// The interface for QueueChannel subscription.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public interface ISubscriberQueueChannel<T>
     {
         /// <summary>
-        /// Subscribe to the context.
+        /// Subscribe to executor messages. 
         /// </summary>
-        /// <param name="action"></param>
-        /// <param name="outQueue"></param>
+        /// <param name="fiber"></param>
+        /// <param name="callback"></param>
         /// <returns></returns>
-        IDisposable OnSubscribe(Action<byte> action, out IMessageQueue<T> outQueue);
+        IDisposable Subscribe(ISubscribableFiber fiber, Action<T> callback);
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 
 namespace AsyncFiberWorks.Channels
@@ -29,13 +28,20 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Subscribe to executor messages. 
         /// </summary>
-        /// <param name="action"></param>
-        /// <param name="outQueue"></param>
+        /// <param name="fiber"></param>
+        /// <param name="callback"></param>
         /// <returns></returns>
-        public IDisposable OnSubscribe(Action<byte> action, out IMessageQueue<T> outQueue)
+        public IDisposable Subscribe(ISubscribableFiber fiber, Action<T> callback)
         {
-            outQueue = _queue;
-            return _channel.AddHandler(action);
+            var consumer = new QueueConsumer<T>(fiber, callback, _queue);
+            var disposable = _channel.AddHandler(consumer.Signal);
+            var unsubscriber = fiber.CreateSubscription();
+            if (unsubscriber != null)
+            {
+                unsubscriber.Add(() => disposable.Dispose());
+            }
+            consumer.SetDisposable(unsubscriber ?? disposable);
+            return unsubscriber;
         }
 
         /// <summary>

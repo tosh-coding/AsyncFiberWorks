@@ -28,8 +28,7 @@ namespace AsyncFiberWorksTests
                         reset.Set();
                     }
                 };
-                var consumer = new QueueConsumer<int>(one, onMsg);
-                consumer.Subscribe(channel);
+                channel.Subscribe(one, onMsg);
                 for (var i = 0; i < 20; i++)
                 {
                     channel.Publish(i);
@@ -55,8 +54,7 @@ namespace AsyncFiberWorksTests
                     }
                     reset.Set();
                 };
-                var consumer = new QueueConsumer<int>(one, onMsg);
-                consumer.Subscribe(channel);
+                channel.Subscribe(one, onMsg);
                 channel.Publish(0);
                 channel.Publish(1);
                 Assert.IsTrue(reset.WaitOne(10000, false));
@@ -90,8 +88,7 @@ namespace AsyncFiberWorksTests
                                             };
                 var fiber = new PoolFiber();
                 queues.Add(fiber);
-                var consumer = new QueueConsumer<int>(fiber, onReceive);
-                consumer.Subscribe(channel);
+                channel.Subscribe(fiber, onReceive);
             }
             for (var i = 0; i < messageCount; i++)
             {
