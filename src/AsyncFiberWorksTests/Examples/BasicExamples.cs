@@ -245,8 +245,7 @@ namespace AsyncFiberWorksTests.Examples
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
                 };
-                var requester = new SnapshotRequest<int>(fiberRequest, actionControl, actionReceive, 5000);
-                requester.Subscribe(channel);
+                var requester = channel.PrimedSubscribe(fiberRequest, actionControl, actionReceive, 5000);
                 var handleReceive = requester;
 
                 requesterThread.Run();

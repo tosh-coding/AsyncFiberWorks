@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.Channels
     /// Subscribes for an initial snapshot and then incremental update.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class SnapshotRequest<T> : IDisposable
+    internal class SnapshotRequest<T> : IDisposable
     {
         private readonly object _lock = new object();
         private readonly ISubscribableFiber _fiber;
@@ -34,15 +34,7 @@ namespace AsyncFiberWorks.Channels
             _timeoutInMs = timeoutInMs;
         }
 
-        /// <summary>
-        /// Start subscribing to the channel.
-        /// </summary>
-        public void Subscribe(SnapshotChannel<T> channel)
-        {
-            channel.OnPrimedSubscribe(this);
-        }
-
-        internal void OnSubscribe(RequestReplyChannel<object, T> requestChannel, MessageHandlerList<T> _updatesChannel)
+        internal void StartSubscribe(RequestReplyChannel<object, T> requestChannel, MessageHandlerList<T> _updatesChannel)
         {
             var reply = requestChannel.SendRequest(new object());
             if (reply == null)
