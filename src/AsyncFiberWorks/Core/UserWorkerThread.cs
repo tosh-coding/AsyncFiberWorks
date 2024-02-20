@@ -33,7 +33,7 @@ namespace AsyncFiberWorks.Core
             _thread.Name = threadName;
             _thread.IsBackground = isBackground;
             _thread.Priority = priority;
-            _taskCompletionSource = new TaskCompletionSource<bool>();
+            _taskCompletionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
         /// <summary>
