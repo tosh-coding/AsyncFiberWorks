@@ -94,9 +94,8 @@ namespace AsyncFiberWorks.Channels
                 {
                     _pending = new Dictionary<K, T>();
                     var unsubscriber = _fiber.BeginSubscription();
-                    Action cbOnTimerDisposing = () => { unsubscriber.Dispose(); };
-                    var timerAction = TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite, cbOnTimerDisposing);
-                    unsubscriber.Add(() => timerAction.Dispose());
+                    var timerAction = TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
+                    unsubscriber.BeginSubscriptionAndSetUnsubscriber(timerAction);
                 }
                 _pending[key] = msg;
             }

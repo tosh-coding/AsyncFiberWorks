@@ -89,9 +89,8 @@ namespace AsyncFiberWorks.Channels
                 if (!_flushPending)
                 {
                     var unsubscriber = _fiber.BeginSubscription();
-                    Action cbOnTimerDisposing = () => { unsubscriber.Dispose(); };
-                    var timerAction = TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite, cbOnTimerDisposing);
-                    unsubscriber.Add(() => timerAction.Dispose());
+                    var timerAction = TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
+                    unsubscriber.BeginSubscriptionAndSetUnsubscriber(timerAction);
                     _flushPending = true;
                 }
                 _pending = msg;
