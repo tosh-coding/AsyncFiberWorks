@@ -18,9 +18,8 @@ namespace AsyncFiberWorks.Fibers
         /// <returns>a handle to cancel the timer.</returns>
         public static IDisposable Schedule(this ISubscribableFiber fiber, Action action, long firstInMs)
         {
-            var unsubscriber = fiber.BeginSubscription();
             var timerAction = TimerAction.StartNew(() => fiber.Enqueue(action), firstInMs, Timeout.Infinite);
-            unsubscriber.BeginSubscriptionAndSetUnsubscriber(timerAction);
+            fiber.BeginSubscriptionAndSetUnsubscriber(timerAction);
             return timerAction;
         }
 
@@ -34,9 +33,8 @@ namespace AsyncFiberWorks.Fibers
         /// <returns>a handle to cancel the timer.</returns>
         public static IDisposable ScheduleOnInterval(this ISubscribableFiber fiber, Action action, long firstInMs, long regularInMs)
         {
-            var unsubscriber = fiber.BeginSubscription();
             var timerAction = TimerAction.StartNew(() => fiber.Enqueue(action), firstInMs, regularInMs);
-            unsubscriber.BeginSubscriptionAndSetUnsubscriber(timerAction);
+            fiber.BeginSubscriptionAndSetUnsubscriber(timerAction);
             return timerAction;
         }
     }

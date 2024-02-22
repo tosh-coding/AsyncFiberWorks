@@ -38,15 +38,6 @@ namespace WpfExample
             Dispose();
         }
 
-
-        /// <summary>
-        /// <see cref="ISubscriptionRegistry.BeginSubscription"/>
-        /// </summary>
-        public Unsubscriber BeginSubscription()
-        {
-            return _fiber.BeginSubscription();
-        }
-
         /// <summary>
         /// <see cref="ISubscriptionRegistry.BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry)"/>
         /// </summary>
