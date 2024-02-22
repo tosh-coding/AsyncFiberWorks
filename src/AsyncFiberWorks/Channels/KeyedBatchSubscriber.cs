@@ -23,7 +23,6 @@ namespace AsyncFiberWorks.Channels
         private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
         private Dictionary<K, T> _pending;
-        private bool _started;
 
         /// <summary>
         /// Construct new instance.
@@ -44,19 +43,11 @@ namespace AsyncFiberWorks.Channels
         }
 
         /// <summary>
-        /// <see cref="IMessageReceiver.StartSubscription(Channel{T}, Unsubscriber)"/>
+        /// <see cref="IMessageReceiver{T}.BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry)"/>
         /// </summary>
-        public bool StartSubscription(Channel<T> channel, Unsubscriber unsubscriber)
+        public void BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry disposable)
         {
-            if (_started)
-            {
-                unsubscriber.Dispose();
-                return false;
-            }
-            _started = true;
-
-            _unsubscriber.BeginSubscriptionAndSetUnsubscriber(unsubscriber);
-            return true;
+            _unsubscriber.BeginSubscriptionAndSetUnsubscriber(disposable);
         }
 
         public void Dispose()

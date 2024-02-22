@@ -22,7 +22,6 @@ namespace AsyncFiberWorks.Channels
 
         private bool _flushPending;
         private T _pending;
-        private bool _started;
 
         /// <summary>
         /// New instance.
@@ -41,19 +40,11 @@ namespace AsyncFiberWorks.Channels
         }
 
         /// <summary>
-        /// <see cref="IMessageReceiver.StartSubscription(Channel{T}, Unsubscriber)"/>
+        /// <see cref="IMessageReceiver{T}.BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry)"/>
         /// </summary>
-        public bool StartSubscription(Channel<T> channel, Unsubscriber unsubscriber)
+        public void BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry disposable)
         {
-            if (_started)
-            {
-                unsubscriber.Dispose();
-                return false;
-            }
-            _started = true;
-
-            _unsubscriber.BeginSubscriptionAndSetUnsubscriber(unsubscriber);
-            return true;
+            _unsubscriber.BeginSubscriptionAndSetUnsubscriber(disposable);
         }
 
         public void Dispose()

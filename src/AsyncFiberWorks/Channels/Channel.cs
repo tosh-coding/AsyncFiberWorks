@@ -19,12 +19,8 @@ namespace AsyncFiberWorks.Channels
         public bool Subscribe(IMessageReceiver<T> messageReceiver)
         {
             var unsubscriber = this._channel.AddHandler(messageReceiver.ReceiveOnProducerThread);
-            bool started = messageReceiver.StartSubscription(this, unsubscriber);
-            if (!started)
-            {
-                throw new InvalidOperationException("Already subscribed.");
-            }
-            return started;
+            messageReceiver.BeginSubscriptionAndSetUnsubscriber(unsubscriber);
+            return true;
         }
 
         /// <summary>

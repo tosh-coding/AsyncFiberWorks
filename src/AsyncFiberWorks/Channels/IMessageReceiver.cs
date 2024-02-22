@@ -1,3 +1,5 @@
+using AsyncFiberWorks.Core;
+
 namespace AsyncFiberWorks.Channels
 {
     /// <summary>
@@ -13,12 +15,9 @@ namespace AsyncFiberWorks.Channels
         void ReceiveOnProducerThread(T msg);
 
         /// <summary>
-        /// Start subscription.
-        /// This is called from the subscription start process of the channel class.
+        /// Begin a subscription. Then set its unsubscriber to disposable.
         /// </summary>
-        /// <param name="channel">The channel in the subscription start process.</param>
-        /// <param name="unsubscriber">An unsubscription to a channel.</param>
-        /// <returns>Success or failure.</returns>
-        bool StartSubscription(Channel<T> channel, Unsubscriber unsubscriber);
+        /// <param name="disposable">Disposables that can be reserved for unsubscriptions.</param>
+        void BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry disposable);
     }
 }
