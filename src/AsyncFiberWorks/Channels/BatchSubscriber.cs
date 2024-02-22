@@ -76,9 +76,8 @@ namespace AsyncFiberWorks.Channels
                 if (_pending == null)
                 {
                     _pending = new List<T>();
-                    var unsubscriber = _fiber.BeginSubscription();
                     var timerAction = TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
-                    unsubscriber.BeginSubscriptionAndSetUnsubscriber(timerAction);
+                    _unsubscriber.BeginSubscriptionAndSetUnsubscriber(timerAction);
                 }
                 _pending.Add(msg);
             }
