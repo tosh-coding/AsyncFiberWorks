@@ -21,13 +21,8 @@ namespace AsyncFiberWorks.Channels
         {
             var responder = new RequestReplyChannelSubscriber<R, M>(fiber, action);
             var disposable = _requestChannel.AddHandler(responder.OnReceive);
-            var unsubscriber = fiber.BeginSubscription();
-            if (unsubscriber != null)
-            {
-                unsubscriber.Add(() => disposable.Dispose());
-            }
-            responder.SetDisposable(unsubscriber ?? disposable);
-            return unsubscriber;
+            responder.AddDisposable(disposable);
+            return responder;
         }
 
         /// <summary>

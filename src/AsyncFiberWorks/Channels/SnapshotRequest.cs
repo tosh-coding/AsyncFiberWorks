@@ -14,10 +14,10 @@ namespace AsyncFiberWorks.Channels
         private readonly Action<SnapshotRequestControlEvent> _control;
         private readonly Action<T> _receive;
         private readonly int _timeoutInMs;
+        private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
         private IReply<T> _reply;
         private bool _disposed = false;
-        private IDisposable _disposableOfReceiver = null;
 
         /// <summary>
         /// Constructor.
@@ -32,6 +32,7 @@ namespace AsyncFiberWorks.Channels
             _control = control;
             _receive = receive;
             _timeoutInMs = timeoutInMs;
+            fiber.BeginSubscriptionAndSetUnsubscriber(_unsubscriber);
         }
 
         internal void StartSubscribe(RequestReplyChannel<object, T> requestChannel, MessageHandlerList<T> _updatesChannel)
@@ -66,23 +67,16 @@ namespace AsyncFiberWorks.Channels
                 };
                 action(result);
                 var disposableOfReceiver = _updatesChannel.AddHandler(action);
-                var unsubscriber = _fiber.BeginSubscription();
-                if (unsubscriber != null)
-                {
-                    unsubscriber.Add(() => disposableOfReceiver.Dispose());
-                    disposableOfReceiver = unsubscriber;
-                }
+                _unsubscriber.Add(() => disposableOfReceiver.Dispose());
 
                 lock (_lock)
                 {
                     if (_disposed)
                     {
-                        disposableOfReceiver.Dispose();
                         return;
                     }
                     else
                     {
-                        _disposableOfReceiver = disposableOfReceiver;
                         _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Connected));
                     }
                 }
@@ -104,11 +98,7 @@ namespace AsyncFiberWorks.Channels
                     _reply.Dispose();
                     _reply = null;
                 }
-                if (_disposableOfReceiver != null)
-                {
-                    _disposableOfReceiver.Dispose();
-                    _disposableOfReceiver = null;
-                }
+                _unsubscriber.Dispose();
                 _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Stopped));
             }
         }

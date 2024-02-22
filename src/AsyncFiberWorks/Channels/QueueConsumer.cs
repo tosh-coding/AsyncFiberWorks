@@ -9,27 +9,24 @@ namespace AsyncFiberWorks.Channels
         private readonly ISubscribableFiber _fiber;
         private readonly Action<T> _callback;
         private readonly IMessageQueue<T> _queue;
-        private IDisposable _disposable;
+        private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
         public QueueConsumer(ISubscribableFiber fiber, Action<T> callback, IMessageQueue<T> queue)
         {
             _fiber = fiber;
             _callback = callback;
             _queue = queue;
+            fiber.BeginSubscriptionAndSetUnsubscriber(_unsubscriber);
         }
 
         public void Dispose()
         {
-            if (_disposable != null)
-            {
-                _disposable.Dispose();
-                _disposable = null;
-            }
+            _unsubscriber.Dispose();
         }
 
-        public void SetDisposable(IDisposable disposable)
+        public void AddDisposable(IDisposable disposable)
         {
-            _disposable = disposable;
+            _unsubscriber.Add(() => disposable.Dispose());
         }
 
         public void Signal(byte dummy)
