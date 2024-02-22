@@ -19,7 +19,7 @@ namespace AsyncFiberWorks.Channels
         public bool Subscribe(IMessageReceiver<T> messageReceiver)
         {
             var unsubscriber = this._channel.AddHandler(messageReceiver.ReceiveOnProducerThread);
-            messageReceiver.BeginSubscriptionAndSetUnsubscriber(unsubscriber);
+            messageReceiver.AddDisposable(unsubscriber);
             return true;
         }
 

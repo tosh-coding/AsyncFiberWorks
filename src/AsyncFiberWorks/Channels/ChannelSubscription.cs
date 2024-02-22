@@ -1,5 +1,4 @@
 using System;
-using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 
 namespace AsyncFiberWorks.Channels
@@ -31,11 +30,12 @@ namespace AsyncFiberWorks.Channels
         }
 
         /// <summary>
-        /// <see cref="IMessageReceiver{T}.BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry)"/>
+        /// <see cref="IMessageReceiver{T}.AddDisposable(IDisposable)"/>
         /// </summary>
-        public void BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry disposable)
+        /// <param name="disposable"></param>
+        public void AddDisposable(IDisposable disposable)
         {
-            _unsubscriber.BeginSubscriptionAndSetUnsubscriber(disposable);
+            _unsubscriber.Add(() => disposable.Dispose());
         }
 
         public void Dispose()

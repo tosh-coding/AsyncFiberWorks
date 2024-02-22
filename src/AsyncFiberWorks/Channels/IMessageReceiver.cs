@@ -1,4 +1,4 @@
-using AsyncFiberWorks.Core;
+using System;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -15,9 +15,9 @@ namespace AsyncFiberWorks.Channels
         void ReceiveOnProducerThread(T msg);
 
         /// <summary>
-        /// Begin a subscription. Then set its unsubscriber to disposable.
+        /// Add a subscription to the subscriber.
         /// </summary>
-        /// <param name="disposable">Disposables that can be reserved for unsubscriptions.</param>
-        void BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry disposable);
+        /// <param name="disposable"></param>
+        void AddDisposable(IDisposable disposable);
     }
 }
