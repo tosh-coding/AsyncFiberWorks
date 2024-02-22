@@ -18,10 +18,11 @@ namespace AsyncFiberWorks.Channels
         private readonly ISubscribableFiber _fiber;
         private readonly long _intervalInMs;
         private readonly IMessageFilter<T> _filter;
+        private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
         private bool _flushPending;
         private T _pending;
-        private IDisposable _disposable;
+        private bool _started;
 
         /// <summary>
         /// New instance.
@@ -36,6 +37,7 @@ namespace AsyncFiberWorks.Channels
             _target = target;
             _intervalInMs = intervalInMs;
             _filter = filter;
+            fiber.BeginSubscriptionAndSetUnsubscriber(_unsubscriber);
         }
 
         /// <summary>
@@ -43,27 +45,20 @@ namespace AsyncFiberWorks.Channels
         /// </summary>
         public bool StartSubscription(Channel<T> channel, Unsubscriber unsubscriber)
         {
-            if (_disposable != null)
+            if (_started)
             {
                 unsubscriber.Dispose();
                 return false;
             }
-            var unsubscriberFiber = _fiber.BeginSubscription();
-            if (unsubscriberFiber != null)
-            {
-                unsubscriberFiber.Add(() => unsubscriber.Dispose());
-            }
-            _disposable = unsubscriberFiber ?? unsubscriber;
+            _started = true;
+
+            _unsubscriber.BeginSubscriptionAndSetUnsubscriber(unsubscriber);
             return true;
         }
 
         public void Dispose()
         {
-            if (_disposable != null)
-            {
-                _disposable.Dispose();
-                _disposable = null;
-            }
+            _unsubscriber.Dispose();
         }
 
         /// <summary>
