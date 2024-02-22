@@ -6,7 +6,7 @@ namespace AsyncFiberWorks.Channels
     /// <summary>
     /// Disposables.
     /// </summary>
-    public class Unsubscriber: IDisposable
+    public class Unsubscriber: ISubscriptionRegistry, IDisposable
     {
         private readonly object _lock = new object();
         private Action _actionUnsubscribe;
@@ -69,7 +69,7 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Begin a subscription. Then set its unsubscriber to disposable.
         /// </summary>
-        /// <param name="disposable"></param>
+        /// <param name="disposable">Disposables that can be reserved for unsubscriptions.</param>
         public void BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry disposable)
         {
             var rootSubscription = this.BeginSubscription();

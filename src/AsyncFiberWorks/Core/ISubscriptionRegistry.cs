@@ -12,5 +12,11 @@ namespace AsyncFiberWorks.Core
         /// </summary>
         /// <returns>Unsubscriber with the unregister process as an element.</returns>
         Unsubscriber BeginSubscription();
+
+        /// <summary>
+        /// Begin a subscription. Then set its unsubscriber to disposable.
+        /// </summary>
+        /// <param name="disposable">Disposables that can be reserved for unsubscriptions.</param>
+        void BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry disposable);
     }
 }

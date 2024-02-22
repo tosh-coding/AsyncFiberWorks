@@ -59,6 +59,19 @@ namespace AsyncFiberWorks.Core
         }
 
         /// <summary>
+        /// Begin a subscription. Then set its unsubscriber to disposable.
+        /// </summary>
+        /// <param name="disposable">Disposables that can be reserved for unsubscriptions.</param>
+        public void BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry disposable)
+        {
+            var rootSubscription = this.BeginSubscription();
+            rootSubscription.Add(() => disposable.Dispose());
+
+            var branchDisposer = disposable.BeginSubscription();
+            branchDisposer.Add(() => rootSubscription.Dispose());
+        }
+
+        /// <summary>
         /// Remove Disposable.
         /// </summary>
         /// <param name="toRemove"></param>
