@@ -44,8 +44,10 @@ namespace AsyncFiberWorksTests
             var scheduleFired = 0;
             var scheduleOnIntervalFired = 0;
 
-            sut.Schedule(() => scheduleFired++, 100);
+            var subscriberSchedule = sut.Schedule(() => scheduleFired++, 100);
+            sut.BeginSubscriptionAndSetUnsubscriber(subscriberSchedule);
             var intervalSub = sut.ScheduleOnInterval(() => scheduleOnIntervalFired++, 100, 500);
+            sut.BeginSubscriptionAndSetUnsubscriber(intervalSub);
 
             // add to the pending list.
             Thread.Sleep(200);
@@ -109,7 +111,8 @@ namespace AsyncFiberWorksTests
             var sut = new StubFiber();
             var channel = new Channel<int>();
 
-            sut.Schedule(() => { }, 1000);
+            var subscriberSchedule = sut.Schedule(() => { }, 1000);
+            sut.BeginSubscriptionAndSetUnsubscriber(subscriberSchedule);
             sut.ExecuteOnlyPendingNow();
             var subscriber = new ChannelSubscription<int>(sut, x => { });
             sut.BeginSubscriptionAndSetUnsubscriber(subscriber);

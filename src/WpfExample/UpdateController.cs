@@ -31,7 +31,9 @@ namespace WpfExample
             }
             else
             {
-                timer = fiber.ScheduleOnInterval(OnTimer, 1000, 1000);
+                var subscriberSchedule = fiber.ScheduleOnInterval(OnTimer, 1000, 1000);
+                timer = subscriberSchedule;
+                fiber.BeginSubscriptionAndSetUnsubscriber(subscriberSchedule);
             }
         }
 

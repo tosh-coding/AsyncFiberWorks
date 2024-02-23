@@ -227,7 +227,7 @@ namespace AsyncFiberWorksTests.Examples
                             channel.Publish(currentValue);
                         }
 
-                        fiberRequest.Schedule(() =>
+                        var subscriberSchedule = fiberRequest.Schedule(() =>
                         {
                             // Finish.
 
@@ -245,6 +245,7 @@ namespace AsyncFiberWorksTests.Examples
 
                             requesterThread.Stop();
                         }, 200);
+                        fiberRequest.BeginSubscriptionAndSetUnsubscriber(subscriberSchedule);
                     }
                 };
                 Action<int> actionReceive = (v) =>
