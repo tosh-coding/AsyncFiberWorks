@@ -28,8 +28,10 @@ namespace AsyncFiberWorksTests
                         reset.Set();
                     }
                 };
+                var unsubscriberList = new Unsubscriber();
                 var subscriber = channel.Subscribe(one, onMsg);
-                one.BeginSubscriptionAndSetUnsubscriber(subscriber);
+                unsubscriberList.AddDisposable(subscriber);
+                one.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
                 for (var i = 0; i < 20; i++)
                 {
                     channel.Publish(i);
@@ -55,8 +57,10 @@ namespace AsyncFiberWorksTests
                     }
                     reset.Set();
                 };
+                var unsubscriberList = new Unsubscriber();
                 var subscriber = channel.Subscribe(one, onMsg);
-                one.BeginSubscriptionAndSetUnsubscriber(subscriber);
+                unsubscriberList.AddDisposable(subscriber);
+                one.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
                 channel.Publish(0);
                 channel.Publish(1);
                 Assert.IsTrue(reset.WaitOne(10000, false));
@@ -90,8 +94,10 @@ namespace AsyncFiberWorksTests
                                             };
                 var fiber = new PoolFiber();
                 queues.Add(fiber);
+                var unsubscriberList = new Unsubscriber();
                 var subscriber = channel.Subscribe(fiber, onReceive);
-                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
+                unsubscriberList.AddDisposable(subscriber);
+                fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
             }
             for (var i = 0; i < messageCount; i++)
             {

@@ -31,12 +31,10 @@ namespace AsyncFiberWorks.Channels
         /// <param name="fiber"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
-        public IDisposableSubscriptionRegistry Subscribe(IExecutionContext fiber, Action<T> callback)
+        public IDisposable Subscribe(IExecutionContext fiber, Action<T> callback)
         {
             var consumer = new QueueConsumer<T>(fiber, callback, _queue);
-            var disposable = _channel.AddHandler(consumer.Signal);
-            consumer.AddDisposable(disposable);
-            return consumer;
+            return _channel.AddHandler(consumer.Signal);
         }
 
         /// <summary>

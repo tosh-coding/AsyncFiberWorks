@@ -15,6 +15,6 @@ namespace AsyncFiberWorks.Channels
         /// <param name="fiber"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
-        IDisposableSubscriptionRegistry Subscribe(IExecutionContext fiber, Action<T> callback);
+        IDisposable Subscribe(IExecutionContext fiber, Action<T> callback);
     }
 }
