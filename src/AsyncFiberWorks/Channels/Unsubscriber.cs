@@ -92,6 +92,11 @@ namespace AsyncFiberWorks.Channels
             return false;
         }
 
+        public void AddDisposable(IDisposable disposable)
+        {
+            this.Add(() => disposable.Dispose());
+        }
+
         /// <summary>
         /// Dispose of all registered disposable.
         /// </summary>

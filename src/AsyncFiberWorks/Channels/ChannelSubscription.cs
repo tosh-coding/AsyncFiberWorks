@@ -8,12 +8,11 @@ namespace AsyncFiberWorks.Channels
     /// Subscribe to messages on this channel. The provided action will be invoked via a Action on the provided executor.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ChannelSubscription<T> : IMessageReceiver<T>, IDisposableSubscriptionRegistry, IDisposable
+    public class ChannelSubscription<T> : IMessageReceiver<T>
     {
         private readonly IMessageFilter<T> _filter;
         private readonly IExecutionContext _fiber;
         private readonly Action<T> _receive;
-        private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
         /// <summary>
         /// Construct the subscription
@@ -45,31 +44,6 @@ namespace AsyncFiberWorks.Channels
             _filter = filter;
             _fiber = fiber;
             _receive = receive;
-        }
-
-        /// <summary>
-        /// <see cref="IMessageReceiver{T}.AddDisposable(IDisposable)"/>
-        /// </summary>
-        /// <param name="disposable"></param>
-        public void AddDisposable(IDisposable disposable)
-        {
-            _unsubscriber.Add(() => disposable.Dispose());
-        }
-
-        /// <summary>
-        /// <see cref="IDisposableSubscriptionRegistry.BeginSubscription"/>
-        /// </summary>
-        public Unsubscriber BeginSubscription()
-        {
-            return _unsubscriber.BeginSubscription();
-        }
-
-        /// <summary>
-        /// Unsubscribe the fiber. Also discards added disposables.
-        /// </summary>
-        public void Dispose()
-        {
-            _unsubscriber.Dispose();
         }
 
         /// <summary>

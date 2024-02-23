@@ -82,6 +82,7 @@ namespace AsyncFiberWorksTests
             var channel = new Channel<int>();
             const int count = 4;
 
+            var unsubscriberList = new Unsubscriber();
             var subscriber = new ChannelSubscription<int>(sut, delegate (int x)
             {
                 if (x == count)
@@ -92,9 +93,9 @@ namespace AsyncFiberWorksTests
                 channel.Publish(x + 1);
                 msgs.Add(x);
             });
-            sut.BeginSubscriptionAndSetUnsubscriber(subscriber);
+            sut.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
             var unsubscriber = channel.Subscribe(subscriber);
-            subscriber.AddDisposable(unsubscriber);
+            unsubscriberList.AddDisposable(unsubscriber);
 
             channel.Publish(0);
             sut.ExecuteAll();
@@ -115,10 +116,11 @@ namespace AsyncFiberWorksTests
             var subscriberSchedule = sut.Schedule(() => { }, 1000);
             sut.BeginSubscriptionAndSetUnsubscriber(subscriberSchedule);
             sut.ExecuteOnlyPendingNow();
+            var unsubscriberList = new Unsubscriber();
             var subscriber = new ChannelSubscription<int>(sut, x => { });
-            sut.BeginSubscriptionAndSetUnsubscriber(subscriber);
+            sut.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
             var unsubscriber = channel.Subscribe(subscriber);
-            subscriber.AddDisposable(unsubscriber);
+            unsubscriberList.AddDisposable(unsubscriber);
             channel.Publish(2);
 
             Assert.AreEqual(2, sut.NumSubscriptions);

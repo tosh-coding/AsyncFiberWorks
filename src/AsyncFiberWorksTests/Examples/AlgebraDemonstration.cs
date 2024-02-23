@@ -150,10 +150,11 @@ namespace AsyncFiberWorksTests.Examples
             public QuadraticSolver(IFiber fiber, ISubscriber<Quadratic> channel, IChannel<SolvedQuadratic> solvedChannel)
             {
                 _solvedChannel = solvedChannel;
+                var unsubscriberList = new Unsubscriber();
                 var subscriber = new ChannelSubscription<Quadratic>(fiber, ProcessReceivedQuadratic);
-                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
+                fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
                 var unsubscriber = channel.Subscribe(subscriber);
-                subscriber.AddDisposable(unsubscriber);
+                unsubscriberList.AddDisposable(unsubscriber);
             }
 
             private void ProcessReceivedQuadratic(Quadratic quadratic)
@@ -202,10 +203,11 @@ namespace AsyncFiberWorksTests.Examples
                 _fiber = fiber;
                 _numberToOutput = numberToOutput;
 
+                var unsubscriberList = new Unsubscriber();
                 var subscriber = new ChannelSubscription<SolvedQuadratic>(fiber, PrintSolution);
-                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
+                fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
                 var unsubscriber = solvedChannel.Subscribe(subscriber);
-                subscriber.AddDisposable(unsubscriber);
+                unsubscriberList.AddDisposable(unsubscriber);
             }
 
             private void PrintSolution(SolvedQuadratic solvedQuadratic)

@@ -15,10 +15,11 @@ namespace WpfExample
         {
             channels = winChannels;
             var threadFiber = new ThreadFiber();
+            var unsubscriberList = new Unsubscriber();
             var subscriber = new ChannelSubscription<RoutedEventArgs>(threadFiber, OnStart);
-            threadFiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
+            threadFiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
             var unsubscriber = channels.StartChannel.Subscribe(subscriber);
-            subscriber.AddDisposable(unsubscriber);
+            unsubscriberList.AddDisposable(unsubscriber);
             threadFiber.Start();
             fiber = threadFiber;
         }

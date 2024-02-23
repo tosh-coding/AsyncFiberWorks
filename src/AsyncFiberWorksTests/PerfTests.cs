@@ -64,10 +64,11 @@ namespace AsyncFiberWorksTests
                         reset.Set();
                     }
                 };
+                var unsubscriberList = new Unsubscriber();
                 var subscriber = new ChannelSubscription<MsgStruct>(fiber, onMsg);
-                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
+                fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
                 var unsubscriber = channel.Subscribe(subscriber);
-                subscriber.AddDisposable(unsubscriber);
+                unsubscriberList.AddDisposable(unsubscriber);
                 using (new PerfTimer(max))
                 {
                     for (var i = 0; i <= max; i++)
@@ -95,10 +96,11 @@ namespace AsyncFiberWorksTests
                                                       reset.Set();
                                                   }
                                               };
+                var unsubscriberList = new Unsubscriber();
                 var subscriber = new ChannelSubscription<MsgStruct>(fiber, onMsg);
-                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
+                fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
                 var unsubscriber = channel.Subscribe(subscriber);
-                subscriber.AddDisposable(unsubscriber);
+                unsubscriberList.AddDisposable(unsubscriber);
                 using (new PerfTimer(max))
                 {
                     for (var i = 0; i <= max; i++)
@@ -127,10 +129,11 @@ namespace AsyncFiberWorksTests
                                                 reset.Set();
                                             }
                                         };
+                var unsubscriberList = new Unsubscriber();
                 var subscriber = new ChannelSubscription<int>(fiber, onMsg);
-                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
+                fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
                 var unsubscriber = channel.Subscribe(subscriber);
-                subscriber.AddDisposable(unsubscriber);
+                unsubscriberList.AddDisposable(unsubscriber);
                 using (new PerfTimer(max))
                 {
                     for (var i = 0; i <= max; i++)
@@ -160,10 +163,11 @@ namespace AsyncFiberWorksTests
                                                    reset.Set();
                                                }
                                            };
+                var unsubscriberList = new Unsubscriber();
                 var subscriber = new ChannelSubscription<object>(fiber, onMsg);
-                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
+                fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
                 var unsubscriber = channel.Subscribe(subscriber);
-                subscriber.AddDisposable(unsubscriber);
+                unsubscriberList.AddDisposable(unsubscriber);
                 using (new PerfTimer(max))
                 {
                     var msg = new object();
