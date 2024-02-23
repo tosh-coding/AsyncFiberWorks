@@ -12,7 +12,7 @@ namespace AsyncFiberWorks.Channels
     /// faster than the arrival rate.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class BatchSubscriber<T> : IMessageReceiver<T>, IDisposableSubscriptionRegistry, IDisposable
+    public class BatchSubscriber<T> : IMessageReceiver<T>, IDisposable
     {
         private readonly object _batchLock = new object();
 
@@ -21,9 +21,9 @@ namespace AsyncFiberWorks.Channels
         private readonly IExecutionContext _batchFiber;
         private readonly IExecutionContext _executeFiber;
         private readonly Action<IList<T>> _receive;
-        private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
         private List<T> _pending;
+        private TimerAction _timerAction;
 
         /// <summary>
         /// Construct new instance.
@@ -76,28 +76,18 @@ namespace AsyncFiberWorks.Channels
         }
 
         /// <summary>
-        /// <see cref="IMessageReceiver{T}.AddDisposable(IDisposable)"/>
-        /// </summary>
-        /// <param name="disposable"></param>
-        public void AddDisposable(IDisposable disposable)
-        {
-            _unsubscriber.Add(() => disposable.Dispose());
-        }
-
-        /// <summary>
-        /// <see cref="IDisposableSubscriptionRegistry.BeginSubscription"/>
-        /// </summary>
-        public Unsubscriber BeginSubscription()
-        {
-            return _unsubscriber.BeginSubscription();
-        }
-
-        /// <summary>
         /// Unsubscribe the fiber, discards added disposables, and cancel the batching timer
         /// </summary>
         public void Dispose()
         {
-            _unsubscriber.Dispose();
+            lock (_batchLock)
+            {
+                if (_timerAction != null)
+                {
+                    _timerAction.Dispose();
+                    _timerAction = null;
+                }
+            }
         }
 
         /// <summary>
@@ -123,8 +113,7 @@ namespace AsyncFiberWorks.Channels
                 if (_pending == null)
                 {
                     _pending = new List<T>();
-                    var timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
-                    _unsubscriber.BeginSubscriptionAndSetUnsubscriber(timerAction);
+                    this._timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
                 }
                 _pending.Add(msg);
             }

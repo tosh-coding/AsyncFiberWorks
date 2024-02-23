@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Channels
     /// has a chance to process the message, the pending message is replaced by the newer message. The old message is discarded.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class LastSubscriber<T> : IMessageReceiver<T>, IDisposableSubscriptionRegistry, IDisposable
+    public class LastSubscriber<T> : IMessageReceiver<T>, IDisposable
     {
         private readonly object _batchLock = new object();
         private readonly IMessageFilter<T> _filter;
@@ -19,10 +19,10 @@ namespace AsyncFiberWorks.Channels
         private readonly IExecutionContext _batchFiber;
         private readonly IExecutionContext _executeFiber;
         private readonly Action<T> _receive;
-        private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
         private bool _flushPending;
         private T _pending;
+        private TimerAction _timerAction;
 
         /// <summary>
         /// New instance.
@@ -75,28 +75,18 @@ namespace AsyncFiberWorks.Channels
         }
 
         /// <summary>
-        /// <see cref="IMessageReceiver{T}.AddDisposable(IDisposable)"/>
-        /// </summary>
-        /// <param name="disposable"></param>
-        public void AddDisposable(IDisposable disposable)
-        {
-            _unsubscriber.Add(() => disposable.Dispose());
-        }
-
-        /// <summary>
-        /// <see cref="IDisposableSubscriptionRegistry.BeginSubscription"/>
-        /// </summary>
-        public Unsubscriber BeginSubscription()
-        {
-            return _unsubscriber.BeginSubscription();
-        }
-
-        /// <summary>
         /// Unsubscribe the fiber, discards added disposables, and cancel the batching timer
         /// </summary>
         public void Dispose()
         {
-            _unsubscriber.Dispose();
+            lock (_batchLock)
+            {
+                if (_timerAction != null)
+                {
+                    _timerAction.Dispose();
+                    _timerAction = null;
+                }
+            }
         }
 
         /// <summary>
@@ -121,8 +111,7 @@ namespace AsyncFiberWorks.Channels
             {
                 if (!_flushPending)
                 {
-                    var timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
-                    _unsubscriber.BeginSubscriptionAndSetUnsubscriber(timerAction);
+                    _timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
                     _flushPending = true;
                 }
                 _pending = msg;

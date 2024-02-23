@@ -102,10 +102,12 @@ namespace AsyncFiberWorksTests.Examples
                                                 }
                                             };
 
+                var unsubscriberList = new Unsubscriber();
                 var subscriber = new BatchSubscriber<int>(1, fiber, cb);
-                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
+                unsubscriberList.AddDisposable(subscriber);
+                fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
                 var unsubscriber = counter.Subscribe(subscriber);
-                subscriber.AddDisposable(unsubscriber);
+                unsubscriberList.AddDisposable(unsubscriber);
 
                 for (var i = 0; i < 10; i++)
                 {
@@ -132,11 +134,13 @@ namespace AsyncFiberWorksTests.Examples
                     }
                 };
 
+                var unsubscriberList = new Unsubscriber();
                 Converter<int, String> keyResolver = x => x.ToString();
                 var subscriber = new KeyedBatchSubscriber<string, int>(null, keyResolver, 0, fiber, cb);
-                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
+                unsubscriberList.AddDisposable(subscriber);
+                fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
                 var unsubscriber = counter.Subscribe(subscriber);
-                subscriber.AddDisposable(unsubscriber);
+                unsubscriberList.AddDisposable(unsubscriber);
 
                 for (var i = 0; i < 10; i++)
                 {
