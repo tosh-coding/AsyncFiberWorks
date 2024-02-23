@@ -65,6 +65,7 @@ namespace AsyncFiberWorksTests
                     }
                 };
                 var subscriber = new ChannelSubscription<MsgStruct>(fiber, onMsg);
+                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
                 channel.Subscribe(subscriber);
                 using (new PerfTimer(max))
                 {
@@ -94,6 +95,7 @@ namespace AsyncFiberWorksTests
                                                   }
                                               };
                 var subscriber = new ChannelSubscription<MsgStruct>(fiber, onMsg);
+                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
                 channel.Subscribe(subscriber);
                 using (new PerfTimer(max))
                 {
@@ -124,6 +126,7 @@ namespace AsyncFiberWorksTests
                                             }
                                         };
                 var subscriber = new ChannelSubscription<int>(fiber, onMsg);
+                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
                 channel.Subscribe(subscriber);
                 using (new PerfTimer(max))
                 {
@@ -155,6 +158,7 @@ namespace AsyncFiberWorksTests
                                                }
                                            };
                 var subscriber = new ChannelSubscription<object>(fiber, onMsg);
+                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
                 channel.Subscribe(subscriber);
                 using (new PerfTimer(max))
                 {

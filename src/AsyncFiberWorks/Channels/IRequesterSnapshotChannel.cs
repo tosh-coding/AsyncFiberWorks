@@ -1,6 +1,5 @@
 ﻿using System;
 using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Fibers;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -17,6 +16,6 @@ namespace AsyncFiberWorks.Channels
         /// <param name="control"></param>
         /// <param name="receive"></param>
         /// <param name="timeoutInMs">For initial snapshot</param>
-        IDisposable PrimedSubscribe(ISubscribableFiber fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs);
+        IDisposableSubscriptionRegistry PrimedSubscribe(IExecutionContext fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs);
     }
 }

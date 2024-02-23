@@ -21,6 +21,7 @@ namespace AsyncFiberWorksTests
             var now = DateTime.Now;
             Action<IRequest<string, DateTime>> onRequest = req => req.SendReply(now);
             var subscriber = timeCheck.AddResponder(responder, onRequest);
+            responder.BeginSubscriptionAndSetUnsubscriber(subscriber);
 
             {
                 var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
@@ -56,6 +57,7 @@ namespace AsyncFiberWorksTests
                     allSent.Set();
                 };
             var subscriber = countChannel.AddResponder(responder, onRequest);
+            responder.BeginSubscriptionAndSetUnsubscriber(subscriber);
 
             {
                 var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
@@ -149,6 +151,7 @@ namespace AsyncFiberWorksTests
                     }
                 };
             var subscriber = countChannel.AddResponder(responder, onRequest);
+            responder.BeginSubscriptionAndSetUnsubscriber(subscriber);
 
             var requests = new List<string>();
             requests.AddRange(dic.Keys);
@@ -224,6 +227,7 @@ namespace AsyncFiberWorksTests
                     });
                 };
             var subscriber = countChannel.AddResponder(responder, onRequest);
+            responder.BeginSubscriptionAndSetUnsubscriber(subscriber);
 
             var requests = new List<string>();
             requests.AddRange(dic.Keys);

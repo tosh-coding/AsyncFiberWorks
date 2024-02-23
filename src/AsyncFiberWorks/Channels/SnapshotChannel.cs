@@ -1,5 +1,5 @@
 ﻿using System;
-using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -20,7 +20,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="control"></param>
         /// <param name="receive"></param>
         /// <param name="timeoutInMs">For initial snapshot</param>
-        public IDisposable PrimedSubscribe(ISubscribableFiber fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs)
+        public IDisposableSubscriptionRegistry PrimedSubscribe(IExecutionContext fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs)
         {
             var requester = new SnapshotRequest<T>(fiber, control, receive, timeoutInMs);
             requester.StartSubscribe(_requestChannel, _updatesChannel);
@@ -43,13 +43,14 @@ namespace AsyncFiberWorks.Channels
         /// <param name="onRequest"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException">Only one responder can be handled within a single channel.</exception>
-        public IDisposable ReplyToPrimingRequest(ISubscribableFiber fiber, Action<IRequest<object, T>> onRequest)
+        public IDisposableSubscriptionRegistry ReplyToPrimingRequest(IExecutionContext fiber, Action<IRequest<object, T>> onRequest)
         {
             if (_requestChannel.NumSubscribers > 0)
             {
                 throw new InvalidOperationException("Only one responder can be handled within a single channel.");
             }
-            return _requestChannel.AddResponder(fiber, onRequest);
+            var subscriber = _requestChannel.AddResponder(fiber, onRequest);
+            return subscriber;
         }
 
         ///<summary>

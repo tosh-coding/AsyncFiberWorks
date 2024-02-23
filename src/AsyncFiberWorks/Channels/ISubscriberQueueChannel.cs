@@ -1,4 +1,4 @@
-﻿using AsyncFiberWorks.Fibers;
+﻿using AsyncFiberWorks.Core;
 using System;
 
 namespace AsyncFiberWorks.Channels
@@ -15,6 +15,6 @@ namespace AsyncFiberWorks.Channels
         /// <param name="fiber"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
-        IDisposable Subscribe(ISubscribableFiber fiber, Action<T> callback);
+        IDisposableSubscriptionRegistry Subscribe(IExecutionContext fiber, Action<T> callback);
     }
 }

@@ -1,5 +1,5 @@
 using System;
-using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -31,7 +31,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="fiber"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
-        public IDisposable Subscribe(ISubscribableFiber fiber, Action<T> callback)
+        public IDisposableSubscriptionRegistry Subscribe(IExecutionContext fiber, Action<T> callback)
         {
             var consumer = new QueueConsumer<T>(fiber, callback, _queue);
             var disposable = _channel.AddHandler(consumer.Signal);

@@ -1,5 +1,5 @@
 using System;
-using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -8,10 +8,10 @@ namespace AsyncFiberWorks.Channels
     /// Subscribe to messages on this channel. The provided action will be invoked via a Action on the provided executor.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ChannelSubscription<T> : IMessageReceiver<T>, IDisposable
+    public class ChannelSubscription<T> : IMessageReceiver<T>, IDisposableSubscriptionRegistry, IDisposable
     {
         private readonly IMessageFilter<T> _filter;
-        private readonly ISubscribableFiber _fiber;
+        private readonly IExecutionContext _fiber;
         private readonly Action<T> _receive;
         private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
@@ -29,7 +29,7 @@ namespace AsyncFiberWorks.Channels
         /// </summary>
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="receive">Message receiving handler.</param>
-        public ChannelSubscription(ISubscribableFiber fiber, Action<T> receive)
+        public ChannelSubscription(IExecutionContext fiber, Action<T> receive)
             : this(null, fiber, receive)
         {
         }
@@ -40,12 +40,11 @@ namespace AsyncFiberWorks.Channels
         /// <param name="filter">Message pass filter.</param>
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="receive">Message receiving handler.</param>
-        public ChannelSubscription(IMessageFilter<T> filter, ISubscribableFiber fiber, Action<T> receive)
+        public ChannelSubscription(IMessageFilter<T> filter, IExecutionContext fiber, Action<T> receive)
         {
             _filter = filter;
             _fiber = fiber;
             _receive = receive;
-            fiber.BeginSubscriptionAndSetUnsubscriber(_unsubscriber);
         }
 
         /// <summary>
@@ -55,6 +54,14 @@ namespace AsyncFiberWorks.Channels
         public void AddDisposable(IDisposable disposable)
         {
             _unsubscriber.Add(() => disposable.Dispose());
+        }
+
+        /// <summary>
+        /// <see cref="IDisposableSubscriptionRegistry.BeginSubscription"/>
+        /// </summary>
+        public Unsubscriber BeginSubscription()
+        {
+            return _unsubscriber.BeginSubscription();
         }
 
         /// <summary>

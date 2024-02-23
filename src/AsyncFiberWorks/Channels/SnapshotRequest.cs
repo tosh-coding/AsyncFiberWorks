@@ -1,4 +1,4 @@
-﻿using AsyncFiberWorks.Fibers;
+﻿using AsyncFiberWorks.Core;
 using System;
 
 namespace AsyncFiberWorks.Channels
@@ -7,10 +7,10 @@ namespace AsyncFiberWorks.Channels
     /// Subscribes for an initial snapshot and then incremental update.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    internal class SnapshotRequest<T> : IDisposable
+    internal class SnapshotRequest<T> : IDisposableSubscriptionRegistry, IDisposable
     {
         private readonly object _lock = new object();
-        private readonly ISubscribableFiber _fiber;
+        private readonly IExecutionContext _fiber;
         private readonly Action<SnapshotRequestControlEvent> _control;
         private readonly Action<T> _receive;
         private readonly int _timeoutInMs;
@@ -26,13 +26,12 @@ namespace AsyncFiberWorks.Channels
         /// <param name="control"></param>
         /// <param name="receive"></param>
         /// <param name="timeoutInMs">For initial snapshot</param>
-        public SnapshotRequest(ISubscribableFiber fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs)
+        public SnapshotRequest(IExecutionContext fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs)
         {
             _fiber = fiber;
             _control = control;
             _receive = receive;
             _timeoutInMs = timeoutInMs;
-            fiber.BeginSubscriptionAndSetUnsubscriber(_unsubscriber);
         }
 
         internal void StartSubscribe(RequestReplyChannel<object, T> requestChannel, MessageHandlerList<T> _updatesChannel)
@@ -81,6 +80,14 @@ namespace AsyncFiberWorks.Channels
                     }
                 }
             });
+        }
+
+        /// <summary>
+        /// <see cref="IDisposableSubscriptionRegistry.BeginSubscription"/>
+        /// </summary>
+        public Unsubscriber BeginSubscription()
+        {
+            return _unsubscriber.BeginSubscription();
         }
 
         public void Dispose()

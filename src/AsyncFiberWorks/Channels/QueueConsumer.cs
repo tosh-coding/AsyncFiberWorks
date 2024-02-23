@@ -1,22 +1,21 @@
 using System;
-using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Channels
 {
-    internal class QueueConsumer<T> : IDisposable
+    internal class QueueConsumer<T> : IDisposableSubscriptionRegistry, IDisposable
     {
         private bool _flushPending;
-        private readonly ISubscribableFiber _fiber;
+        private readonly IExecutionContext _fiber;
         private readonly Action<T> _callback;
         private readonly IMessageQueue<T> _queue;
         private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
-        public QueueConsumer(ISubscribableFiber fiber, Action<T> callback, IMessageQueue<T> queue)
+        public QueueConsumer(IExecutionContext fiber, Action<T> callback, IMessageQueue<T> queue)
         {
             _fiber = fiber;
             _callback = callback;
             _queue = queue;
-            fiber.BeginSubscriptionAndSetUnsubscriber(_unsubscriber);
         }
 
         public void Dispose()
@@ -27,6 +26,14 @@ namespace AsyncFiberWorks.Channels
         public void AddDisposable(IDisposable disposable)
         {
             _unsubscriber.Add(() => disposable.Dispose());
+        }
+
+        /// <summary>
+        /// <see cref="IDisposableSubscriptionRegistry.BeginSubscription"/>
+        /// </summary>
+        public Unsubscriber BeginSubscription()
+        {
+            return _unsubscriber.BeginSubscription();
         }
 
         public void Signal(byte dummy)

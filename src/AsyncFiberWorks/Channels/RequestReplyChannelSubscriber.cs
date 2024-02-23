@@ -1,19 +1,18 @@
-﻿using AsyncFiberWorks.Fibers;
+﻿using AsyncFiberWorks.Core;
 using System;
 
 namespace AsyncFiberWorks.Channels
 {
-    internal class RequestReplyChannelSubscriber<R, M> : IDisposable
+    internal class RequestReplyChannelSubscriber<R, M> : IDisposableSubscriptionRegistry, IDisposable
     {
-        private readonly ISubscribableFiber _fiber;
+        private readonly IExecutionContext _fiber;
         private readonly Action<IRequest<R, M>> _onRequest;
         private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
-        public RequestReplyChannelSubscriber(ISubscribableFiber fiber, Action<IRequest<R, M>> onRequest)
+        public RequestReplyChannelSubscriber(IExecutionContext fiber, Action<IRequest<R, M>> onRequest)
         {
             _fiber = fiber;
             _onRequest = onRequest;
-            fiber.BeginSubscriptionAndSetUnsubscriber(_unsubscriber);
         }
 
         public void Dispose()
@@ -24,6 +23,14 @@ namespace AsyncFiberWorks.Channels
         public void AddDisposable(IDisposable disposable)
         {
             _unsubscriber.Add(() => disposable.Dispose());
+        }
+
+        /// <summary>
+        /// <see cref="IDisposableSubscriptionRegistry.BeginSubscription"/>
+        /// </summary>
+        public Unsubscriber BeginSubscription()
+        {
+            return _unsubscriber.BeginSubscription();
         }
 
         public void OnReceive(IRequest<R, M> msg)

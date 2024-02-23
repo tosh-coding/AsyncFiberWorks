@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Channels
     /// </summary>
     /// <typeparam name="K"></typeparam>
     /// <typeparam name="T"></typeparam>
-    public class KeyedBatchSubscriber<K, T> : IMessageReceiver<T>, IDisposable
+    public class KeyedBatchSubscriber<K, T> : IMessageReceiver<T>, IDisposableSubscriptionRegistry, IDisposable
     {
         private readonly object _batchLock = new object();
 
@@ -19,7 +19,7 @@ namespace AsyncFiberWorks.Channels
         private readonly Converter<T, K> _keyResolver;
         private readonly long _intervalInMs;
         private readonly IExecutionContext _batchFiber;
-        private readonly ISubscribableFiber _executeFiber;
+        private readonly IExecutionContext _executeFiber;
         private readonly Action<IDictionary<K, T>> _receive;
         private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
@@ -43,7 +43,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="receive">Message receiving handler.</param>
-        public KeyedBatchSubscriber(Converter<T, K> keyResolver, long intervalInMs, ISubscribableFiber fiber, Action<IDictionary<K, T>> receive)
+        public KeyedBatchSubscriber(Converter<T, K> keyResolver, long intervalInMs, IExecutionContext fiber, Action<IDictionary<K, T>> receive)
             : this(null, keyResolver, intervalInMs, fiber, receive)
         {
         }
@@ -56,7 +56,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="receive">Message receiving handler.</param>
-        public KeyedBatchSubscriber(IMessageFilter<T> filter, Converter<T, K> keyResolver, long intervalInMs, ISubscribableFiber fiber, Action<IDictionary<K, T>> receive)
+        public KeyedBatchSubscriber(IMessageFilter<T> filter, Converter<T, K> keyResolver, long intervalInMs, IExecutionContext fiber, Action<IDictionary<K, T>> receive)
             : this(filter, keyResolver, intervalInMs, null, fiber, receive)
         {
         }
@@ -70,7 +70,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="batchFiber">Fiber used for batch processing.</param>
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="receive">Message receiving handler.</param>
-        public KeyedBatchSubscriber(IMessageFilter<T> filter, Converter<T, K> keyResolver, long intervalInMs, IExecutionContext batchFiber, ISubscribableFiber fiber, Action<IDictionary<K, T>> receive)
+        public KeyedBatchSubscriber(IMessageFilter<T> filter, Converter<T, K> keyResolver, long intervalInMs, IExecutionContext batchFiber, IExecutionContext fiber, Action<IDictionary<K, T>> receive)
         {
             _filter = filter;
             _keyResolver = keyResolver;
@@ -78,7 +78,6 @@ namespace AsyncFiberWorks.Channels
             _batchFiber = batchFiber ?? ((IExecutionContext)fiber) ?? new PoolFiberSlim();
             _executeFiber = fiber;
             _receive = receive;
-            fiber.BeginSubscriptionAndSetUnsubscriber(_unsubscriber);
         }
 
         /// <summary>
@@ -88,6 +87,14 @@ namespace AsyncFiberWorks.Channels
         public void AddDisposable(IDisposable disposable)
         {
             _unsubscriber.Add(() => disposable.Dispose());
+        }
+
+        /// <summary>
+        /// <see cref="IDisposableSubscriptionRegistry.BeginSubscription"/>
+        /// </summary>
+        public Unsubscriber BeginSubscription()
+        {
+            return _unsubscriber.BeginSubscription();
         }
 
         /// <summary>
