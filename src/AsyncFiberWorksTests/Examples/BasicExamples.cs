@@ -160,8 +160,10 @@ namespace AsyncFiberWorksTests.Examples
             using (var fiber = new PoolFiber())
             {
                 var channel = new RequestReplyChannel<string, string>();
+                var unsubscriberList = new Unsubscriber();
                 var subscriber = channel.AddResponder(fiber, req => req.SendReply("bye"));
-                fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
+                unsubscriberList.AddDisposable(subscriber);
+                fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
 
                 var reply = channel.SendRequest("hello");
                 reply.SetCallbackOnReceive(10000, testFiber, (_) =>
@@ -195,8 +197,10 @@ namespace AsyncFiberWorksTests.Examples
                         return currentValue;
                     }
                 };
+                var unsubscriberList = new Unsubscriber();
                 var subscriber = channel.ReplyToPrimingRequest(fiberReply, request => request.SendReply(reply()));
-                fiberReply.BeginSubscriptionAndSetUnsubscriber(subscriber);
+                unsubscriberList.AddDisposable(subscriber);
+                fiberReply.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
                 Assert.AreEqual(1, channel.NumSubscribers);
 
                 // Start changing values.

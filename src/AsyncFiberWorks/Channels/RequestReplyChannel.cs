@@ -17,12 +17,10 @@ namespace AsyncFiberWorks.Channels
         /// </summary>
         /// <param name="action"></param>
         /// <returns></returns>
-        public IDisposableSubscriptionRegistry AddResponder(IExecutionContext fiber, Action<IRequest<R, M>> action)
+        public IDisposable AddResponder(IExecutionContext fiber, Action<IRequest<R, M>> action)
         {
             var responder = new RequestReplyChannelSubscriber<R, M>(fiber, action);
-            var disposable = _requestChannel.AddHandler(responder.OnReceive);
-            responder.AddDisposable(disposable);
-            return responder;
+            return _requestChannel.AddHandler(responder.OnReceive);
         }
 
         /// <summary>
