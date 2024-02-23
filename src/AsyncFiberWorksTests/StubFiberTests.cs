@@ -93,7 +93,8 @@ namespace AsyncFiberWorksTests
                 msgs.Add(x);
             });
             sut.BeginSubscriptionAndSetUnsubscriber(subscriber);
-            channel.Subscribe(subscriber);
+            var unsubscriber = channel.Subscribe(subscriber);
+            subscriber.AddDisposable(unsubscriber);
 
             channel.Publish(0);
             sut.ExecuteAll();
@@ -116,7 +117,8 @@ namespace AsyncFiberWorksTests
             sut.ExecuteOnlyPendingNow();
             var subscriber = new ChannelSubscription<int>(sut, x => { });
             sut.BeginSubscriptionAndSetUnsubscriber(subscriber);
-            channel.Subscribe(subscriber);
+            var unsubscriber = channel.Subscribe(subscriber);
+            subscriber.AddDisposable(unsubscriber);
             channel.Publish(2);
 
             Assert.AreEqual(2, sut.NumSubscriptions);

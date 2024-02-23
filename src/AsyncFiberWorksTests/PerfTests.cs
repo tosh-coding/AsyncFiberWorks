@@ -66,7 +66,8 @@ namespace AsyncFiberWorksTests
                 };
                 var subscriber = new ChannelSubscription<MsgStruct>(fiber, onMsg);
                 fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
-                channel.Subscribe(subscriber);
+                var unsubscriber = channel.Subscribe(subscriber);
+                subscriber.AddDisposable(unsubscriber);
                 using (new PerfTimer(max))
                 {
                     for (var i = 0; i <= max; i++)
@@ -96,7 +97,8 @@ namespace AsyncFiberWorksTests
                                               };
                 var subscriber = new ChannelSubscription<MsgStruct>(fiber, onMsg);
                 fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
-                channel.Subscribe(subscriber);
+                var unsubscriber = channel.Subscribe(subscriber);
+                subscriber.AddDisposable(unsubscriber);
                 using (new PerfTimer(max))
                 {
                     for (var i = 0; i <= max; i++)
@@ -127,7 +129,8 @@ namespace AsyncFiberWorksTests
                                         };
                 var subscriber = new ChannelSubscription<int>(fiber, onMsg);
                 fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
-                channel.Subscribe(subscriber);
+                var unsubscriber = channel.Subscribe(subscriber);
+                subscriber.AddDisposable(unsubscriber);
                 using (new PerfTimer(max))
                 {
                     for (var i = 0; i <= max; i++)
@@ -159,7 +162,8 @@ namespace AsyncFiberWorksTests
                                            };
                 var subscriber = new ChannelSubscription<object>(fiber, onMsg);
                 fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
-                channel.Subscribe(subscriber);
+                var unsubscriber = channel.Subscribe(subscriber);
+                subscriber.AddDisposable(unsubscriber);
                 using (new PerfTimer(max))
                 {
                     var msg = new object();

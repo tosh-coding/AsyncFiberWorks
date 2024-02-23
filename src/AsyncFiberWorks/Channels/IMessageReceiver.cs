@@ -1,5 +1,3 @@
-using System;
-
 namespace AsyncFiberWorks.Channels
 {
     /// <summary>
@@ -13,11 +11,5 @@ namespace AsyncFiberWorks.Channels
         /// Probably just transfer it to another fiber.
         /// </summary>
         void ReceiveOnProducerThread(T msg);
-
-        /// <summary>
-        /// Add a subscription to the subscriber.
-        /// </summary>
-        /// <param name="disposable"></param>
-        void AddDisposable(IDisposable disposable);
     }
 }

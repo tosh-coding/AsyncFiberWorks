@@ -20,7 +20,8 @@ namespace WpfExample
 
             var subscriber = new LastSubscriber<DateTime>(0, fiber, OnTimeUpdate);
             fiber.BeginSubscriptionAndSetUnsubscriber(subscriber);
-            channels.TimeUpdate.Subscribe(subscriber);
+            var unsubscriber = channels.TimeUpdate.Subscribe(subscriber);
+            subscriber.AddDisposable(unsubscriber);
             new UpdateController(channels);
         }
 

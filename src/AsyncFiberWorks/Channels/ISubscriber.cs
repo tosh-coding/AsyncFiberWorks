@@ -1,3 +1,5 @@
+using AsyncFiberWorks.Core;
+
 namespace AsyncFiberWorks.Channels
 {
     /// <summary>
@@ -10,7 +12,7 @@ namespace AsyncFiberWorks.Channels
         /// Subscribe a channel.
         /// </summary>
         /// <param name="messageReceiver">Subscriber.</param>
-        /// <returns>Success or failure.</returns>
-        bool Subscribe(IMessageReceiver<T> messageReceiver);
+        /// <returns>Unsubscriber.</returns>
+        IDisposableSubscriptionRegistry Subscribe(IMessageReceiver<T> messageReceiver);
     }
 }
