@@ -20,7 +20,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="control"></param>
         /// <param name="receive"></param>
         /// <param name="timeoutInMs">For initial snapshot</param>
-        public IDisposableSubscriptionRegistry PrimedSubscribe(IExecutionContext fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs)
+        public IDisposable PrimedSubscribe(IExecutionContext fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs)
         {
             var requester = new SnapshotRequest<T>(fiber, control, receive, timeoutInMs);
             requester.StartSubscribe(_requestChannel, _updatesChannel);

@@ -269,9 +269,11 @@ namespace AsyncFiberWorksTests.Examples
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
                 };
+                var unsubscriberList2 = new Unsubscriber();
                 var requester = channel.PrimedSubscribe(fiberRequest, actionControl, actionReceive, 5000);
-                fiberRequest.BeginSubscriptionAndSetUnsubscriber(requester);
-                var handleReceive = requester;
+                unsubscriberList2.AddDisposable(requester);
+                fiberRequest.BeginSubscriptionAndSetUnsubscriber(unsubscriberList2);
+                var handleReceive = unsubscriberList2;
 
                 requesterThread.Run();
                 handleReceive.Dispose();
