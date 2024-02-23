@@ -15,7 +15,7 @@ namespace AsyncFiberWorks.Core
         private Timer _timer = null;
         private bool _canceled = false;
 
-        public TimerAction(Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
+        private TimerAction(Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
         {
             if (firstIntervalInMs < 0)
             {
@@ -37,7 +37,7 @@ namespace AsyncFiberWorks.Core
             return timerAction;
         }
 
-        public void Start()
+        private void Start()
         {
             lock (_lock)
             {

@@ -10,28 +10,12 @@ namespace AsyncFiberWorksTests
     public class TimerActionTests
     {
         [Test]
-        public void CancelBeforeStart()
-        {
-            var stubFiber = new StubFiber();
-            var executionCount = 0;
-            Action action = () => executionCount++;
-            var timer = new TimerAction(() => stubFiber.Enqueue(action), 1, 2);
-            Thread.Sleep(10);
-            stubFiber.ExecuteOnlyPendingNow();
-            Assert.AreEqual(0, executionCount);
-            timer.Dispose();
-            stubFiber.ExecuteOnlyPendingNow();
-            Assert.AreEqual(0, executionCount);
-        }
-
-        [Test]
         public void CallbackFromTimer()
         {
             var stubFiber = new StubFiber();
             long counter = 0;
             Action action = () => { counter++; };
-            var timer = new TimerAction(() => stubFiber.Enqueue(action), 2);
-            timer.Start();
+            var timer = TimerAction.StartNew(() => stubFiber.Enqueue(action), 2);
 
             Thread.Sleep(20);
             stubFiber.ExecuteOnlyPendingNow();
@@ -46,8 +30,7 @@ namespace AsyncFiberWorksTests
             var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
-            var timer = new TimerAction(() => stubFiber.Enqueue(actionOnTimer), 2, 100);
-            timer.Start();
+            var timer = TimerAction.StartNew(() => stubFiber.Enqueue(actionOnTimer), 2, 100);
 
             Thread.Sleep(20);
             stubFiber.ExecuteOnlyPendingNow();
@@ -65,8 +48,7 @@ namespace AsyncFiberWorksTests
             var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
-            var timer = new TimerAction(() => stubFiber.Enqueue(actionOnTimer), 2);
-            timer.Start();
+            var timer = TimerAction.StartNew(() => stubFiber.Enqueue(actionOnTimer), 2);
 
             timer.Dispose();
             Thread.Sleep(20);
