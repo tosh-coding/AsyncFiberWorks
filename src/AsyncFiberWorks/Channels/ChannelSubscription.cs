@@ -10,22 +10,41 @@ namespace AsyncFiberWorks.Channels
     /// <typeparam name="T"></typeparam>
     public class ChannelSubscription<T> : IMessageReceiver<T>, IDisposable
     {
-        private readonly Action<T> _receiver;
-        private readonly ISubscribableFiber _fiber;
         private readonly IMessageFilter<T> _filter;
+        private readonly ISubscribableFiber _fiber;
+        private readonly Action<T> _receive;
         private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
         /// <summary>
         /// Construct the subscription
         /// </summary>
-        /// <param name="fiber">the target executor to receive the message</param>
-        /// <param name="receiver"></param>
-        /// <param name="filter"></param>
-        public ChannelSubscription(ISubscribableFiber fiber, Action<T> receiver, IMessageFilter<T> filter = null)
+        /// <param name="receive">Message receiving handler.</param>
+        public ChannelSubscription(Action<T> receive)
+            : this(null, receive)
         {
-            _fiber = fiber;
-            _receiver = receiver;
+        }
+
+        /// <summary>
+        /// Construct the subscription
+        /// </summary>
+        /// <param name="fiber">the target executor to receive the message</param>
+        /// <param name="receive">Message receiving handler.</param>
+        public ChannelSubscription(ISubscribableFiber fiber, Action<T> receive)
+            : this(null, fiber, receive)
+        {
+        }
+
+        /// <summary>
+        /// Construct the subscription
+        /// </summary>
+        /// <param name="filter">Message pass filter.</param>
+        /// <param name="fiber">the target executor to receive the message</param>
+        /// <param name="receive">Message receiving handler.</param>
+        public ChannelSubscription(IMessageFilter<T> filter, ISubscribableFiber fiber, Action<T> receive)
+        {
             _filter = filter;
+            _fiber = fiber;
+            _receive = receive;
             fiber.BeginSubscriptionAndSetUnsubscriber(_unsubscriber);
         }
 
@@ -38,6 +57,9 @@ namespace AsyncFiberWorks.Channels
             _unsubscriber.Add(() => disposable.Dispose());
         }
 
+        /// <summary>
+        /// Unsubscribe the fiber. Also discards added disposables.
+        /// </summary>
         public void Dispose()
         {
             _unsubscriber.Dispose();
@@ -61,7 +83,14 @@ namespace AsyncFiberWorks.Channels
         /// <param name="msg"></param>
         protected void OnMessageOnProducerThread(T msg)
         {
-            _fiber.Enqueue(() => _receiver(msg));
+            if (_fiber != null)
+            {
+                _fiber.Enqueue(() => _receive(msg));
+            }
+            else
+            {
+                _receive(msg);
+            }
         }
     }
 }

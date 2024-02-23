@@ -14,10 +14,11 @@ namespace AsyncFiberWorks.Channels
     public class LastSubscriber<T> : IMessageReceiver<T>, IDisposable
     {
         private readonly object _batchLock = new object();
-        private readonly Action<T> _target;
-        private readonly ISubscribableFiber _fiber;
-        private readonly long _intervalInMs;
         private readonly IMessageFilter<T> _filter;
+        private readonly long _intervalInMs;
+        private readonly IExecutionContext _batchFiber;
+        private readonly ISubscribableFiber _executeFiber;
+        private readonly Action<T> _receive;
         private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
         private bool _flushPending;
@@ -26,16 +27,51 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// New instance.
         /// </summary>
-        /// <param name="target"></param>
-        /// <param name="fiber"></param>
-        /// <param name="intervalInMs"></param>
-        /// <param name="filter"></param>
-        public LastSubscriber(Action<T> target, ISubscribableFiber fiber, long intervalInMs, IMessageFilter<T> filter = null)
+        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="receive">Message receiving handler.</param>
+        public LastSubscriber(long intervalInMs, Action<T> receive)
+            : this(intervalInMs, null, receive)
         {
-            _fiber = fiber;
-            _target = target;
-            _intervalInMs = intervalInMs;
+        }
+
+        /// <summary>
+        /// New instance.
+        /// </summary>
+        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="fiber"></param>
+        /// <param name="receive">Message receiving handler.</param>
+        public LastSubscriber(long intervalInMs, ISubscribableFiber fiber, Action<T> receive)
+            : this(null, intervalInMs, fiber, receive)
+        {
+        }
+
+        /// <summary>
+        /// New instance.
+        /// </summary>
+        /// <param name="filter">Message pass filter.</param>
+        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="fiber">The target context to execute the action</param>
+        /// <param name="receive">Message receiving handler.</param>
+        public LastSubscriber(IMessageFilter<T> filter, long intervalInMs, ISubscribableFiber fiber, Action<T> receive)
+            : this(filter, intervalInMs, null, fiber, receive)
+        {
+        }
+
+        /// <summary>
+        /// New instance.
+        /// </summary>
+        /// <param name="filter">Message pass filter.</param>
+        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="batchFiber">Fiber used for batch processing.</param>
+        /// <param name="fiber">The target context to execute the action</param>
+        /// <param name="receive">Message receiving handler.</param>
+        public LastSubscriber(IMessageFilter<T> filter, long intervalInMs, IExecutionContext batchFiber, ISubscribableFiber fiber, Action<T> receive)
+        {
             _filter = filter;
+            _intervalInMs = intervalInMs;
+            _batchFiber = batchFiber ?? ((IExecutionContext)fiber) ?? new PoolFiberSlim();
+            _executeFiber = fiber;
+            _receive = receive;
             fiber.BeginSubscriptionAndSetUnsubscriber(_unsubscriber);
         }
 
@@ -48,6 +84,9 @@ namespace AsyncFiberWorks.Channels
             _unsubscriber.Add(() => disposable.Dispose());
         }
 
+        /// <summary>
+        /// Unsubscribe the fiber, discards added disposables, and cancel the batching timer
+        /// </summary>
         public void Dispose()
         {
             _unsubscriber.Dispose();
@@ -75,7 +114,7 @@ namespace AsyncFiberWorks.Channels
             {
                 if (!_flushPending)
                 {
-                    var timerAction = TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
+                    var timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
                     _unsubscriber.BeginSubscriptionAndSetUnsubscriber(timerAction);
                     _flushPending = true;
                 }
@@ -85,7 +124,15 @@ namespace AsyncFiberWorks.Channels
 
         private void Flush()
         {
-            _target(ClearPending());
+            var toFlush = ClearPending();
+            if ((_executeFiber != null) && (_batchFiber != _executeFiber))
+            {
+                _executeFiber.Enqueue(() => _receive(toFlush));
+            }
+            else
+            {
+                _receive(toFlush);
+            }
         }
 
         private T ClearPending()

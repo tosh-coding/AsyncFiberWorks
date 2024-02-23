@@ -64,7 +64,7 @@ namespace AsyncFiberWorksTests.Examples
                 };
                 var filter = new MessageFilter<int>();
                 filter.AddFilterOnProducerThread(x => x % 2 == 0);
-                var subscriber = new ChannelSubscription<int>(fiber, onMsg, filter);
+                var subscriber = new ChannelSubscription<int>(filter, fiber, onMsg);
                 channel.Subscribe(subscriber);
                 channel.Publish(1);
                 channel.Publish(2);
@@ -93,7 +93,7 @@ namespace AsyncFiberWorksTests.Examples
                                                 }
                                             };
 
-                var subscriber = new BatchSubscriber<int>(fiber, cb, 1, null);
+                var subscriber = new BatchSubscriber<int>(1, fiber, cb);
                 counter.Subscribe(subscriber);
 
                 for (var i = 0; i < 10; i++)
@@ -122,7 +122,7 @@ namespace AsyncFiberWorksTests.Examples
                 };
 
                 Converter<int, String> keyResolver = x => x.ToString();
-                var subscriber = new KeyedBatchSubscriber<string, int>(keyResolver, cb, fiber, 0, null);
+                var subscriber = new KeyedBatchSubscriber<string, int>(null, keyResolver, 0, fiber, cb);
                 counter.Subscribe(subscriber);
 
                 for (var i = 0; i < 10; i++)

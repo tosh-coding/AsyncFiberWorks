@@ -15,11 +15,12 @@ namespace AsyncFiberWorks.Channels
     {
         private readonly object _batchLock = new object();
 
-        private readonly Action<IDictionary<K, T>> _target;
-        private readonly Converter<T, K> _keyResolver;
-        private readonly ISubscribableFiber _fiber;
-        private readonly long _intervalInMs;
         private readonly IMessageFilter<T> _filter;
+        private readonly Converter<T, K> _keyResolver;
+        private readonly long _intervalInMs;
+        private readonly IExecutionContext _batchFiber;
+        private readonly ISubscribableFiber _executeFiber;
+        private readonly Action<IDictionary<K, T>> _receive;
         private readonly Unsubscriber _unsubscriber = new Unsubscriber();
 
         private Dictionary<K, T> _pending;
@@ -28,17 +29,55 @@ namespace AsyncFiberWorks.Channels
         /// Construct new instance.
         /// </summary>
         /// <param name="keyResolver"></param>
-        /// <param name="target"></param>
-        /// <param name="fiber"></param>
-        /// <param name="intervalInMs"></param>
-        /// <param name="filter"></param>
-        public KeyedBatchSubscriber(Converter<T, K> keyResolver, Action<IDictionary<K, T>> target, ISubscribableFiber fiber, long intervalInMs, IMessageFilter<T> filter = null)
+        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="receive">Message receiving handler.</param>
+        public KeyedBatchSubscriber(Converter<T, K> keyResolver, long intervalInMs, Action<IDictionary<K, T>> receive)
+            : this(keyResolver, intervalInMs, null, receive)
         {
-            _keyResolver = keyResolver;
-            _fiber = fiber;
-            _target = target;
-            _intervalInMs = intervalInMs;
+        }
+
+        /// <summary>
+        /// Construct new instance.
+        /// </summary>
+        /// <param name="keyResolver"></param>
+        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="fiber">the target executor to receive the message</param>
+        /// <param name="receive">Message receiving handler.</param>
+        public KeyedBatchSubscriber(Converter<T, K> keyResolver, long intervalInMs, ISubscribableFiber fiber, Action<IDictionary<K, T>> receive)
+            : this(null, keyResolver, intervalInMs, fiber, receive)
+        {
+        }
+
+        /// <summary>
+        /// Construct new instance.
+        /// </summary>
+        /// <param name="filter">Message pass filter.</param>
+        /// <param name="keyResolver"></param>
+        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="fiber">the target executor to receive the message</param>
+        /// <param name="receive">Message receiving handler.</param>
+        public KeyedBatchSubscriber(IMessageFilter<T> filter, Converter<T, K> keyResolver, long intervalInMs, ISubscribableFiber fiber, Action<IDictionary<K, T>> receive)
+            : this(filter, keyResolver, intervalInMs, null, fiber, receive)
+        {
+        }
+
+        /// <summary>
+        /// Construct new instance.
+        /// </summary>
+        /// <param name="filter">Message pass filter.</param>
+        /// <param name="keyResolver"></param>
+        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="batchFiber">Fiber used for batch processing.</param>
+        /// <param name="fiber">the target executor to receive the message</param>
+        /// <param name="receive">Message receiving handler.</param>
+        public KeyedBatchSubscriber(IMessageFilter<T> filter, Converter<T, K> keyResolver, long intervalInMs, IExecutionContext batchFiber, ISubscribableFiber fiber, Action<IDictionary<K, T>> receive)
+        {
             _filter = filter;
+            _keyResolver = keyResolver;
+            _intervalInMs = intervalInMs;
+            _batchFiber = batchFiber ?? ((IExecutionContext)fiber) ?? new PoolFiberSlim();
+            _executeFiber = fiber;
+            _receive = receive;
             fiber.BeginSubscriptionAndSetUnsubscriber(_unsubscriber);
         }
 
@@ -51,6 +90,9 @@ namespace AsyncFiberWorks.Channels
             _unsubscriber.Add(() => disposable.Dispose());
         }
 
+        /// <summary>
+        /// Unsubscribe the fiber, discards added disposables, and cancel the batching timer
+        /// </summary>
         public void Dispose()
         {
             _unsubscriber.Dispose();
@@ -80,7 +122,7 @@ namespace AsyncFiberWorks.Channels
                 if (_pending == null)
                 {
                     _pending = new Dictionary<K, T>();
-                    var timerAction = TimerAction.StartNew(() => _fiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
+                    var timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
                     _unsubscriber.BeginSubscriptionAndSetUnsubscriber(timerAction);
                 }
                 _pending[key] = msg;
@@ -92,7 +134,14 @@ namespace AsyncFiberWorks.Channels
             var toReturn = ClearPending();
             if (toReturn != null)
             {
-                _target(toReturn);
+                if ((_executeFiber != null) && (_batchFiber != _executeFiber))
+                {
+                    _executeFiber.Enqueue(() => _receive(toReturn));
+                }
+                else
+                {
+                    _receive(toReturn);
+                }
             }
         }
 
