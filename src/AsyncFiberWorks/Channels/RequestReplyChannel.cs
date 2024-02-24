@@ -29,7 +29,7 @@ namespace AsyncFiberWorks.Channels
         /// <returns>null if no subscribers registered for request.</returns>
         public IReply<M> SendRequest(R p)
         {
-            var request = new ChannelRequest<R, M>(p);
+            var request = new RequestReplyChannelRequest<R, M>(p);
             return _requestChannel.Publish(request) ? request : null;
         }
 

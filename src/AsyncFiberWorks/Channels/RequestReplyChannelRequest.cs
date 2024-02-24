@@ -5,7 +5,7 @@ using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Channels
 {
-    internal class ChannelRequest<R, M> : IRequest<R, M>, IReply<M>
+    internal class RequestReplyChannelRequest<R, M> : IRequest<R, M>, IReply<M>
     {
         private readonly object _lock = new object();
         private readonly R _req;
@@ -17,7 +17,7 @@ namespace AsyncFiberWorks.Channels
         private object _timerId = null;
         private object _argumentOfCallback = null;
 
-        public ChannelRequest(R req)
+        public RequestReplyChannelRequest(R req)
         {
             _req = req;
         }
