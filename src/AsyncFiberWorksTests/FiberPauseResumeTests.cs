@@ -75,5 +75,50 @@ namespace AsyncFiberWorksTests
             await Task.Delay(100);
             return @"{""result"":""success""}";
         }
+
+        [Test]
+        public async Task PauseAndTaskRun()
+        {
+            var fiber = new PoolFiberSlim();
+            var counter = new IntClass();
+            counter.Value = 0;
+            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            fiber.Enqueue(() => PauseAndTaskFuncInFiber(fiber, counter, tcs));
+            fiber.Enqueue(() => counter.Value += 1);
+            Thread.Sleep(1);
+            Assert.AreEqual(0, counter.Value);
+
+            // For the completion of the test.
+            await tcs.Task.ConfigureAwait(false);
+            Assert.AreEqual(11, counter.Value);
+        }
+
+        void PauseAndTaskFuncInFiber(PoolFiberSlim fiber, IntClass counter, TaskCompletionSource<bool> tcs)
+        {
+            // Pause and start async method.
+            fiber.Pause();
+            Task.Run(async () =>
+            {
+                try
+                {
+                    // Some kind of asynchronous operation.
+                    _ = await SomeWebApiAccessAsync();
+                }
+                finally
+                {
+                    // Calls the resume function at the end of an asynchronous method.
+                    fiber.Resume(() => counter.Value = 10);
+                }
+            });
+
+            // For the completion of the test.
+            fiber.Enqueue(() => tcs.SetResult(true));
+        }
+    }
+
+    class IntClass
+    {
+        public int Value;
     }
 }
