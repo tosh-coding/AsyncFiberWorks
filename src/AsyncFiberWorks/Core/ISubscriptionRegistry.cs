@@ -8,9 +8,9 @@ namespace AsyncFiberWorks.Core
     public interface ISubscriptionRegistry
     {
         /// <summary>
-        /// Create an unsubscriber who unsubscribes when the fiber is discarded.
+        /// Begin subscription.
         /// </summary>
-        /// <returns>Unsubscriber with the unregister process as an element.</returns>
+        /// <returns>Unsubscribers. It is also discarded when the subscription subject is terminated.</returns>
         Unsubscriber BeginSubscription();
     }
 }

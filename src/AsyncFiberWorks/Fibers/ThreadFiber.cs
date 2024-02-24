@@ -102,7 +102,7 @@ namespace AsyncFiberWorks.Fibers
         }
 
         /// <summary>
-        /// <see cref="Subscriptions.BeginSubscription"/>
+        /// <see cref="ISubscriptionRegistry.BeginSubscription"/>
         /// </summary>
         /// <returns></returns>
         public Unsubscriber BeginSubscription()
@@ -111,7 +111,7 @@ namespace AsyncFiberWorks.Fibers
         }
 
         /// <summary>
-        /// <see cref="ISubscriptionRegistry.NumSubscriptions"/>
+        /// <see cref="ISubscriptionRegistryViewing.NumSubscriptions"/>
         /// </summary>
         public int NumSubscriptions
         {

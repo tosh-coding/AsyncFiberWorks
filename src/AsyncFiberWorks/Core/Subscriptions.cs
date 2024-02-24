@@ -19,7 +19,7 @@ namespace AsyncFiberWorks.Core
         /// </summary>
         /// <param name="toAdd"></param>
         /// <returns>A disposer to unregister the subscription.</returns>
-        public IDisposable RegisterSubscription(IDisposable toAdd)
+        private IDisposable RegisterSubscription(IDisposable toAdd)
         {
             bool added = false;
             lock (_lock)

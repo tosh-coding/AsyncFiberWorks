@@ -1,4 +1,3 @@
-using AsyncFiberWorks.Core;
 using System;
 
 namespace AsyncFiberWorks.Channels
@@ -6,7 +5,7 @@ namespace AsyncFiberWorks.Channels
     /// <summary>
     /// Disposables.
     /// </summary>
-    public class Unsubscriber: ISubscriptionRegistry, IDisposable
+    public class Unsubscriber: IDisposable
     {
         private readonly object _lock = new object();
         private Action _actionUnsubscribe;
@@ -33,52 +32,28 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Add a disposable.
         /// </summary>
-        /// <param name="action"></param>
-        public void Add(Action action)
+        /// <param name="disposingAction">A disposable.</param>
+        public void Add(Action disposingAction)
         {
             bool added = false;
             lock (_lock)
             {
                 if (!_disposed)
                 {
-                    _actionUnsubscribe += action;
+                    _actionUnsubscribe += disposingAction;
                     added = true;
                 }
             }
             if (!added)
             {
-                action();
+                disposingAction();
             }
         }
 
         /// <summary>
-        /// Create and register a new Unsubscriber.
-        /// It will be disposed when the subscription target ends.
+        /// Add a disposable.
         /// </summary>
-        /// <returns>Created unsubscriber.</returns>
-        public Unsubscriber BeginSubscription()
-        {
-            var unsubscriber = new Unsubscriber();
-            Action action = () => unsubscriber.Dispose();
-            this.Add(action);
-            Action disposable = () => this.Remove(action);
-            unsubscriber.Add(disposable);
-            return unsubscriber;
-        }
-
-        private bool Remove(Action action)
-        {
-            lock (_lock)
-            {
-                if (!_disposed)
-                {
-                    _actionUnsubscribe -= action;
-                    return true;
-                }
-            }
-            return false;
-        }
-
+        /// <param name="disposable">A disposable.</param>
         public void AddDisposable(IDisposable disposable)
         {
             this.Add(() => disposable.Dispose());
