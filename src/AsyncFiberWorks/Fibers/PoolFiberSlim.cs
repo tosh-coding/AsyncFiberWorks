@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Fibers
@@ -169,6 +170,49 @@ namespace AsyncFiberWorks.Fibers
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Pause the fiber until the task is completed.
+        /// </summary>
+        /// <param name="task">Tasks to be monitored.</param>
+        /// <returns>Tasks until the fiber resumes.</returns>
+        public Task PauseWhileRunning(Task task)
+        {
+            Pause();
+            return Task.Run(async () =>
+            {
+                try
+                {
+                    await task;
+                }
+                finally
+                {
+                    Resume(() => { });
+                }
+            });
+        }
+
+        /// <summary>
+        /// Pause the fiber until the task is completed.
+        /// </summary>
+        /// <param name="func">Function to retrieve the task to be monitored.</param>
+        /// <returns>Tasks until the fiber resumes.</returns>
+        public Task PauseWhileRunning(Func<Task> func)
+        {
+            Pause();
+            var task = func();
+            return Task.Run(async () =>
+            {
+                try
+                {
+                    await task;
+                }
+                finally
+                {
+                    Resume(() => { });
+                }
+            });
         }
     }
 }
