@@ -18,12 +18,13 @@ namespace WpfExample
             InitializeComponent();
             fiber = new DispatcherFiber(Dispatcher);
 
-            var unsubscriberList = new Unsubscriber();
+            var subscriptionFiber = fiber.BeginSubscription();
+
             var subscriber = new LastSubscriber<DateTime>(0, fiber, OnTimeUpdate);
-            unsubscriberList.AddDisposable(subscriber);
-            fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
-            var unsubscriber = channels.TimeUpdate.Subscribe(subscriber);
-            unsubscriberList.AddDisposable(unsubscriber);
+            var subscriptionChannel = channels.TimeUpdate.Subscribe(subscriber);
+            subscriptionFiber.AddDisposable(subscriber);
+            subscriptionFiber.AddDisposable(subscriptionChannel);
+
             new UpdateController(channels);
         }
 

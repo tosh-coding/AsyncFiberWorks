@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Fibers
@@ -101,7 +102,16 @@ namespace AsyncFiberWorks.Fibers
         }
 
         /// <summary>
-        /// <see cref="ISubscriptionRegistry.BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry)"/>
+        /// <see cref="Subscriptions.BeginSubscription"/>
+        /// </summary>
+        /// <returns></returns>
+        public Unsubscriber BeginSubscription()
+        {
+            return _subscriptions.BeginSubscription();
+        }
+
+        /// <summary>
+        /// <see cref="Subscriptions.BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry)"/>
         /// </summary>
         public void BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry disposable)
         {

@@ -56,11 +56,10 @@ namespace AsyncFiberWorksTests.Examples
                 _name = name;
                 _inboundChannel = inboundChannel;
                 _outboundChannel = outboundChannel;
-                var unsubscriberList = new Unsubscriber();
+                var subscriptionFiber = fiber.BeginSubscription();
                 var subscriber = new ChannelSubscription<IntPair>(fiber, CalculateNext);
-                fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
-                var unsubscriber = _inboundChannel.Subscribe(subscriber);
-                unsubscriberList.AddDisposable(unsubscriber);
+                var subscriptionChannel = _inboundChannel.Subscribe(subscriber);
+                subscriptionFiber.AddDisposable(subscriptionChannel);
                 _limit = limit;
             }
 

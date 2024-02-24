@@ -15,11 +15,10 @@ namespace WpfExample
         {
             channels = winChannels;
             var threadFiber = new ThreadFiber();
-            var unsubscriberList = new Unsubscriber();
+            var subscriptionFiber = threadFiber.BeginSubscription();
             var subscriber = new ChannelSubscription<RoutedEventArgs>(threadFiber, OnStart);
-            threadFiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
-            var unsubscriber = channels.StartChannel.Subscribe(subscriber);
-            unsubscriberList.AddDisposable(unsubscriber);
+            var subscriptionChannel = channels.StartChannel.Subscribe(subscriber);
+            subscriptionFiber.AddDisposable(subscriptionChannel);
             threadFiber.Start();
             fiber = threadFiber;
         }
@@ -33,11 +32,10 @@ namespace WpfExample
             }
             else
             {
-                var unsubscriberListSchedule = new Unsubscriber();
+                var subscriptionFiber = fiber.BeginSubscription();
                 var timerDisposable = fiber.ScheduleOnInterval(OnTimer, 1000, 1000);
-                unsubscriberListSchedule.AddDisposable(timerDisposable);
-                timer = unsubscriberListSchedule;
-                fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberListSchedule);
+                subscriptionFiber.AddDisposable(timerDisposable);
+                timer = subscriptionFiber;
             }
         }
 

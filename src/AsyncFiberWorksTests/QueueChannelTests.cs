@@ -28,10 +28,9 @@ namespace AsyncFiberWorksTests
                         reset.Set();
                     }
                 };
-                var unsubscriberList = new Unsubscriber();
-                var subscriber = channel.Subscribe(one, onMsg);
-                unsubscriberList.AddDisposable(subscriber);
-                one.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
+                var subscriptionFiber = one.BeginSubscription();
+                var subscriptionChannel = channel.Subscribe(one, onMsg);
+                subscriptionFiber.AddDisposable(subscriptionChannel);
                 for (var i = 0; i < 20; i++)
                 {
                     channel.Publish(i);
@@ -57,10 +56,9 @@ namespace AsyncFiberWorksTests
                     }
                     reset.Set();
                 };
-                var unsubscriberList = new Unsubscriber();
-                var subscriber = channel.Subscribe(one, onMsg);
-                unsubscriberList.AddDisposable(subscriber);
-                one.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
+                var subscriptionFiber = one.BeginSubscription();
+                var subscriptionChannel = channel.Subscribe(one, onMsg);
+                subscriptionFiber.AddDisposable(subscriptionChannel);
                 channel.Publish(0);
                 channel.Publish(1);
                 Assert.IsTrue(reset.WaitOne(10000, false));
@@ -94,10 +92,9 @@ namespace AsyncFiberWorksTests
                                             };
                 var fiber = new PoolFiber();
                 queues.Add(fiber);
-                var unsubscriberList = new Unsubscriber();
-                var subscriber = channel.Subscribe(fiber, onReceive);
-                unsubscriberList.AddDisposable(subscriber);
-                fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
+                var subscriptionFiber = fiber.BeginSubscription();
+                var subscriptionChannel = channel.Subscribe(fiber, onReceive);
+                subscriptionFiber.AddDisposable(subscriptionChannel);
             }
             for (var i = 0; i < messageCount; i++)
             {

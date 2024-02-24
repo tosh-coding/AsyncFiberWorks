@@ -90,7 +90,16 @@ namespace WpfExample
         }
 
         /// <summary>
-        /// <see cref="ISubscriptionRegistry.BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry)"/>
+        /// <see cref="Subscriptions.BeginSubscription"/>
+        /// </summary>
+        /// <returns></returns>
+        public Unsubscriber BeginSubscription()
+        {
+            return _fiber.BeginSubscription();
+        }
+
+        /// <summary>
+        /// <see cref="Subscriptions.BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry)"/>
         /// </summary>
         public void BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry disposable)
         {

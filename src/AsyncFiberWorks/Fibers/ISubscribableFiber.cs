@@ -1,3 +1,4 @@
+using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Fibers
@@ -8,6 +9,12 @@ namespace AsyncFiberWorks.Fibers
     /// </summary>
     public interface ISubscribableFiber : IExecutionContext
     {
+        /// <summary>
+        /// Begin subscription.
+        /// </summary>
+        /// <returns>Unsubscribers. It is also discarded when the subscription subject is terminated.</returns>
+        Unsubscriber BeginSubscription();
+
         /// <summary>
         /// Begin a subscription. Then set its unsubscriber to disposable.
         /// </summary>

@@ -45,10 +45,9 @@ namespace AsyncFiberWorksTests
             var scheduleOnIntervalFired = 0;
 
             var disposableTimer = sut.Schedule(() => scheduleFired++, 100);
-            var unsubscriberListScheduleInterval = new Unsubscriber();
+            var subscriptionFiber = sut.BeginSubscription();
             var intervalSub = sut.ScheduleOnInterval(() => scheduleOnIntervalFired++, 100, 500);
-            unsubscriberListScheduleInterval.AddDisposable(intervalSub);
-            sut.BeginSubscriptionAndSetUnsubscriber(unsubscriberListScheduleInterval);
+            subscriptionFiber.AddDisposable(intervalSub);
 
             // add to the pending list.
             Thread.Sleep(200);
@@ -65,7 +64,7 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(2, scheduleOnIntervalFired);
 
-            unsubscriberListScheduleInterval.Dispose();
+            subscriptionFiber.Dispose();
 
             // The regularInMs has passed after dispose.
             Thread.Sleep(500);
@@ -111,16 +110,15 @@ namespace AsyncFiberWorksTests
             var sut = new StubFiber();
             var channel = new Channel<int>();
 
-            var subscriberSchedule = new Unsubscriber();
+            var subscriptionFiber1 = sut.BeginSubscription();
             var disposableTimer = sut.Schedule(() => { }, 1000);
-            subscriberSchedule.AddDisposable(disposableTimer);
-            sut.BeginSubscriptionAndSetUnsubscriber(subscriberSchedule);
+            subscriptionFiber1.AddDisposable(disposableTimer);
             sut.ExecuteOnlyPendingNow();
-            var unsubscriberList = new Unsubscriber();
+            
+            var subscriptionFiber2 = sut.BeginSubscription();
             var subscriber = new ChannelSubscription<int>(sut, x => { });
-            sut.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
-            var unsubscriber = channel.Subscribe(subscriber);
-            unsubscriberList.AddDisposable(unsubscriber);
+            var subscriptionChannel = channel.Subscribe(subscriber);
+            subscriptionFiber2.AddDisposable(subscriptionChannel);
             channel.Publish(2);
 
             Assert.AreEqual(2, sut.NumSubscriptions);

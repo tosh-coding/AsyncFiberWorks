@@ -70,11 +70,10 @@ namespace AsyncFiberWorksTests
                                          };
 
                     var fiber = fibers[i];
-                    var unsubscriberList = new Unsubscriber();
+                    var subscriptionFiber = fiber.BeginSubscription();
                     var subscriber = new ChannelSubscription<Msg>(fiber, cb);
-                    fiber.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
-                    var unsubscriber = channels[prior].Subscribe(subscriber);
-                    unsubscriberList.AddDisposable(unsubscriber);
+                    var subscriptionChannel = channels[prior].Subscribe(subscriber);
+                    subscriptionFiber.AddDisposable(subscriptionChannel);
                 }
             }
 
