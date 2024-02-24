@@ -113,7 +113,7 @@ namespace AsyncFiberWorks.Channels
                 if (_pending == null)
                 {
                     _pending = new List<T>();
-                    _timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), null, _intervalInMs, Timeout.Infinite);
+                    _timerAction = OneshotTimerAction.StartNew(() => _batchFiber.Enqueue(Flush), _intervalInMs);
                 }
                 _pending.Add(msg);
             }

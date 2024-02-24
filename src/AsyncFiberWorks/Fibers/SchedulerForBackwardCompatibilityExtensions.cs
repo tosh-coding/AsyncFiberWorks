@@ -20,7 +20,7 @@ namespace AsyncFiberWorks.Fibers
         public static IDisposableSubscriptionRegistry Schedule(this IExecutionContext fiber, Action action, long firstInMs)
         {
             var unsubscriberList = new Unsubscriber();
-            var timer = TimerAction.StartNew(() => fiber.Enqueue(action), () => unsubscriberList.Dispose(), firstInMs, Timeout.Infinite);
+            var timer = OneshotTimerAction.StartNew(() => fiber.Enqueue(action), firstInMs);
             unsubscriberList.AddDisposable(timer);
             return unsubscriberList;
         }
@@ -35,8 +35,13 @@ namespace AsyncFiberWorks.Fibers
         /// <returns>a handle to cancel the timer.</returns>
         public static IDisposableSubscriptionRegistry ScheduleOnInterval(this IExecutionContext fiber, Action action, long firstInMs, long regularInMs)
         {
+            if (regularInMs <= 0)
+            {
+                return Schedule(fiber, action, firstInMs);
+            }
+
             var unsubscriberList = new Unsubscriber();
-            var timer = TimerAction.StartNew(() => fiber.Enqueue(action), () => unsubscriberList.Dispose(), firstInMs, regularInMs);
+            var timer = IntervalTimerAction.StartNew(() => fiber.Enqueue(action), firstInMs, regularInMs);
             unsubscriberList.AddDisposable(timer);
             return unsubscriberList;
         }

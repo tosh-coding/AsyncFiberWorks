@@ -111,7 +111,7 @@ namespace AsyncFiberWorks.Channels
             {
                 if (!_flushPending)
                 {
-                    _timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), null, _intervalInMs, Timeout.Infinite);
+                    _timerAction = OneshotTimerAction.StartNew(() => _batchFiber.Enqueue(Flush), _intervalInMs);
                     _flushPending = true;
                 }
                 _pending = msg;
