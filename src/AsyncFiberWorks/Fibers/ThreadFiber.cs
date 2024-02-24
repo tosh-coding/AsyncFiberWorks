@@ -111,14 +111,6 @@ namespace AsyncFiberWorks.Fibers
         }
 
         /// <summary>
-        /// <see cref="Subscriptions.BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry)"/>
-        /// </summary>
-        public void BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry disposable)
-        {
-            _subscriptions.BeginSubscriptionAndSetUnsubscriber(disposable);
-        }
-
-        /// <summary>
         /// <see cref="ISubscriptionRegistry.NumSubscriptions"/>
         /// </summary>
         public int NumSubscriptions

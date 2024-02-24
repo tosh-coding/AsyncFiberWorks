@@ -48,14 +48,6 @@ namespace WpfExample
         }
 
         /// <summary>
-        /// <see cref="Subscriptions.BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry)"/>
-        /// </summary>
-        public void BeginSubscriptionAndSetUnsubscriber(IDisposableSubscriptionRegistry disposable)
-        {
-            _fiber.BeginSubscriptionAndSetUnsubscriber(disposable);
-        }
-
-        /// <summary>
         /// <see cref="ISubscriptionRegistry.NumSubscriptions"/>
         /// </summary>
         public int NumSubscriptions
