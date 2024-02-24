@@ -15,7 +15,7 @@ namespace AsyncFiberWorks.Channels
         /// </summary>
         /// <param name="action">A message handler.</param>
         /// <returns>Function for removing the handler.</returns>
-        public Unsubscriber AddHandler(Action<T> action)
+        public IDisposable AddHandler(Action<T> action)
         {
             _handlers += action;
 

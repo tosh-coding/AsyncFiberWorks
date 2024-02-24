@@ -1,4 +1,4 @@
-using AsyncFiberWorks.Core;
+using System;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -13,6 +13,6 @@ namespace AsyncFiberWorks.Channels
         /// </summary>
         /// <param name="messageReceiver">Subscriber.</param>
         /// <returns>Unsubscriber.</returns>
-        IDisposableSubscriptionRegistry Subscribe(IMessageReceiver<T> messageReceiver);
+        IDisposable Subscribe(IMessageReceiver<T> messageReceiver);
     }
 }

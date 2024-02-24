@@ -1,4 +1,4 @@
-using AsyncFiberWorks.Core;
+using System;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -15,7 +15,7 @@ namespace AsyncFiberWorks.Channels
         /// </summary>
         /// <param name="messageReceiver">Subscriber.</param>
         /// <returns></returns>
-        public IDisposableSubscriptionRegistry Subscribe(IMessageReceiver<T> messageReceiver)
+        public IDisposable Subscribe(IMessageReceiver<T> messageReceiver)
         {
             return this._channel.AddHandler(messageReceiver.ReceiveOnProducerThread);
         }
