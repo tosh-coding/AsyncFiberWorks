@@ -59,7 +59,7 @@ namespace AsyncFiberWorksTests.Examples
                 var subscriptionFiber = fiber.BeginSubscription();
                 var subscriber = new ChannelSubscription<IntPair>(fiber, CalculateNext);
                 var subscriptionChannel = _inboundChannel.Subscribe(subscriber);
-                subscriptionFiber.AddDisposable(subscriptionChannel);
+                subscriptionFiber.AppendDisposable(subscriptionChannel);
                 _limit = limit;
             }
 

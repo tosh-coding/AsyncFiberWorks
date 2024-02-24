@@ -23,7 +23,7 @@ namespace AsyncFiberWorksTests.Examples
                 var subscriptionFiber = fiber.BeginSubscription();
                 var subscriber = new ChannelSubscription<string>(fiber, delegate { reset.Set(); });
                 var subscriptionChannel = channel.Subscribe(subscriber);
-                subscriptionFiber.AddDisposable(subscriptionChannel);
+                subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish("hello");
 
                 Assert.IsTrue(reset.WaitOne(5000, false));
@@ -42,7 +42,7 @@ namespace AsyncFiberWorksTests.Examples
                 var subscriptionFiber = fiber.BeginSubscription();
                 var subscriber = new ChannelSubscription<string>(fiber, delegate { reset.Set(); });
                 var subscriptionChannel = channel.Subscribe(subscriber);
-                subscriptionFiber.AddDisposable(subscriptionChannel);
+                subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish("hello");
 
                 Assert.IsTrue(reset.WaitOne(5000, false));
@@ -71,7 +71,7 @@ namespace AsyncFiberWorksTests.Examples
                 var subscriptionFiber = fiber.BeginSubscription();
                 var subscriber = new ChannelSubscription<int>(filter, fiber, onMsg);
                 var subscriptionChannel = channel.Subscribe(subscriber);
-                subscriptionFiber.AddDisposable(subscriptionChannel);
+                subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish(1);
                 channel.Publish(2);
                 channel.Publish(3);
@@ -101,9 +101,8 @@ namespace AsyncFiberWorksTests.Examples
 
                 var subscriptionFiber = fiber.BeginSubscription();
                 var subscriber = new BatchSubscriber<int>(1, fiber, cb);
-                subscriptionFiber.AddDisposable(subscriber);
                 var subscriptionChannel = counter.Subscribe(subscriber);
-                subscriptionFiber.AddDisposable(subscriptionChannel);
+                subscriptionFiber.AppendDisposable(subscriber, subscriptionChannel);
 
                 for (var i = 0; i < 10; i++)
                 {
@@ -130,12 +129,14 @@ namespace AsyncFiberWorksTests.Examples
                     }
                 };
 
+                var disposables = new List<IDisposable>();
                 var subscriptionFiber = fiber.BeginSubscription();
                 Converter<int, String> keyResolver = x => x.ToString();
                 var subscriber = new KeyedBatchSubscriber<string, int>(null, keyResolver, 0, fiber, cb);
+                disposables.Add(subscriber);
                 var subscriptionChannel = counter.Subscribe(subscriber);
-                subscriptionFiber.AddDisposable(subscriber);
-                subscriptionFiber.AddDisposable(subscriptionChannel);
+                disposables.Add(subscriptionChannel);
+                subscriptionFiber.AppendDisposable(disposables);
 
                 for (var i = 0; i < 10; i++)
                 {
@@ -157,7 +158,7 @@ namespace AsyncFiberWorksTests.Examples
                 var channel = new RequestReplyChannel<string, string>();
                 var subscriptionFiber = fiber.BeginSubscription();
                 var subscriptionChannel = channel.AddResponder(fiber, req => req.SendReply("bye"));
-                subscriptionFiber.AddDisposable(subscriptionChannel);
+                subscriptionFiber.AppendDisposable(subscriptionChannel);
 
                 var reply = channel.SendRequest("hello");
                 reply.SetCallbackOnReceive(10000, testFiber, (_) =>
@@ -193,7 +194,7 @@ namespace AsyncFiberWorksTests.Examples
                 };
                 var subscriptionFiber = fiberReply.BeginSubscription();
                 var subscriptionChannel = channel.ReplyToPrimingRequest(fiberReply, request => request.SendReply(reply()));
-                subscriptionFiber.AddDisposable(subscriptionChannel);
+                subscriptionFiber.AppendDisposable(subscriptionChannel);
                 Assert.AreEqual(1, channel.NumSubscribers);
 
                 // Start changing values.
@@ -279,7 +280,7 @@ namespace AsyncFiberWorksTests.Examples
             var subscriptionFiber = fiber.BeginSubscription();
             var subscriber = new ChannelSubscription<int>(fiber, x => { });
             var subscriptionCHannel = channel.Subscribe(subscriber);
-            subscriptionFiber.AddDisposable(subscriptionCHannel);
+            subscriptionFiber.AppendDisposable(subscriptionCHannel);
 
             Assert.AreEqual(1, fiber.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
@@ -301,7 +302,7 @@ namespace AsyncFiberWorksTests.Examples
             var subscriptionFiber = fiber.BeginSubscription();
             var subscriber = new ChannelSubscription<int>(fiber, x => { });
             var subscriptionChannel = channel.Subscribe(subscriber);
-            subscriptionFiber.AddDisposable(subscriptionChannel);
+            subscriptionFiber.AppendDisposable(subscriptionChannel);
 
             Assert.AreEqual(1, fiber.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
@@ -322,7 +323,7 @@ namespace AsyncFiberWorksTests.Examples
             var subscriptionFiber = fiber.BeginSubscription();
             var subscriber = new ChannelSubscription<int>(fiber, x => { });
             var subscriptionChannel = channel.Subscribe(subscriber);
-            subscriptionFiber.AddDisposable(subscriptionChannel);
+            subscriptionFiber.AppendDisposable(subscriptionChannel);
 
             Assert.AreEqual(1, fiber.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
@@ -344,7 +345,7 @@ namespace AsyncFiberWorksTests.Examples
             var subscriptionFiber = fiber.BeginSubscription();
             var subscriber = new ChannelSubscription<int>(fiber, x => { });
             var subscriptionChannel = channel.Subscribe(subscriber);
-            subscriptionFiber.AddDisposable(subscriptionChannel);
+            subscriptionFiber.AppendDisposable(subscriptionChannel);
 
             Assert.AreEqual(1, fiber.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);

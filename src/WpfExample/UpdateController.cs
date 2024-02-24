@@ -18,7 +18,7 @@ namespace WpfExample
             var subscriptionFiber = threadFiber.BeginSubscription();
             var subscriber = new ChannelSubscription<RoutedEventArgs>(threadFiber, OnStart);
             var subscriptionChannel = channels.StartChannel.Subscribe(subscriber);
-            subscriptionFiber.AddDisposable(subscriptionChannel);
+            subscriptionFiber.AppendDisposable(subscriptionChannel);
             threadFiber.Start();
             fiber = threadFiber;
         }
@@ -34,7 +34,7 @@ namespace WpfExample
             {
                 var subscriptionFiber = fiber.BeginSubscription();
                 var timerDisposable = fiber.ScheduleOnInterval(OnTimer, 1000, 1000);
-                subscriptionFiber.AddDisposable(timerDisposable);
+                subscriptionFiber.AppendDisposable(timerDisposable);
                 timer = subscriptionFiber;
             }
         }

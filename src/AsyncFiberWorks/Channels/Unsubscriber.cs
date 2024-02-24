@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -33,7 +34,7 @@ namespace AsyncFiberWorks.Channels
         /// Add a disposable.
         /// </summary>
         /// <param name="disposingAction">A disposable.</param>
-        public void Add(Action disposingAction)
+        private void PrivateAdd(Action disposingAction)
         {
             bool added = false;
             lock (_lock)
@@ -51,12 +52,36 @@ namespace AsyncFiberWorks.Channels
         }
 
         /// <summary>
-        /// Add a disposable.
+        /// Append a disposable. It will be destroyed in tandem.
         /// </summary>
         /// <param name="disposable">A disposable.</param>
-        public void AddDisposable(IDisposable disposable)
+        public void AppendDisposable(IDisposable disposable)
         {
-            this.Add(() => disposable.Dispose());
+            this.PrivateAdd(() => disposable.Dispose());
+        }
+
+        /// <summary>
+        /// Append disposables. They will be destroyed in tandem.
+        /// </summary>
+        /// <param name="disposableList">Disposables.</param>
+        public void AppendDisposable(IEnumerable<IDisposable> disposableList)
+        {
+            foreach (var disposable in disposableList)
+            {
+                this.PrivateAdd(() => disposable.Dispose());
+            }
+        }
+
+        /// <summary>
+        /// Append disposables. They will be destroyed in tandem.
+        /// </summary>
+        /// <param name="disposableList">Disposables.</param>
+        public void AppendDisposable(params IDisposable[] disposableList)
+        {
+            foreach (var disposable in disposableList)
+            {
+                this.PrivateAdd(() => disposable.Dispose());
+            }
         }
 
         /// <summary>

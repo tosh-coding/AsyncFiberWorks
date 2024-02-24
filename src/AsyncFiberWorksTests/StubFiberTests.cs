@@ -47,7 +47,7 @@ namespace AsyncFiberWorksTests
             var disposableTimer = sut.Schedule(() => scheduleFired++, 100);
             var subscriptionFiber = sut.BeginSubscription();
             var intervalSub = sut.ScheduleOnInterval(() => scheduleOnIntervalFired++, 100, 500);
-            subscriptionFiber.AddDisposable(intervalSub);
+            subscriptionFiber.AppendDisposable(intervalSub);
 
             // add to the pending list.
             Thread.Sleep(200);
@@ -112,13 +112,13 @@ namespace AsyncFiberWorksTests
 
             var subscriptionFiber1 = sut.BeginSubscription();
             var disposableTimer = sut.Schedule(() => { }, 1000);
-            subscriptionFiber1.AddDisposable(disposableTimer);
+            subscriptionFiber1.AppendDisposable(disposableTimer);
             sut.ExecuteOnlyPendingNow();
             
             var subscriptionFiber2 = sut.BeginSubscription();
             var subscriber = new ChannelSubscription<int>(sut, x => { });
             var subscriptionChannel = channel.Subscribe(subscriber);
-            subscriptionFiber2.AddDisposable(subscriptionChannel);
+            subscriptionFiber2.AppendDisposable(subscriptionChannel);
             channel.Publish(2);
 
             Assert.AreEqual(2, sut.NumSubscriptions);

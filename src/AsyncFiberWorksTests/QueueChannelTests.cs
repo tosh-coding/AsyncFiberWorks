@@ -30,7 +30,7 @@ namespace AsyncFiberWorksTests
                 };
                 var subscriptionFiber = one.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(one, onMsg);
-                subscriptionFiber.AddDisposable(subscriptionChannel);
+                subscriptionFiber.AppendDisposable(subscriptionChannel);
                 for (var i = 0; i < 20; i++)
                 {
                     channel.Publish(i);
@@ -58,7 +58,7 @@ namespace AsyncFiberWorksTests
                 };
                 var subscriptionFiber = one.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(one, onMsg);
-                subscriptionFiber.AddDisposable(subscriptionChannel);
+                subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish(0);
                 channel.Publish(1);
                 Assert.IsTrue(reset.WaitOne(10000, false));
@@ -94,7 +94,7 @@ namespace AsyncFiberWorksTests
                 queues.Add(fiber);
                 var subscriptionFiber = fiber.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(fiber, onReceive);
-                subscriptionFiber.AddDisposable(subscriptionChannel);
+                subscriptionFiber.AppendDisposable(subscriptionChannel);
             }
             for (var i = 0; i < messageCount; i++)
             {
