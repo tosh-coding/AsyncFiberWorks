@@ -44,10 +44,7 @@ namespace AsyncFiberWorksTests
             var scheduleFired = 0;
             var scheduleOnIntervalFired = 0;
 
-            var subscriberSchedule = new Unsubscriber();
             var disposableTimer = sut.Schedule(() => scheduleFired++, 100);
-            subscriberSchedule.AddDisposable(disposableTimer);
-            sut.BeginSubscriptionAndSetUnsubscriber(subscriberSchedule);
             var unsubscriberListScheduleInterval = new Unsubscriber();
             var intervalSub = sut.ScheduleOnInterval(() => scheduleOnIntervalFired++, 100, 500);
             unsubscriberListScheduleInterval.AddDisposable(intervalSub);
@@ -86,7 +83,6 @@ namespace AsyncFiberWorksTests
             var channel = new Channel<int>();
             const int count = 4;
 
-            var unsubscriberList = new Unsubscriber();
             var subscriber = new ChannelSubscription<int>(sut, delegate (int x)
             {
                 if (x == count)
@@ -97,9 +93,7 @@ namespace AsyncFiberWorksTests
                 channel.Publish(x + 1);
                 msgs.Add(x);
             });
-            sut.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
             var unsubscriber = channel.Subscribe(subscriber);
-            unsubscriberList.AddDisposable(unsubscriber);
 
             channel.Publish(0);
             sut.ExecuteAll();

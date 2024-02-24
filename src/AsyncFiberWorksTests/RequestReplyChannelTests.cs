@@ -19,11 +19,8 @@ namespace AsyncFiberWorksTests
             var responder = new PoolFiber();
             var timeCheck = new RequestReplyChannel<string, DateTime>();
             var now = DateTime.Now;
-            var unsubscriberList = new Unsubscriber();
             Action<IRequest<string, DateTime>> onRequest = req => req.SendReply(now);
             var subscriber = timeCheck.AddResponder(responder, onRequest);
-            unsubscriberList.AddDisposable(subscriber);
-            responder.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
 
             {
                 var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
@@ -58,10 +55,7 @@ namespace AsyncFiberWorksTests
                         req.SendReply(i);
                     allSent.Set();
                 };
-            var unsubscriberList = new Unsubscriber();
             var subscriber = countChannel.AddResponder(responder, onRequest);
-            unsubscriberList.AddDisposable(subscriber);
-            responder.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
 
             {
                 var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
@@ -154,10 +148,7 @@ namespace AsyncFiberWorksTests
                         req.SendReply(-1);
                     }
                 };
-            var unsubscriberList = new Unsubscriber();
             var subscriber = countChannel.AddResponder(responder, onRequest);
-            unsubscriberList.AddDisposable(subscriber);
-            responder.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
 
             var requests = new List<string>();
             requests.AddRange(dic.Keys);
@@ -232,10 +223,7 @@ namespace AsyncFiberWorksTests
                         }
                     });
                 };
-            var unsubscriberList = new Unsubscriber();
             var subscriber = countChannel.AddResponder(responder, onRequest);
-            unsubscriberList.AddDisposable(subscriber);
-            responder.BeginSubscriptionAndSetUnsubscriber(unsubscriberList);
 
             var requests = new List<string>();
             requests.AddRange(dic.Keys);

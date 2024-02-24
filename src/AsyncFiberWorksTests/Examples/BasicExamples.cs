@@ -243,8 +243,7 @@ namespace AsyncFiberWorksTests.Examples
                             channel.Publish(currentValue);
                         }
 
-                        var subscriberSchedule = new Unsubscriber();
-                        var disposableTimer = fiberRequest.Schedule(() =>
+                        fiberRequest.Schedule(() =>
                         {
                             // Finish.
 
@@ -262,8 +261,6 @@ namespace AsyncFiberWorksTests.Examples
 
                             requesterThread.Stop();
                         }, 200);
-                        subscriberSchedule.AddDisposable(disposableTimer);
-                        fiberRequest.BeginSubscriptionAndSetUnsubscriber(subscriberSchedule);
                     }
                 };
                 Action<int> actionReceive = (v) =>
@@ -271,11 +268,7 @@ namespace AsyncFiberWorksTests.Examples
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
                 };
-                var unsubscriberList2 = new Unsubscriber();
-                var requester = channel.PrimedSubscribe(fiberRequest, actionControl, actionReceive, 5000);
-                unsubscriberList2.AddDisposable(requester);
-                fiberRequest.BeginSubscriptionAndSetUnsubscriber(unsubscriberList2);
-                var handleReceive = unsubscriberList2;
+                var handleReceive = channel.PrimedSubscribe(fiberRequest, actionControl, actionReceive, 5000);
 
                 requesterThread.Run();
                 handleReceive.Dispose();
