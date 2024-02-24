@@ -2,10 +2,10 @@ using System;
 
 namespace AsyncFiberWorks.Channels
 {
-    ///<summary>
-    /// Default Channel Implementation. Methods are thread safe.
-    ///</summary>
-    ///<typeparam name="T"></typeparam>
+    /// <summary>
+    /// Default Channel Implementation. Published messages are forwarded to all subscribers.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class Channel<T> : IChannel<T>
     {
         private readonly MessageHandlerList<T> _channel = new MessageHandlerList<T>();
