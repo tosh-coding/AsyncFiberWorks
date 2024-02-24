@@ -5,11 +5,11 @@ using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Channels
 {
-    internal class RequestReplyChannelRequest<R, M> : IRequest<R, M>, IReply<M>
+    internal class RequestReplyChannelRequest<TRequestMessage, TReplyMessage> : IRequest<TRequestMessage, TReplyMessage>, IReply<TReplyMessage>
     {
         private readonly object _lock = new object();
-        private readonly R _req;
-        private readonly Queue<M> _resp = new Queue<M>();
+        private readonly TRequestMessage _req;
+        private readonly Queue<TReplyMessage> _resp = new Queue<TReplyMessage>();
         private bool _disposed;
         private IExecutionContext _fiberOnReceive = null;
         private Action<object> _callbackOnReceive = null;
@@ -17,17 +17,17 @@ namespace AsyncFiberWorks.Channels
         private object _timerId = null;
         private object _argumentOfCallback = null;
 
-        public RequestReplyChannelRequest(R req)
+        public RequestReplyChannelRequest(TRequestMessage req)
         {
             _req = req;
         }
 
-        public R Request
+        public TRequestMessage Request
         {
             get { return _req; }
         }
 
-        public bool SendReply(M response)
+        public bool SendReply(TReplyMessage response)
         {
             lock (_lock)
             {
@@ -49,7 +49,7 @@ namespace AsyncFiberWorks.Channels
             }
         }
 
-        public bool TryReceive(out M result)
+        public bool TryReceive(out TReplyMessage result)
         {
             lock (_lock)
             {
@@ -60,10 +60,10 @@ namespace AsyncFiberWorks.Channels
                 }
                 if (_disposed)
                 {
-                    result = default(M);
+                    result = default(TReplyMessage);
                     return false;
                 }
-                result = default(M);
+                result = default(TReplyMessage);
                 return false;
             }
         }

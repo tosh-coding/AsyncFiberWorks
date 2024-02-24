@@ -6,18 +6,18 @@ namespace AsyncFiberWorks.Channels
     /// <summary>
     /// Channel for synchronous and asynchronous requests.
     /// </summary>
-    /// <typeparam name="R"></typeparam>
-    /// <typeparam name="M"></typeparam>
-    public class RequestReplyChannel<R, M>: IRequestReplyChannel<R,M>
+    /// <typeparam name="TRequestMessage"></typeparam>
+    /// <typeparam name="TReplyMessage"></typeparam>
+    public class RequestReplyChannel<TRequestMessage, TReplyMessage>: IRequestReplyChannel<TRequestMessage,TReplyMessage>
     {
-        private readonly MessageHandlerList<IRequest<R, M>> _requestChannel = new MessageHandlerList<IRequest<R, M>>();
+        private readonly MessageHandlerList<IRequest<TRequestMessage, TReplyMessage>> _requestChannel = new MessageHandlerList<IRequest<TRequestMessage, TReplyMessage>>();
 
         /// <summary>
         /// Add a responder for requests.
         /// </summary>
         /// <param name="action">A responder.</param>
         /// <returns>Handler for cancellation.</returns>
-        public IDisposable AddResponder(Action<IRequest<R, M>> action)
+        public IDisposable AddResponder(Action<IRequest<TRequestMessage, TReplyMessage>> action)
         {
             return _requestChannel.AddHandler(action);
         }
@@ -27,9 +27,9 @@ namespace AsyncFiberWorks.Channels
         /// </summary>
         /// <param name="p"></param>
         /// <returns>null if no subscribers registered for request.</returns>
-        public IReply<M> SendRequest(R p)
+        public IReply<TReplyMessage> SendRequest(TRequestMessage p)
         {
-            var request = new RequestReplyChannelRequest<R, M>(p);
+            var request = new RequestReplyChannelRequest<TRequestMessage, TReplyMessage>(p);
             return _requestChannel.Publish(request) ? request : null;
         }
 
