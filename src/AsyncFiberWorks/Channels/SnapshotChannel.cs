@@ -39,17 +39,16 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Responds to the request for an initial snapshot.
         /// </summary>
-        /// <param name="fiber"></param>
         /// <param name="onRequest"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException">Only one responder can be handled within a single channel.</exception>
-        public IDisposable ReplyToPrimingRequest(IExecutionContext fiber, Action<IRequest<object, T>> onRequest)
+        public IDisposable ReplyToPrimingRequest(Action<IRequest<object, T>> onRequest)
         {
             if (_requestChannel.NumSubscribers > 0)
             {
                 throw new InvalidOperationException("Only one responder can be handled within a single channel.");
             }
-            return _requestChannel.AddResponder(fiber, onRequest);
+            return _requestChannel.AddResponder(onRequest);
         }
 
         ///<summary>

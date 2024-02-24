@@ -20,7 +20,8 @@ namespace AsyncFiberWorksTests
             var timeCheck = new RequestReplyChannel<string, DateTime>();
             var now = DateTime.Now;
             Action<IRequest<string, DateTime>> onRequest = req => req.SendReply(now);
-            var subscriber = timeCheck.AddResponder(responder, onRequest);
+            var actionWithContext = new ActionWithContext<IRequest<string, DateTime>>(onRequest, responder);
+            var subscriber = timeCheck.AddResponder(actionWithContext.OnReceive);
 
             {
                 var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
@@ -55,7 +56,8 @@ namespace AsyncFiberWorksTests
                         req.SendReply(i);
                     allSent.Set();
                 };
-            var subscriber = countChannel.AddResponder(responder, onRequest);
+            var actionWithContext = new ActionWithContext<IRequest<string, int>>(onRequest, responder);
+            var subscriber = countChannel.AddResponder(actionWithContext.OnReceive);
 
             {
                 var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
@@ -148,7 +150,8 @@ namespace AsyncFiberWorksTests
                         req.SendReply(-1);
                     }
                 };
-            var subscriber = countChannel.AddResponder(responder, onRequest);
+            var actionWithContext = new ActionWithContext<IRequest<string, int>>(onRequest, responder);
+            var subscriber = countChannel.AddResponder(actionWithContext.OnReceive);
 
             var requests = new List<string>();
             requests.AddRange(dic.Keys);
@@ -223,7 +226,8 @@ namespace AsyncFiberWorksTests
                         }
                     });
                 };
-            var subscriber = countChannel.AddResponder(responder, onRequest);
+            var actionWithContext = new ActionWithContext<IRequest<string, int>>(onRequest, responder);
+            var subscriber = countChannel.AddResponder(actionWithContext.OnReceive);
 
             var requests = new List<string>();
             requests.AddRange(dic.Keys);

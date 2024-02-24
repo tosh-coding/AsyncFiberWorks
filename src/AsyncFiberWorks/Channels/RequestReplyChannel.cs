@@ -15,12 +15,11 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Add a responder for requests.
         /// </summary>
-        /// <param name="action"></param>
-        /// <returns></returns>
-        public IDisposable AddResponder(IExecutionContext fiber, Action<IRequest<R, M>> action)
+        /// <param name="action">A responder.</param>
+        /// <returns>Handler for cancellation.</returns>
+        public IDisposable AddResponder(Action<IRequest<R, M>> action)
         {
-            var responder = new RequestReplyChannelSubscriber<R, M>(fiber, action);
-            return _requestChannel.AddHandler(responder.OnReceive);
+            return _requestChannel.AddHandler(action);
         }
 
         /// <summary>

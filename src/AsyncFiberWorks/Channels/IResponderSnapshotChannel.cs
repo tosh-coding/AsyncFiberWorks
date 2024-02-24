@@ -12,11 +12,10 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Responds to the request for an initial snapshot.
         /// </summary>
-        /// <param name="fiber"></param>
         /// <param name="onRequest"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException">Only one responder can be handled within a single channel.</exception>
-        IDisposable ReplyToPrimingRequest(IExecutionContext fiber, Action<IRequest<object, T>> onRequest);
+        IDisposable ReplyToPrimingRequest(Action<IRequest<object, T>> onRequest);
 
         /// <summary>
         /// Publish a message to all subscribers. Returns true if any subscribers are registered.

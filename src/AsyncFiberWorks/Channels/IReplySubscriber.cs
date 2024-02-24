@@ -15,6 +15,6 @@ namespace AsyncFiberWorks.Channels
         /// </summary>
         /// <param name="action"></param>
         /// <returns></returns>
-        IDisposable AddResponder(IExecutionContext fiber, Action<IRequest<R, M>> action);
+        IDisposable AddResponder(Action<IRequest<R, M>> action);
     }
 }
