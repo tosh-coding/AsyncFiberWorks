@@ -44,10 +44,14 @@ namespace AsyncFiberWorksTests
             var scheduleFired = 0;
             var scheduleOnIntervalFired = 0;
 
-            var subscriberSchedule = sut.Schedule(() => scheduleFired++, 100);
+            var subscriberSchedule = new Unsubscriber();
+            var disposableTimer = sut.Schedule(() => scheduleFired++, 100);
+            subscriberSchedule.AddDisposable(disposableTimer);
             sut.BeginSubscriptionAndSetUnsubscriber(subscriberSchedule);
+            var unsubscriberListScheduleInterval = new Unsubscriber();
             var intervalSub = sut.ScheduleOnInterval(() => scheduleOnIntervalFired++, 100, 500);
-            sut.BeginSubscriptionAndSetUnsubscriber(intervalSub);
+            unsubscriberListScheduleInterval.AddDisposable(intervalSub);
+            sut.BeginSubscriptionAndSetUnsubscriber(unsubscriberListScheduleInterval);
 
             // add to the pending list.
             Thread.Sleep(200);
@@ -64,7 +68,7 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(2, scheduleOnIntervalFired);
 
-            intervalSub.Dispose();
+            unsubscriberListScheduleInterval.Dispose();
 
             // The regularInMs has passed after dispose.
             Thread.Sleep(500);
@@ -113,7 +117,9 @@ namespace AsyncFiberWorksTests
             var sut = new StubFiber();
             var channel = new Channel<int>();
 
-            var subscriberSchedule = sut.Schedule(() => { }, 1000);
+            var subscriberSchedule = new Unsubscriber();
+            var disposableTimer = sut.Schedule(() => { }, 1000);
+            subscriberSchedule.AddDisposable(disposableTimer);
             sut.BeginSubscriptionAndSetUnsubscriber(subscriberSchedule);
             sut.ExecuteOnlyPendingNow();
             var unsubscriberList = new Unsubscriber();

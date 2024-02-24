@@ -1,7 +1,5 @@
-﻿using AsyncFiberWorks.Channels;
-using AsyncFiberWorks.Core;
+﻿using AsyncFiberWorks.Core;
 using System;
-using System.Threading;
 
 namespace AsyncFiberWorks.Fibers
 {
@@ -16,13 +14,10 @@ namespace AsyncFiberWorks.Fibers
         /// <param name="fiber"></param>
         /// <param name="action"></param>
         /// <param name="firstInMs"></param>
-        /// <returns>a handle to cancel the timer.</returns>
-        public static IDisposableSubscriptionRegistry Schedule(this IExecutionContext fiber, Action action, long firstInMs)
+        /// <returns>A handle to cancel the timer.</returns>
+        public static IDisposable Schedule(this IExecutionContext fiber, Action action, long firstInMs)
         {
-            var unsubscriberList = new Unsubscriber();
-            var timer = OneshotTimerAction.StartNew(() => fiber.Enqueue(action), firstInMs);
-            unsubscriberList.AddDisposable(timer);
-            return unsubscriberList;
+            return OneshotTimerAction.StartNew(() => fiber.Enqueue(action), firstInMs);
         }
 
         /// <summary>
@@ -32,18 +27,17 @@ namespace AsyncFiberWorks.Fibers
         /// <param name="action"></param>
         /// <param name="firstInMs"></param>
         /// <param name="regularInMs"></param>
-        /// <returns>a handle to cancel the timer.</returns>
-        public static IDisposableSubscriptionRegistry ScheduleOnInterval(this IExecutionContext fiber, Action action, long firstInMs, long regularInMs)
+        /// <returns>A handle to cancel the timer.</returns>
+        public static IDisposable ScheduleOnInterval(this IExecutionContext fiber, Action action, long firstInMs, long regularInMs)
         {
             if (regularInMs <= 0)
             {
                 return Schedule(fiber, action, firstInMs);
             }
-
-            var unsubscriberList = new Unsubscriber();
-            var timer = IntervalTimerAction.StartNew(() => fiber.Enqueue(action), firstInMs, regularInMs);
-            unsubscriberList.AddDisposable(timer);
-            return unsubscriberList;
+            else
+            {
+                return IntervalTimerAction.StartNew(() => fiber.Enqueue(action), firstInMs, regularInMs);
+            }
         }
     }
 }

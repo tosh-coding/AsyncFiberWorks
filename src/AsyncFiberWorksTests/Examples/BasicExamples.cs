@@ -243,7 +243,8 @@ namespace AsyncFiberWorksTests.Examples
                             channel.Publish(currentValue);
                         }
 
-                        var subscriberSchedule = fiberRequest.Schedule(() =>
+                        var subscriberSchedule = new Unsubscriber();
+                        var disposableTimer = fiberRequest.Schedule(() =>
                         {
                             // Finish.
 
@@ -261,6 +262,7 @@ namespace AsyncFiberWorksTests.Examples
 
                             requesterThread.Stop();
                         }, 200);
+                        subscriberSchedule.AddDisposable(disposableTimer);
                         fiberRequest.BeginSubscriptionAndSetUnsubscriber(subscriberSchedule);
                     }
                 };
