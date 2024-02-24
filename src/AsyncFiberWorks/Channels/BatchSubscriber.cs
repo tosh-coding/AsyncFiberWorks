@@ -23,7 +23,7 @@ namespace AsyncFiberWorks.Channels
         private readonly Action<IList<T>> _receive;
 
         private List<T> _pending;
-        private TimerAction _timerAction;
+        private IDisposable _timerAction;
 
         /// <summary>
         /// Construct new instance.
@@ -113,7 +113,7 @@ namespace AsyncFiberWorks.Channels
                 if (_pending == null)
                 {
                     _pending = new List<T>();
-                    this._timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
+                    _timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), null, _intervalInMs, Timeout.Infinite);
                 }
                 _pending.Add(msg);
             }

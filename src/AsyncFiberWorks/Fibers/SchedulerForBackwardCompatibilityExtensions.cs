@@ -1,4 +1,5 @@
-﻿using AsyncFiberWorks.Core;
+﻿using AsyncFiberWorks.Channels;
+using AsyncFiberWorks.Core;
 using System;
 using System.Threading;
 
@@ -18,7 +19,10 @@ namespace AsyncFiberWorks.Fibers
         /// <returns>a handle to cancel the timer.</returns>
         public static IDisposableSubscriptionRegistry Schedule(this IExecutionContext fiber, Action action, long firstInMs)
         {
-            return TimerAction.StartNew(() => fiber.Enqueue(action), firstInMs, Timeout.Infinite);
+            var unsubscriberList = new Unsubscriber();
+            var timer = TimerAction.StartNew(() => fiber.Enqueue(action), () => unsubscriberList.Dispose(), firstInMs, Timeout.Infinite);
+            unsubscriberList.AddDisposable(timer);
+            return unsubscriberList;
         }
 
         /// <summary>
@@ -31,7 +35,10 @@ namespace AsyncFiberWorks.Fibers
         /// <returns>a handle to cancel the timer.</returns>
         public static IDisposableSubscriptionRegistry ScheduleOnInterval(this IExecutionContext fiber, Action action, long firstInMs, long regularInMs)
         {
-            return TimerAction.StartNew(() => fiber.Enqueue(action), firstInMs, regularInMs);
+            var unsubscriberList = new Unsubscriber();
+            var timer = TimerAction.StartNew(() => fiber.Enqueue(action), () => unsubscriberList.Dispose(), firstInMs, regularInMs);
+            unsubscriberList.AddDisposable(timer);
+            return unsubscriberList;
         }
     }
 }

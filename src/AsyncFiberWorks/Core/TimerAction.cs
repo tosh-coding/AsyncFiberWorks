@@ -1,21 +1,20 @@
-using AsyncFiberWorks.Channels;
 using System;
 using System.Threading;
 
 namespace AsyncFiberWorks.Core
 {
-    internal sealed class TimerAction : IDisposable, IDisposableSubscriptionRegistry
+    internal sealed class TimerAction : IDisposable
     {
         private readonly object _lock = new object();
         private readonly Action _action;
         private readonly long _firstIntervalInMs;
         private readonly long _intervalInMs;
-        private readonly Unsubscriber _unsubscriber = new Unsubscriber();
+        private readonly Action _callbackOnDispose;
 
         private Timer _timer = null;
         private bool _canceled = false;
 
-        private TimerAction(Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
+        private TimerAction(Action action, Action callbackOnDispose, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
         {
             if (firstIntervalInMs < 0)
             {
@@ -28,11 +27,12 @@ namespace AsyncFiberWorks.Core
             _action = action;
             _firstIntervalInMs = firstIntervalInMs;
             _intervalInMs = intervalInMs;
+            _callbackOnDispose = callbackOnDispose;
         }
 
-        public static TimerAction StartNew(Action action, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
+        public static IDisposable StartNew(Action action, Action callbackOnDispose, long firstIntervalInMs, long intervalInMs = Timeout.Infinite)
         {
-            var timerAction = new TimerAction(action, firstIntervalInMs, intervalInMs);
+            var timerAction = new TimerAction(action, callbackOnDispose, firstIntervalInMs, intervalInMs);
             timerAction.Start();
             return timerAction;
         }
@@ -70,11 +70,6 @@ namespace AsyncFiberWorks.Core
             }
         }
 
-        public Unsubscriber BeginSubscription()
-        {
-            return _unsubscriber.BeginSubscription();
-        }
-
         public void Dispose()
         {
             lock (_lock)
@@ -89,7 +84,7 @@ namespace AsyncFiberWorks.Core
             {
                 _timer.Dispose();
             }
-            _unsubscriber.Dispose();
+            _callbackOnDispose?.Invoke();
         }
     }
 }

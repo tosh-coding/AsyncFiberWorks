@@ -15,7 +15,7 @@ namespace AsyncFiberWorksTests
             var stubFiber = new StubFiber();
             long counter = 0;
             Action action = () => { counter++; };
-            var timer = TimerAction.StartNew(() => stubFiber.Enqueue(action), 2);
+            var timer = TimerAction.StartNew(() => stubFiber.Enqueue(action), null, 2);
 
             Thread.Sleep(20);
             stubFiber.ExecuteOnlyPendingNow();
@@ -30,7 +30,7 @@ namespace AsyncFiberWorksTests
             var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
-            var timer = TimerAction.StartNew(() => stubFiber.Enqueue(actionOnTimer), 2, 100);
+            var timer = TimerAction.StartNew(() => stubFiber.Enqueue(actionOnTimer), null, 2, 100);
 
             Thread.Sleep(20);
             stubFiber.ExecuteOnlyPendingNow();
@@ -48,7 +48,7 @@ namespace AsyncFiberWorksTests
             var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
-            var timer = TimerAction.StartNew(() => stubFiber.Enqueue(actionOnTimer), 2);
+            var timer = TimerAction.StartNew(() => stubFiber.Enqueue(actionOnTimer), null, 2);
 
             timer.Dispose();
             Thread.Sleep(20);

@@ -23,7 +23,7 @@ namespace AsyncFiberWorks.Channels
         private readonly Action<IDictionary<K, T>> _receive;
 
         private Dictionary<K, T> _pending;
-        private TimerAction _timerAction;
+        private IDisposable _timerAction;
 
         /// <summary>
         /// Construct new instance.
@@ -119,7 +119,7 @@ namespace AsyncFiberWorks.Channels
                 if (_pending == null)
                 {
                     _pending = new Dictionary<K, T>();
-                    this._timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
+                    _timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), null, _intervalInMs, Timeout.Infinite);
                 }
                 _pending[key] = msg;
             }

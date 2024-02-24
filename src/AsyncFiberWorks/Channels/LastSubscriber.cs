@@ -22,7 +22,7 @@ namespace AsyncFiberWorks.Channels
 
         private bool _flushPending;
         private T _pending;
-        private TimerAction _timerAction;
+        private IDisposable _timerAction;
 
         /// <summary>
         /// New instance.
@@ -111,7 +111,7 @@ namespace AsyncFiberWorks.Channels
             {
                 if (!_flushPending)
                 {
-                    _timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), _intervalInMs, Timeout.Infinite);
+                    _timerAction = TimerAction.StartNew(() => _batchFiber.Enqueue(Flush), null, _intervalInMs, Timeout.Infinite);
                     _flushPending = true;
                 }
                 _pending = msg;
