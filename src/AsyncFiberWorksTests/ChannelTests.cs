@@ -1,0 +1,163 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using NUnit.Framework;
+using AsyncFiberWorks.Channels;
+using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Fibers;
+using System.Linq;
+
+namespace AsyncFiberWorksTests
+{
+    [TestFixture]
+    public class ChannelTests
+    {
+        [Test]
+        public void BroadcastMessage()
+        {
+            var channel = new Channel<string>();
+
+            int multiCount = 5;
+            var nodeList = CreateNodeList<string>(multiCount);
+
+            Action<Node<string>, string> receiveAction = (node, msg) =>
+            {
+                node.Fiber.Enqueue(() =>
+                {
+                    node.ReceivedMessages.Add(msg);
+                });
+            };
+
+            foreach (var node in nodeList)
+            {
+                channel.Subscribe((msg) =>
+                {
+                    receiveAction(node, msg);
+                });
+            }
+
+            channel.Publish("Hello");
+            channel.Publish("World");
+
+            Thread.Sleep(1);
+
+            foreach (var node in nodeList)
+            {
+                Assert.AreEqual(node.ReceivedMessages.Count, 2);
+                Assert.AreEqual("Hello", node.ReceivedMessages[0]);
+                Assert.AreEqual("World", node.ReceivedMessages[1]);
+            }
+        }
+
+        Node<T>[] CreateNodeList<T>(int multiCount)
+        {
+            var nodeList = new Node<T>[multiCount];
+            for (int i = 0; i < nodeList.Length; i++)
+            {
+                nodeList[i] = new Node<T>(i);
+            }
+            return nodeList;
+        }
+
+        [Test]
+        public void OneToMulti()
+        {
+            var channel = new Channel<MessageFrame>();
+
+            int multiCount = 5;
+            var nodeList = CreateNodeList<MessageFrame>(multiCount);
+
+            foreach (var node in nodeList)
+            {
+                var filter = new MessageFilter<MessageFrame>();
+                filter.AddFilterOnProducerThread((msg) =>
+                {
+                    return msg.NodeId != node.NodeId;
+                });
+                var subscriber = new ChannelSubscription<MessageFrame>(filter, node.Fiber, (msg) =>
+                {
+                    node.ReceivedMessages.Add(msg);
+                });
+                channel.Subscribe(subscriber);
+            }
+
+            channel.Publish(new MessageFrame() { NodeId = 2, Message = "Hello" });
+            channel.Publish(new MessageFrame() { NodeId = 2, Message = "World" });
+
+            Thread.Sleep(10);
+
+            foreach (var node in nodeList)
+            {
+                if (node.NodeId == 2)
+                {
+                    Assert.AreEqual(0, node.ReceivedMessages.Count);
+                }
+                else
+                {
+                    Assert.AreEqual(2, node.ReceivedMessages.Count);
+                    Assert.AreEqual("Hello", node.ReceivedMessages[0].Message);
+                    Assert.AreEqual("World", node.ReceivedMessages[1].Message);
+                }
+            }
+        }
+
+        [Test]
+        public void CallAndResponse()
+        {
+            var channelCall = new Channel<MessageFrame>();
+            var channelResponse = new Channel<MessageFrame>();
+
+            int multiCount = 5;
+            var nodeList = CreateNodeList<MessageFrame>(multiCount);
+
+            foreach (var node in nodeList)
+            {
+                channelCall.Subscribe(node.Fiber.CreateAction<MessageFrame>((msg) =>
+                {
+                    channelResponse.Publish(new MessageFrame()
+                    {
+                        NodeId = node.NodeId,
+                        Message = msg.Message.Split(new char[] { ' ' }, 2)[1],
+                    });
+                }));
+                channelResponse.Subscribe(node.Fiber.CreateAction<MessageFrame>((msg) =>
+                {
+                    node.ReceivedMessages.Add(msg);
+                }));
+            }
+
+            channelCall.Publish(new MessageFrame() { NodeId = 2, Message = "Say Ho" });
+            channelCall.Publish(new MessageFrame() { NodeId = 2, Message = "Say Ho,Ho" });
+
+            Thread.Sleep(10);
+
+            foreach (var node in nodeList)
+            {
+                Assert.AreEqual(2 * multiCount, node.ReceivedMessages.Count);
+                Assert.AreEqual(multiCount, node.ReceivedMessages.Count(x => x.Message == "Ho"));
+                Assert.AreEqual(multiCount, node.ReceivedMessages.Count(x => x.Message == "Ho,Ho"));
+            }
+        }
+
+
+    }
+
+    class Node<T>
+    {
+        public readonly int NodeId;
+        public readonly PoolFiberSlim Fiber;
+        public readonly List<T> ReceivedMessages = new List<T>();
+
+        public Node(int nodeId)
+        {
+            this.NodeId = nodeId;
+            this.Fiber = new PoolFiberSlim();
+        }
+    }
+
+    class MessageFrame
+    {
+        public int NodeId;
+        public string Message;
+    }
+}
