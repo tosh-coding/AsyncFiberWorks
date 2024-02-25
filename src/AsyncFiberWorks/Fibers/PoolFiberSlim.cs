@@ -18,7 +18,9 @@ namespace AsyncFiberWorks.Fibers
         private Queue<Action> _toPass = new Queue<Action>();
 
         private bool _flushPending;
-        private int _paused = 0;
+        private bool _paused;
+        private bool _flushPaused;
+        private bool _resuming;
 
         /// <summary>
         /// Create a pool fiber with the specified thread pool and specified executor.
@@ -71,20 +73,29 @@ namespace AsyncFiberWorks.Fibers
             {
                 while (toExecute.Count > 0)
                 {
-                    Action action = toExecute.Dequeue();
-                    _executor.Execute(action);
-
                     lock (_lock)
                     {
-                        if (_paused != 0)
+                        if (_paused)
                         {
-                            return;
+                            break;
                         }
                     }
+                    Action action = toExecute.Dequeue();
+                    _executor.Execute(action);
                 }
                 lock (_lock)
                 {
-                    if (_queue.Count > 0)
+                    if (_paused)
+                    {
+                        _flushPaused = true;
+                        return;
+                    }
+                    else if (toExecute.Count > 0)
+                    {
+                        // don't monopolize thread.
+                        _pool.Queue(Flush);
+                    }
+                    else if (_queue.Count > 0)
                     {
                         // don't monopolize thread.
                         _pool.Queue(Flush);
@@ -101,10 +112,6 @@ namespace AsyncFiberWorks.Fibers
         {
             lock (_lock)
             {
-                if (_paused != 0)
-                {
-                    return null;
-                }
                 if (_toPass.Count > 0)
                 {
                     return _toPass;
@@ -119,6 +126,30 @@ namespace AsyncFiberWorks.Fibers
             }
         }
 
+        private void ResumeAction(Action action)
+        {
+            lock (_lock)
+            {
+                if (_flushPaused || (!_flushPending))
+                {
+                    action?.Invoke();
+                    _paused = false;
+                    _flushPaused = false;
+                    _resuming = false;
+
+                    if (_flushPending)
+                    {
+                        _pool.Queue(Flush);
+                    }
+                }
+                else
+                {
+                    // Wait flushPaused.
+                    _pool.Queue((_) => ResumeAction(action));
+                }
+            }
+        }
+
         /// <summary>
         /// Pauses the consumption of the task queue.
         /// </summary>
@@ -127,11 +158,11 @@ namespace AsyncFiberWorks.Fibers
         {
             lock (_lock)
             {
-                if (_paused != 0)
+                if (_paused)
                 {
                     throw new InvalidOperationException("Pause was called twice.");
                 }
-                _paused = 1;
+                _paused = true;
             }
         }
 
@@ -144,74 +175,47 @@ namespace AsyncFiberWorks.Fibers
         {
             lock (_lock)
             {
-                if (_paused == 0)
+                if (!_paused)
                 {
                     throw new InvalidOperationException("Resume was called in the unpaused state.");
                 }
-                if (_paused != 1)
+                if (_resuming)
                 {
                     throw new InvalidOperationException("Resume was called twice.");
                 }
-                _paused = 2;
-            }
-
-            try
-            {
-                action();
-            }
-            finally
-            {
-                lock (_lock)
-                {
-                    _paused = 0;
-                    if (_flushPending)
-                    {
-                        _pool.Queue(Flush);
-                    }
-                }
+                _resuming = true;
+                _pool.Queue((_) => ResumeAction(action));
             }
         }
 
         /// <summary>
         /// Pause the fiber until the task is completed.
         /// </summary>
-        /// <param name="task">Tasks to be monitored.</param>
+        /// <param name="task">Tasks to be monitored. The task should return a resume function.</param>
         /// <returns>Tasks until the fiber resumes.</returns>
-        public Task PauseWhileRunning(Task task)
+        public Task PauseWhileRunning(Task<Action> task)
         {
             Pause();
             return Task.Run(async () =>
             {
-                try
-                {
-                    await task;
-                }
-                finally
-                {
-                    Resume(() => { });
-                }
+                var action = await task;
+                Resume(action);
             });
         }
 
         /// <summary>
         /// Pause the fiber until the task is completed.
         /// </summary>
-        /// <param name="func">Function to retrieve the task to be monitored.</param>
+        /// <param name="func">Function to retrieve the task to be monitored. The task should return a resume function.</param>
         /// <returns>Tasks until the fiber resumes.</returns>
-        public Task PauseWhileRunning(Func<Task> func)
+        public Task PauseWhileRunning(Func<Task<Action>> func)
         {
             Pause();
             var task = func();
             return Task.Run(async () =>
             {
-                try
-                {
-                    await task;
-                }
-                finally
-                {
-                    Resume(() => { });
-                }
+                var action = await task;
+                Resume(action);
             });
         }
     }

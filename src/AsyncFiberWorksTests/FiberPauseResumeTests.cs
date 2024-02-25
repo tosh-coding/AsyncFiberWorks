@@ -141,7 +141,10 @@ namespace AsyncFiberWorksTests
             {
                 // Some kind of asynchronous operation.
                 _ = await SomeWebApiAccessAsync();
-                counter.Value = 10;
+                return () =>
+                {
+                    counter.Value = 10;
+                };
             });
 
             // For the completion of the test.
