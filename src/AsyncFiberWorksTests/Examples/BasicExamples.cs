@@ -223,12 +223,10 @@ namespace AsyncFiberWorksTests.Examples
                 var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
                 var fiberRequest = new PoolFiber(requesterThread, new DefaultExecutor());
                 var receivedValues = new List<int>();
+                var timeoutTimerCancellation = new Unsubscriber();
                 Action<SnapshotRequestControlEvent> actionControl = (controlEvent) =>
                 {
-                    if (controlEvent == SnapshotRequestControlEvent.Timeout)
-                    {
-                        Assert.Fail("SnapshotRequestControlEvent.Timeout");
-                    }
+                    timeoutTimerCancellation.Dispose();
                     if (controlEvent == SnapshotRequestControlEvent.Connecting)
                     {
                         return;
@@ -271,7 +269,13 @@ namespace AsyncFiberWorksTests.Examples
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
                 };
-                var handleReceive = channel.PrimedSubscribe(fiberRequest, actionControl, actionReceive, 5000);
+                var handleReceive = channel.PrimedSubscribe(fiberRequest, actionControl, actionReceive);
+                var timeoutTimer = fiberRequest.Schedule(() =>
+                {
+                    handleReceive.Dispose();
+                    Assert.Fail("SnapshotRequestControlEvent.Timeout");
+                }, 5000);
+                timeoutTimerCancellation.AppendDisposable(timeoutTimer);
 
                 requesterThread.Run();
                 handleReceive.Dispose();

@@ -14,7 +14,6 @@ namespace AsyncFiberWorks.Channels
         private readonly IExecutionContext _fiber;
         private readonly Action<SnapshotRequestControlEvent> _control;
         private readonly Action<T> _receive;
-        private readonly int _timeoutInMs;
 
         private IReply<T> _reply;
         private bool _disposed = false;
@@ -26,13 +25,11 @@ namespace AsyncFiberWorks.Channels
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="control"></param>
         /// <param name="receive"></param>
-        /// <param name="timeoutInMs">For initial snapshot</param>
-        public SnapshotRequest(IExecutionContext fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive, int timeoutInMs)
+        public SnapshotRequest(IExecutionContext fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive)
         {
             _fiber = fiber;
             _control = control;
             _receive = receive;
-            _timeoutInMs = timeoutInMs;
         }
 
         internal void StartSubscribe(RequestReplyChannel<object, T> requestChannel, MessageHandlerList<T> _updatesChannel)
@@ -44,21 +41,7 @@ namespace AsyncFiberWorks.Channels
             }
             _reply = reply;
 
-            var workFiber = new PoolFiber();
-            var timeoutTimer = workFiber.Schedule(() =>
-            {
-                lock (_lock)
-                {
-                    if (_reply == null)
-                    {
-                        return;
-                    }
-                    _reply.Dispose();
-                    _reply = null;
-                }
-                _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Timeout));
-            }, _timeoutInMs);
-            reply.SetCallbackOnReceive(() => workFiber.Enqueue(() =>
+            reply.SetCallbackOnReceive(() => DefaultThreadPool.Instance.Queue((_) =>
             {
                 T result;
                 bool successToFirstReceive = reply.TryReceive(out result);
@@ -71,7 +54,6 @@ namespace AsyncFiberWorks.Channels
                     _reply.Dispose();
                     _reply = null;
                 }
-                timeoutTimer.Dispose();
 
                 if (!successToFirstReceive)
                 {
@@ -136,11 +118,6 @@ namespace AsyncFiberWorks.Channels
         /// Initial value. Not used.
         /// </summary>
         None = 0,
-
-        /// <summary>
-        /// A timeout occurred.
-        /// </summary>
-        Timeout = 1,
 
         /// <summary>
         /// The state changed during a connection attempt.
