@@ -1,4 +1,5 @@
 ﻿using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Fibers;
 using System;
 
 namespace AsyncFiberWorks.Channels
@@ -43,19 +44,37 @@ namespace AsyncFiberWorks.Channels
             }
             _reply = reply;
 
-            reply.SetCallbackOnReceive(_timeoutInMs, () => DefaultThreadPool.Instance.Queue((_) =>
+            var workFiber = new PoolFiber();
+            var timeoutTimer = workFiber.Schedule(() =>
+            {
+                lock (_lock)
+                {
+                    if (_reply == null)
+                    {
+                        return;
+                    }
+                    _reply.Dispose();
+                    _reply = null;
+                }
+                _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Timeout));
+            }, _timeoutInMs);
+            reply.SetCallbackOnReceive(() => workFiber.Enqueue(() =>
             {
                 T result;
                 bool successToFirstReceive = reply.TryReceive(out result);
                 lock (_lock)
                 {
+                    if (_reply == null)
+                    {
+                        return;
+                    }
                     _reply.Dispose();
                     _reply = null;
                 }
+                timeoutTimer.Dispose();
 
                 if (!successToFirstReceive)
                 {
-                    _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Timeout));
                     return;
                 }
                 _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Connecting));

@@ -19,9 +19,8 @@ namespace AsyncFiberWorks.Channels
         /// Set up on-receive callbacks.
         /// Also called if timed out. In that case, TryReceive will fail.
         /// </summary>
-        /// <param name="timeoutInMs"></param>
         /// <param name="callbackOnReceive"></param>
         /// <returns></returns>
-        bool SetCallbackOnReceive(int timeoutInMs, Action callbackOnReceive);
+        bool SetCallbackOnReceive(Action callbackOnReceive);
     }
 }

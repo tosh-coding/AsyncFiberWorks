@@ -150,6 +150,7 @@ namespace AsyncFiberWorksTests.Examples
         [Test]
         public void RequestReply()
         {
+            // Thread for Assert.
             var testThread = new ThreadPoolAdaptorFromQueueForThread();
             var testFiber = new PoolFiber(testThread, new DefaultExecutor());
 
@@ -162,8 +163,14 @@ namespace AsyncFiberWorksTests.Examples
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
 
                 var reply = channel.SendRequest("hello");
-                reply.SetCallbackOnReceive(10000, () => testFiber.Enqueue(() =>
+                var timeoutTimer = testFiber.Schedule(() =>
                 {
+                    reply.Dispose();
+                    Assert.Fail();
+                }, 10000);
+                reply.SetCallbackOnReceive(() => testFiber.Enqueue(() =>
+                {
+                    timeoutTimer.Dispose();
                     string result;
                     bool received = reply.TryReceive(out result);
                     Assert.IsTrue(received);

@@ -24,12 +24,21 @@ namespace AsyncFiberWorksTests
             var subscriber = timeCheck.AddResponder(actionWithContext.OnReceive);
 
             {
+                // Thread for Assert.
                 var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
                 var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
+
                 requesterFiber.Pause();
                 var response = timeCheck.SendRequest("hello");
-                response.SetCallbackOnReceive(10000, () => DefaultThreadPool.Instance.Queue((_) =>
+                var fiberInPause = new PoolFiber();
+                var timeoutTimer = fiberInPause.Schedule(() =>
                 {
+                    response.Dispose();
+                    requesterThread.Queue((_) => Assert.Fail());
+                }, 10000);
+                response.SetCallbackOnReceive(() => fiberInPause.Enqueue(() =>
+                {
+                    timeoutTimer.Dispose();
                     requesterFiber.Resume(() =>
                     {
                         bool received = response.TryReceive(out DateTime result);
@@ -45,32 +54,41 @@ namespace AsyncFiberWorksTests
         [Test]
         public void SynchronousRequestWithMultipleReplies()
         {
-            IFiber responder = new PoolFiber();
             var countChannel = new RequestReplyChannel<string, int>();
-
             var allSent = new AutoResetEvent(false);
-            Action<IRequest<string, int>> onRequest =
-                delegate(IRequest<string, int> req)
-                {
-                    for (var i = 0; i <= 5; i++)
-                        req.SendReply(i);
-                    allSent.Set();
-                };
-            var actionWithContext = new ActionWithContext<IRequest<string, int>>(onRequest, responder);
-            var subscriber = countChannel.AddResponder(actionWithContext.OnReceive);
+
+            {
+                IFiber responder = new PoolFiber();
+                Action<IRequest<string, int>> onRequest =
+                    delegate (IRequest<string, int> req)
+                    {
+                        for (var i = 0; i <= 5; i++)
+                            req.SendReply(i);
+                        allSent.Set();
+                    };
+                var actionWithContext = new ActionWithContext<IRequest<string, int>>(onRequest, responder);
+                var subscriber = countChannel.AddResponder(actionWithContext.OnReceive);
+            }
 
             {
                 var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
                 var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
                 requesterFiber.Pause();
+                var fiberInPause = new PoolFiber();
                 var response = countChannel.SendRequest("hello");
                 allSent.WaitOne(10000, false);
                 using (response)
                 {
+                    var timeoutTimer1 = fiberInPause.Schedule(() =>
+                    {
+                        response.Dispose();
+                        requesterThread.Queue((_) => Assert.Fail());
+                    }, 1000);
                     int i = 0;
                     Action[] receivingArray = new Action[1];
                     Action receiving = () =>
                     {
+                        timeoutTimer1.Dispose();
                         requesterFiber.Resume(() =>
                         {
                             int result;
@@ -83,16 +101,28 @@ namespace AsyncFiberWorksTests
                                 if (i < 5)
                                 {
                                     requesterFiber.Pause();
-                                    response.SetCallbackOnReceive(1000, () => DefaultThreadPool.Instance.Queue((_) =>
+                                    var timeoutTimer2 = fiberInPause.Schedule(() =>
                                     {
+                                        response.Dispose();
+                                        requesterThread.Queue((_) => Assert.Fail());
+                                    }, 1000);
+                                    response.SetCallbackOnReceive(() => fiberInPause.Enqueue(() =>
+                                    {
+                                        timeoutTimer2.Dispose();
                                         receivingArray[0].Invoke();
                                     }));
                                 }
                                 else
                                 {
                                     requesterFiber.Pause();
-                                    response.SetCallbackOnReceive(3000, () => DefaultThreadPool.Instance.Queue((_) =>
+                                    var timeoutTimer2 = fiberInPause.Schedule(() =>
                                     {
+                                        response.Dispose();
+                                        requesterThread.Queue((_) => Assert.Fail());
+                                    }, 3000);
+                                    response.SetCallbackOnReceive(() => fiberInPause.Enqueue(() =>
+                                    {
+                                        timeoutTimer2.Dispose();
                                         requesterFiber.Resume(() =>
                                         {
                                             requesterFiber.Enqueue(() =>
@@ -102,14 +132,14 @@ namespace AsyncFiberWorksTests
                                                 Assert.AreEqual(5, result);
 
                                                 requesterFiber.Pause();
-                                                response.SetCallbackOnReceive(3000, () => DefaultThreadPool.Instance.Queue((_2) =>
+                                                var timeoutTimer3 = fiberInPause.Schedule(() =>
                                                 {
-                                                    requesterFiber.Resume(() =>
-                                                    {
-                                                        received = response.TryReceive(out result);
-                                                        Assert.IsFalse(received);
-                                                        requesterThread.Stop();
-                                                    });
+                                                    response.Dispose();
+                                                    requesterThread.Stop();
+                                                }, 3000);
+                                                response.SetCallbackOnReceive(() => fiberInPause.Enqueue(() =>
+                                                {
+                                                    requesterThread.Queue((_) => Assert.Fail());
                                                 }));
                                             });
                                         });
@@ -119,7 +149,7 @@ namespace AsyncFiberWorksTests
                         });
                     };
                     receivingArray[0] = receiving;
-                    response.SetCallbackOnReceive(1000, () => DefaultThreadPool.Instance.Queue((_) => receiving()));
+                    response.SetCallbackOnReceive(() => fiberInPause.Enqueue(receiving));
                     requesterThread.Run();
                 }
             }
@@ -158,10 +188,12 @@ namespace AsyncFiberWorksTests
             requests.Add("daikon");
             int indexRequest = 0;
 
-            int timeoutInMs = 500;
-            IReply<int> response = null;
+            // Thread for Assert.
             var mainThread = new ThreadPoolAdaptorFromQueueForThread();
             var mainFiber = new PoolFiber(mainThread, new DefaultExecutor());
+
+            int timeoutInMs = 500;
+            IReply<int> response = null;
             var ownAction = new List<Action>();
             Action action = () =>
             {
@@ -175,8 +207,14 @@ namespace AsyncFiberWorksTests
                     string requestData = requests[indexRequest];
                     indexRequest += 1;
                     response = countChannel.SendRequest(requestData);
-                    response.SetCallbackOnReceive(timeoutInMs, () => mainFiber.Enqueue(() =>
+                    var timeoutTimer = mainFiber.Schedule(() =>
                     {
+                        response.Dispose();
+                        Assert.Fail();
+                    }, timeoutInMs);
+                    Action onReceive = () => mainFiber.Enqueue(() =>
+                    {
+                        timeoutTimer.Dispose();
                         bool isReceived = response.TryReceive(out int responseData);
                         Assert.IsTrue(isReceived);
                         if (dic.ContainsKey(requestData))
@@ -188,7 +226,8 @@ namespace AsyncFiberWorksTests
                             Assert.AreEqual(-1, responseData);
                         }
                         mainFiber.Enqueue(ownAction[0]);
-                    }));
+                    });
+                    response.SetCallbackOnReceive(onReceive);
                 }
             };
             ownAction.Add(action);
@@ -262,19 +301,29 @@ namespace AsyncFiberWorksTests
 
         private static Task<T> WaitOnReceive<T>(IReply<T> reply, int timeoutInMs)
         {
+            var workFiber = new PoolFiber();
             var tcs = new TaskCompletionSource<T>();
-            reply.SetCallbackOnReceive(timeoutInMs, () => DefaultThreadPool.Instance.Queue((_) =>
+            var timeoutTimer = workFiber.Schedule(() =>
             {
+                if (tcs.TrySetCanceled())
+                {
+                    reply.Dispose();
+                }
+            }, timeoutInMs);
+            Action onReceive = () => workFiber.Enqueue(() =>
+            {
+                timeoutTimer.Dispose();
                 bool isReceived = reply.TryReceive(out T responseData);
                 if (isReceived)
                 {
-                    tcs.SetResult(responseData);
+                    tcs.TrySetResult(responseData);
                 }
                 else
                 {
-                    tcs.SetCanceled();
+                    tcs.TrySetCanceled();
                 }
-            }));
+            });
+            reply.SetCallbackOnReceive(onReceive);
             return tcs.Task;
         }
     }
