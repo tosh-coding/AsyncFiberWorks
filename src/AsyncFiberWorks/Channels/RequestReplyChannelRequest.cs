@@ -23,6 +23,7 @@ namespace AsyncFiberWorks.Channels
 
         public bool SendReply(TReplyMessage response)
         {
+            Action action;
             lock (_lock)
             {
                 if (_disposed)
@@ -31,10 +32,11 @@ namespace AsyncFiberWorks.Channels
                 }
                 _resp.Enqueue(response);
 
-                var callbackOnReceive = _callbackOnReceive;
-                callbackOnReceive?.Invoke();
-                return true;
+                action = _callbackOnReceive;
+                _callbackOnReceive = null;
             }
+            action?.Invoke();
+            return true;
         }
 
         public bool TryReceive(out TReplyMessage result)
@@ -53,10 +55,7 @@ namespace AsyncFiberWorks.Channels
 
         public bool SetCallbackOnReceive(Action callbackOnReceive)
         {
-            if (callbackOnReceive == null)
-            {
-                throw new ArgumentNullException(nameof(callbackOnReceive));
-            }
+            bool hasResponse = false;
             lock (_lock)
             {
                 if (_disposed)
@@ -64,12 +63,19 @@ namespace AsyncFiberWorks.Channels
                     return false;
                 }
 
-                _callbackOnReceive = callbackOnReceive;
-
-                if (_resp.Count > 0)
+                hasResponse = _resp.Count > 0;
+                if (hasResponse)
                 {
-                    callbackOnReceive();
+                    _callbackOnReceive = null;
                 }
+                else
+                {
+                    _callbackOnReceive = callbackOnReceive;
+                }
+            }
+            if (hasResponse)
+            {
+                callbackOnReceive?.Invoke();
             }
             return true;
         }

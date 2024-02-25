@@ -15,8 +15,8 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Send one or more responses.
         /// </summary>
-        /// <param name="replyMsg"></param>
-        /// <returns></returns>
+        /// <param name="replyMsg">A message</param>
+        /// <returns>Returns false if it has already been disposed.</returns>
         bool SendReply(M replyMsg);
     }
 }

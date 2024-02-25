@@ -3,12 +3,19 @@
 namespace AsyncFiberWorks.Core
 {
     /// <summary>
-    /// A pair of Action and Fiber.
+    /// An action with an execution context.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class ActionWithContext<T>
     {
+        /// <summary>
+        /// Action.
+        /// </summary>
         private readonly Action<T> _action;
+
+        /// <summary>
+        /// The context in which the action should be executed.
+        /// </summary>
         private readonly IExecutionContext _fiber;
 
         /// <summary>

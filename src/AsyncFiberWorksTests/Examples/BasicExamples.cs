@@ -158,8 +158,8 @@ namespace AsyncFiberWorksTests.Examples
             {
                 var channel = new RequestReplyChannel<string, string>();
                 var subscriptionFiber = fiber.BeginSubscription();
-                var actionWithContext = new ActionWithContext<IRequest<string, string>>(req => req.SendReply("bye"), fiber);
-                var subscriptionChannel = channel.AddResponder(actionWithContext.OnReceive);
+                var subscriptionChannel = channel.AddResponder(
+                    fiber.CreateAction<IRequest<string, string>>(req => req.SendReply("bye")));
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
 
                 var reply = channel.SendRequest("hello");
@@ -201,8 +201,8 @@ namespace AsyncFiberWorksTests.Examples
                     }
                 };
                 var subscriptionFiber = fiberReply.BeginSubscription();
-                var actionWithContext = new ActionWithContext<IRequest<object, int>>(request => request.SendReply(reply()), fiberReply);
-                var subscriptionChannel = channel.ReplyToPrimingRequest(actionWithContext.OnReceive);
+                var subscriptionChannel = channel.ReplyToPrimingRequest(
+                    fiberReply.CreateAction<IRequest<object, int>>(request => request.SendReply(reply())));
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 Assert.AreEqual(1, channel.NumSubscribers);
 
