@@ -28,7 +28,7 @@ namespace AsyncFiberWorksTests
                 var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
                 requesterFiber.Pause();
                 var response = timeCheck.SendRequest("hello");
-                response.SetCallbackOnReceive(10000, new PoolFiber(), (_) =>
+                response.SetCallbackOnReceive(10000, () => DefaultThreadPool.Instance.Queue((_) =>
                 {
                     requesterFiber.Resume(() =>
                     {
@@ -37,7 +37,7 @@ namespace AsyncFiberWorksTests
                         Assert.AreEqual(result, now);
                         requesterThread.Stop();
                     });
-                });
+                }));
                 requesterThread.Run();
             }
         }
@@ -83,15 +83,15 @@ namespace AsyncFiberWorksTests
                                 if (i < 5)
                                 {
                                     requesterFiber.Pause();
-                                    response.SetCallbackOnReceive(1000, new PoolFiber(), (_) =>
+                                    response.SetCallbackOnReceive(1000, () => DefaultThreadPool.Instance.Queue((_) =>
                                     {
                                         receivingArray[0].Invoke();
-                                    });
+                                    }));
                                 }
                                 else
                                 {
                                     requesterFiber.Pause();
-                                    response.SetCallbackOnReceive(3000, new PoolFiber(), (_) =>
+                                    response.SetCallbackOnReceive(3000, () => DefaultThreadPool.Instance.Queue((_) =>
                                     {
                                         requesterFiber.Resume(() =>
                                         {
@@ -102,7 +102,7 @@ namespace AsyncFiberWorksTests
                                                 Assert.AreEqual(5, result);
 
                                                 requesterFiber.Pause();
-                                                response.SetCallbackOnReceive(3000, new PoolFiber(), (dummy) =>
+                                                response.SetCallbackOnReceive(3000, () => DefaultThreadPool.Instance.Queue((_2) =>
                                                 {
                                                     requesterFiber.Resume(() =>
                                                     {
@@ -110,16 +110,16 @@ namespace AsyncFiberWorksTests
                                                         Assert.IsFalse(received);
                                                         requesterThread.Stop();
                                                     });
-                                                });
+                                                }));
                                             });
                                         });
-                                    });
+                                    }));
                                 }
                             });
                         });
                     };
                     receivingArray[0] = receiving;
-                    response.SetCallbackOnReceive(1000, new PoolFiber(), (_) => receiving());
+                    response.SetCallbackOnReceive(1000, () => DefaultThreadPool.Instance.Queue((_) => receiving()));
                     requesterThread.Run();
                 }
             }
@@ -175,7 +175,7 @@ namespace AsyncFiberWorksTests
                     string requestData = requests[indexRequest];
                     indexRequest += 1;
                     response = countChannel.SendRequest(requestData);
-                    response.SetCallbackOnReceive(timeoutInMs, mainFiber, (_) =>
+                    response.SetCallbackOnReceive(timeoutInMs, () => mainFiber.Enqueue(() =>
                     {
                         bool isReceived = response.TryReceive(out int responseData);
                         Assert.IsTrue(isReceived);
@@ -188,7 +188,7 @@ namespace AsyncFiberWorksTests
                             Assert.AreEqual(-1, responseData);
                         }
                         mainFiber.Enqueue(ownAction[0]);
-                    });
+                    }));
                 }
             };
             ownAction.Add(action);
@@ -263,7 +263,7 @@ namespace AsyncFiberWorksTests
         private static Task<T> WaitOnReceive<T>(IReply<T> reply, int timeoutInMs)
         {
             var tcs = new TaskCompletionSource<T>();
-            reply.SetCallbackOnReceive(timeoutInMs, null, (_) =>
+            reply.SetCallbackOnReceive(timeoutInMs, () => DefaultThreadPool.Instance.Queue((_) =>
             {
                 bool isReceived = reply.TryReceive(out T responseData);
                 if (isReceived)
@@ -274,7 +274,7 @@ namespace AsyncFiberWorksTests
                 {
                     tcs.SetCanceled();
                 }
-            });
+            }));
             return tcs.Task;
         }
     }

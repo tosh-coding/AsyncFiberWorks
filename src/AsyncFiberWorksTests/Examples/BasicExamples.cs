@@ -162,14 +162,14 @@ namespace AsyncFiberWorksTests.Examples
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
 
                 var reply = channel.SendRequest("hello");
-                reply.SetCallbackOnReceive(10000, testFiber, (_) =>
+                reply.SetCallbackOnReceive(10000, () => testFiber.Enqueue(() =>
                 {
                     string result;
                     bool received = reply.TryReceive(out result);
                     Assert.IsTrue(received);
                     Assert.AreEqual("bye", result);
                     testThread.Stop();
-                });
+                }));
                 testThread.Run();
             }
         }

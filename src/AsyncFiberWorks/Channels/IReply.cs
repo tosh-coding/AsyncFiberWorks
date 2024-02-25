@@ -1,4 +1,3 @@
-using AsyncFiberWorks.Core;
 using System;
 
 namespace AsyncFiberWorks.Channels
@@ -21,10 +20,8 @@ namespace AsyncFiberWorks.Channels
         /// Also called if timed out. In that case, TryReceive will fail.
         /// </summary>
         /// <param name="timeoutInMs"></param>
-        /// <param name="fiberOnReceive">A Fiber on which the on-receive callback runs. If null it runs on .NET ThreadPool.</param>
         /// <param name="callbackOnReceive"></param>
-        /// <param name="argumentOfCallback"></param>
         /// <returns></returns>
-        bool SetCallbackOnReceive(int timeoutInMs, IExecutionContext fiberOnReceive, Action<object> callbackOnReceive, object argumentOfCallback = null);
+        bool SetCallbackOnReceive(int timeoutInMs, Action callbackOnReceive);
     }
 }

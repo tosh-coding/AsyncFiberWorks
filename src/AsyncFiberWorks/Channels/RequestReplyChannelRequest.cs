@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -11,11 +10,9 @@ namespace AsyncFiberWorks.Channels
         private readonly TRequestMessage _req;
         private readonly Queue<TReplyMessage> _resp = new Queue<TReplyMessage>();
         private bool _disposed;
-        private IExecutionContext _fiberOnReceive = null;
-        private Action<object> _callbackOnReceive = null;
+        private Action _callbackOnReceive = null;
         private Timer _timer = null;
         private object _timerId = null;
-        private object _argumentOfCallback = null;
 
         public RequestReplyChannelRequest(TRequestMessage req)
         {
@@ -39,11 +36,9 @@ namespace AsyncFiberWorks.Channels
 
                 if (_callbackOnReceive != null)
                 {
-                    var fiberOnReceive = _fiberOnReceive;
                     var callbackOnReceive = _callbackOnReceive;
-                    var argumentOfCallback = _argumentOfCallback;
                     ClearCallbackOnReceive();
-                    EnqueueOnReceive(fiberOnReceive, callbackOnReceive, argumentOfCallback);
+                    callbackOnReceive();
                 }
                 return true;
             }
@@ -68,7 +63,7 @@ namespace AsyncFiberWorks.Channels
             }
         }
 
-        public bool SetCallbackOnReceive(int timeoutInMs, IExecutionContext fiberOnReceive, Action<object> callbackOnReceive, object argumentOfCallback = null)
+        public bool SetCallbackOnReceive(int timeoutInMs, Action callbackOnReceive)
         {
             if (callbackOnReceive == null)
             {
@@ -82,24 +77,20 @@ namespace AsyncFiberWorks.Channels
                 }
                 if (_timer != null)
                 {
-                    var oldFiberOnReceive = _fiberOnReceive;
                     var oldCallbackOnReceive = _callbackOnReceive;
-                    var oldArgumentOfCallback = _argumentOfCallback;
                     ClearCallbackOnReceive();
-                    EnqueueOnReceive(oldFiberOnReceive, oldCallbackOnReceive, oldArgumentOfCallback);
+                    oldCallbackOnReceive();
                 }
 
                 if (_resp.Count <= 0)
                 {
-                    _fiberOnReceive = fiberOnReceive;
                     _callbackOnReceive = callbackOnReceive;
-                    _argumentOfCallback = argumentOfCallback;
                     _timerId = new object();
                     _timer = new Timer(OnTimeout, _timerId, timeoutInMs, 0);
                 }
                 else
                 {
-                    EnqueueOnReceive(fiberOnReceive, callbackOnReceive, argumentOfCallback);
+                    callbackOnReceive();
                 }
             }
             return true;
@@ -120,9 +111,7 @@ namespace AsyncFiberWorks.Channels
                 _timer.Dispose();
                 _timer = null;
                 _timerId = null;
-                _fiberOnReceive = null;
                 _callbackOnReceive = null;
-                _argumentOfCallback = null;
             }
         }
 
@@ -143,29 +132,9 @@ namespace AsyncFiberWorks.Channels
                     return;
                 }
 
-                var fiberOnReceive = _fiberOnReceive;
                 var callbackOnReceive = _callbackOnReceive;
-                var argumentOfCallback = _argumentOfCallback;
                 ClearCallbackOnReceive();
-                EnqueueOnReceive(fiberOnReceive, callbackOnReceive, argumentOfCallback);
-            }
-        }
-
-        private void EnqueueOnReceive(IExecutionContext fiberOnReceive, Action<object> callbackOnReceive, object argumentOfCallback)
-        {
-            if (fiberOnReceive != null)
-            {
-                fiberOnReceive.Enqueue(() =>
-                {
-                    callbackOnReceive(argumentOfCallback);
-                });
-            }
-            else
-            {
-                DefaultThreadPool.Instance.Queue((_) =>
-                {
-                    callbackOnReceive(argumentOfCallback);
-                });
+                callbackOnReceive();
             }
         }
 
@@ -182,9 +151,7 @@ namespace AsyncFiberWorks.Channels
                     _timer.Dispose();
                     _timer = null;
                     _timerId = null;
-                    _fiberOnReceive = null;
                     _callbackOnReceive = null;
-                    _argumentOfCallback = null;
                 }
             }
         }

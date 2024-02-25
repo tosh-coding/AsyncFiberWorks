@@ -43,7 +43,7 @@ namespace AsyncFiberWorks.Channels
             }
             _reply = reply;
 
-            reply.SetCallbackOnReceive(_timeoutInMs, null, (_) =>
+            reply.SetCallbackOnReceive(_timeoutInMs, () => DefaultThreadPool.Instance.Queue((_) =>
             {
                 T result;
                 bool successToFirstReceive = reply.TryReceive(out result);
@@ -80,7 +80,7 @@ namespace AsyncFiberWorks.Channels
                         _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Connected));
                     }
                 }
-            });
+            }));
         }
 
         public void Dispose()
