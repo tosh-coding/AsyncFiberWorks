@@ -88,7 +88,7 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task Discontinue()
+        public async Task DiscontinuedDuringPublishing()
         {
             var channel = new AcknowledgementChannel<int, bool>();
 
