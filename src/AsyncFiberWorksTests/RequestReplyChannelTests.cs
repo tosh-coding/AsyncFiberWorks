@@ -343,5 +343,76 @@ namespace AsyncFiberWorksTests
             reply.SetCallbackOnReceive(onReceive);
             return tcs.Task;
         }
+
+        [Test]
+        public async Task OnlyFirstOneIsAcquired()
+        {
+            var countChannel = new RequestReplyChannel<int, int>();
+            int resourceHolderId = 0;
+
+            // Responder.
+            {
+                IFiber responder = new PoolFiber();
+                Action<IRequest<int, int>> onRequest =
+                    (IRequest<int, int> req) =>
+                    {
+                        Task.Run(async () =>
+                        {
+                            await responder.SwitchTo();
+
+                            // There is no resource holder yet.
+                            if (resourceHolderId == 0)
+                            {
+                                resourceHolderId = req.Request;
+                                req.SendReply(resourceHolderId);
+                            }
+                            // There is already a resource holder.
+                            else
+                            {
+                                req.SendReply(resourceHolderId);
+                            }
+                        });
+                    };
+                var subscriber = countChannel.AddResponder(responder.CreateAction(onRequest));
+            }
+
+            // Requester.
+            {
+                var response1 = countChannel.SendRequest(1);
+                var response2 = countChannel.SendRequest(2);
+                var response3 = countChannel.SendRequest(3);
+                var response4 = countChannel.SendRequest(4);
+                var response5 = countChannel.SendRequest(5);
+
+                try
+                {
+                    var t1 = WaitReply(response1, 500);
+                    var t2 = WaitReply(response2, 500);
+                    var t3 = WaitReply(response3, 500);
+                    var t4 = WaitReply(response4, 500);
+                    var t5 = WaitReply(response5, 500);
+
+                    await Task.WhenAll(t1, t2, t3, t4, t5);
+
+                    // Only one requestor acquires resources.
+                    Assert.AreEqual(t1.Result, t2.Result);
+                    Assert.AreEqual(t1.Result, t3.Result);
+                    Assert.AreEqual(t1.Result, t4.Result);
+                    Assert.AreEqual(t1.Result, t5.Result);
+                }
+                catch (OperationCanceledException)
+                {
+                    Assert.Fail();
+                }
+                finally
+                {
+                    response1.Dispose();
+                    response2.Dispose();
+                    response3.Dispose();
+                    response4.Dispose();
+                    response5.Dispose();
+                }
+            }
+        }
     }
 }
