@@ -30,9 +30,9 @@ namespace AsyncFiberWorks.Channels
         /// Publishes the incremental update.
         ///</summary>
         ///<param name="update"></param>
-        public bool Publish(T update)
+        public void Publish(T update)
         {
-            return _updatesChannel.Publish(update);
+            _updatesChannel.Publish(update);
         }
 
         /// <summary>

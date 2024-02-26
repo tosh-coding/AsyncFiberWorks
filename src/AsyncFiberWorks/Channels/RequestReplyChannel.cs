@@ -30,7 +30,8 @@ namespace AsyncFiberWorks.Channels
         public IReply<TReplyMessage> SendRequest(TRequestMessage p)
         {
             var request = new RequestReplyChannelRequest<TRequestMessage, TReplyMessage>(p);
-            return _requestChannel.Publish(request) ? request : null;
+            _requestChannel.Publish(request);
+            return request;
         }
 
         ///<summary>

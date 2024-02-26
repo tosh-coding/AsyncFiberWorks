@@ -4,6 +4,7 @@ namespace AsyncFiberWorks.Channels
 {
     /// <summary>
     /// List of message handlers.
+    /// The publication of the message is fire and forget.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     internal sealed class MessageHandlerList<T>
@@ -30,16 +31,13 @@ namespace AsyncFiberWorks.Channels
         /// Call all message handlers.
         /// </summary>
         /// <param name="msg">A message.</param>
-        /// <returns>True if one or more handlers have been called.</returns>
-        public bool Publish(T msg)
+        public void Publish(T msg)
         {
             var evnt = _handlers; // copy reference for thread safety
             if (evnt != null)
             {
                 evnt(msg);
-                return true;
             }
-            return false;
         }
 
         /// <summary>

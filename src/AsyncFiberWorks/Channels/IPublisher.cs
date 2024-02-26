@@ -10,7 +10,6 @@ namespace AsyncFiberWorks.Channels
         /// Publish a message to all subscribers. Returns true if any subscribers are registered.
         /// </summary>
         /// <param name="msg"></param>
-        /// <returns></returns>
-        bool Publish(T msg);
+        void Publish(T msg);
     }
 }

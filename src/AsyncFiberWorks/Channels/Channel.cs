@@ -34,10 +34,9 @@ namespace AsyncFiberWorks.Channels
         /// <see cref="IPublisher{T}.Publish(T)"/>
         /// </summary>
         /// <param name="msg"></param>
-        /// <returns></returns>
-        public bool Publish(T msg)
+        public void Publish(T msg)
         {
-            return _channel.Publish(msg);
+            _channel.Publish(msg);
         }
 
         ///<summary>
