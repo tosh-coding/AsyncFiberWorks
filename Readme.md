@@ -116,7 +116,7 @@ ThreadFiber does not support pause. It is specifically intended for performance-
  * _[ThreadPoolAdaptorFromQueueForThread](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Core/ThreadPoolAdaptorFromQueueForThread.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
 
 ## Channels ##
-The channel function has not changed much from the original Retlang design concept. The following explanation is quoted from Retlang.
+A channel is a messaging mechanism that abstracts the communication destination.  Channel functionality has not changed much from the original Retlang design concept. The following explanation is quoted from Retlang.
 
 > Message based concurrency in .NET
 > \[...\]
@@ -124,10 +124,9 @@ The channel function has not changed much from the original Retlang design conce
 
 (Quote from [Retlang page](https://code.google.com/archive/p/retlang/). Broken links were replaced.)
 
-### Four channels ###
+### Channel classes ###
 There are four channel types.
 
  * _[Channel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/Channel.cs)_ - Forward published messages to all subscribers.  One-way.  Used for 1:1 unicasting, 1:N broadcasting and N:1 message aggregation.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/Examples/BasicExamples.cs#L20).
- * _[QueueChannel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/QueueChannel.cs)_ - Forward a published message to only one of the subscribers. One-way. Used for 1:N/N:N load balancing.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/QueueChannelTests.cs#L22).
  * _[RequestReplyChannel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/RequestReplyChannel.cs)_ - Subscribers respond to requests from publishers. Two-way.  Used for 1:1/N:1 request/reply messaging, 1:N/N:M bulk queries to multiple nodes.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/RequestReplyChannelTests.cs).
  * _[SnapshotChannel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/SnapshotChannel.cs)_ - Subscribers are also notified when they start subscribing, and separately thereafter.  One-way. Used for replication with incremental update notifications.  Only one responder can be handled within a single channel.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/Examples/BasicExamples.cs#L189).

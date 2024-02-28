@@ -9,7 +9,7 @@ using AsyncFiberWorks.Fibers;
 namespace AsyncFiberWorksTests
 {
     [TestFixture]
-    public class QueueChannelTests
+    public class QueueConsumerTests
     {
         [Test]
         public void SingleConsumer()
@@ -19,7 +19,7 @@ namespace AsyncFiberWorksTests
             var reset = new AutoResetEvent(false);
             using (one)
             {
-                var channel = new QueueChannel<int>();
+                var channel = new Channel<int>();
                 Action<int> onMsg = delegate
                 {
                     oneConsumed++;
@@ -29,7 +29,8 @@ namespace AsyncFiberWorksTests
                     }
                 };
                 var subscriptionFiber = one.BeginSubscription();
-                var subscriptionChannel = channel.Subscribe(one, onMsg);
+                var consumer = new QueueConsumer<int>(one, onMsg);
+                var subscriptionChannel = channel.Subscribe(consumer.ReceiveOnProducerThread);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 for (var i = 0; i < 20; i++)
                 {
@@ -47,7 +48,7 @@ namespace AsyncFiberWorksTests
             var reset = new AutoResetEvent(false);
             using (one)
             {
-                var channel = new QueueChannel<int>();
+                var channel = new Channel<int>();
                 Action<int> onMsg = delegate(int num)
                 {
                     if (num == 0)
@@ -57,7 +58,8 @@ namespace AsyncFiberWorksTests
                     reset.Set();
                 };
                 var subscriptionFiber = one.BeginSubscription();
-                var subscriptionChannel = channel.Subscribe(one, onMsg);
+                var consumer = new QueueConsumer<int>(one, onMsg);
+                var subscriptionChannel = channel.Subscribe(consumer.ReceiveOnProducerThread);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish(0);
                 channel.Publish(1);
@@ -72,7 +74,7 @@ namespace AsyncFiberWorksTests
             var queues = new List<IFiber>();
             var receiveCount = 0;
             var reset = new AutoResetEvent(false);
-            var channel = new QueueChannel<int>();
+            var channel = new Channel<int>();
 
             var messageCount = 100;
             var updateLock = new object();
@@ -93,7 +95,9 @@ namespace AsyncFiberWorksTests
                 var fiber = new PoolFiber();
                 queues.Add(fiber);
                 var subscriptionFiber = fiber.BeginSubscription();
-                var subscriptionChannel = channel.Subscribe(fiber, onReceive);
+
+                var consumer = new QueueConsumer<int>(fiber, onReceive);
+                var subscriptionChannel = channel.Subscribe(consumer.ReceiveOnProducerThread);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
             }
             for (var i = 0; i < messageCount; i++)

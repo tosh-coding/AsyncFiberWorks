@@ -3,24 +3,44 @@ using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Channels
 {
-    internal class QueueConsumer<T>
+    /// <summary>
+    /// Queue incoming messages once. It is then dequeued from the callback processing performed on the fiber.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class QueueConsumer<T> : IMessageReceiver<T>
     {
+        private readonly object _lock = new object();
         private bool _flushPending;
         private readonly IExecutionContext _fiber;
         private readonly Action<T> _callback;
         private readonly IMessageQueue<T> _queue;
 
-        public QueueConsumer(IExecutionContext fiber, Action<T> callback, IMessageQueue<T> queue)
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="fiber"></param>
+        /// <param name="callback"></param>
+        /// <param name="queue"></param>
+        public QueueConsumer(IExecutionContext fiber, Action<T> callback, IMessageQueue<T> queue = null)
         {
+            if (queue == null)
+            {
+                queue = new InternalQueue<T>();
+            }
             _fiber = fiber;
             _callback = callback;
             _queue = queue;
         }
 
-        public void Signal(byte dummy)
+        /// <summary>
+        /// Message receiving function.
+        /// </summary>
+        /// <param name="msg">A message.</param>
+        public void ReceiveOnProducerThread(T msg)
         {
-            lock (this)
+            lock (_lock)
             {
+                _queue.Enqueue(msg);
                 if (_flushPending)
                 {
                     return;
@@ -42,7 +62,7 @@ namespace AsyncFiberWorks.Channels
             }
             finally
             {
-                lock (this)
+                lock (_lock)
                 {
                     if (_queue.IsEmpty)
                     {
