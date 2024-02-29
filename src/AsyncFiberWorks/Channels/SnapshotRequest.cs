@@ -15,7 +15,7 @@ namespace AsyncFiberWorks.Channels
         private readonly Action<SnapshotRequestControlEvent> _control;
         private readonly Action<T> _receive;
 
-        private IReply<T> _reply;
+        private IDisposable _reply;
         private bool _disposed = false;
         private IDisposable _disposableOfReceiver;
 
@@ -34,17 +34,8 @@ namespace AsyncFiberWorks.Channels
 
         internal void StartSubscribe(RequestReplyChannel<object, T> requestChannel, MessageHandlerList<T> _updatesChannel)
         {
-            var reply = requestChannel.SendRequest(new object());
-            if (reply == null)
+            _reply = requestChannel.SendRequest(new object(), (result) => DefaultThreadPool.Instance.Queue((_) =>
             {
-                throw new ArgumentException(typeof(T).Name + " synchronous request has no reply subscriber.");
-            }
-            _reply = reply;
-
-            reply.SetCallbackOnReceive(() => DefaultThreadPool.Instance.Queue((_) =>
-            {
-                T result;
-                bool successToFirstReceive = reply.TryReceive(out result);
                 lock (_lock)
                 {
                     if (_reply == null)
@@ -55,10 +46,6 @@ namespace AsyncFiberWorks.Channels
                     _reply = null;
                 }
 
-                if (!successToFirstReceive)
-                {
-                    return;
-                }
                 _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Connecting));
 
                 Action<T> action = (msg) =>

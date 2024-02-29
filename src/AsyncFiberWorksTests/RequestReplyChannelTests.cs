@@ -33,29 +33,30 @@ namespace AsyncFiberWorksTests
 
                 requesterFiber.Pause();
 
-                var fiberInPause = new PoolFiberSlim(new OneShotExecutor());
-                var response = timeCheck.SendRequest("hello");
-                var timeoutTimer = fiberInPause.Schedule(() =>
+                var workFiber = new PoolFiberSlim(new OneShotExecutor());
+                var timeoutTimer = workFiber.Schedule(() =>
                 {
                     requesterThread.Queue((_) => Assert.Fail());
                 }, 10000);
-                response.SetCallbackOnReceive(() => fiberInPause.Enqueue(() =>
+                var disposableRequest = new Unsubscriber();
+                var response = timeCheck.SendRequest("hello",
+                    (result) => workFiber.Enqueue(() =>
                 {
                     timeoutTimer.Dispose();
+                    disposableRequest.Dispose();
                     requesterFiber.Resume(() =>
                     {
-                        bool received = response.TryReceive(out DateTime result);
-                        Assert.IsTrue(received);
                         Assert.AreEqual(result, now);
                         requesterThread.Stop();
                     });
                 }));
+                disposableRequest.AppendDisposable(response);
                 requesterThread.Run();
             }
         }
 
         [Test]
-        public void SynchronousRequestWithMultipleReplies()
+        public void MultipleReplies()
         {
             var countChannel = new RequestReplyChannel<string, int>();
             var allSent = new AutoResetEvent(false);
@@ -68,7 +69,6 @@ namespace AsyncFiberWorksTests
                     {
                         for (var i = 0; i <= 5; i++)
                             req.SendReply(i);
-                        allSent.Set();
                     };
                 var subscriber = countChannel.AddResponder(fiber.CreateAction(onRequest));
             }
@@ -76,93 +76,41 @@ namespace AsyncFiberWorksTests
             // Requester.
             {
                 var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
-                var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
+                var workFiber = new PoolFiber(requesterThread, new DefaultExecutor());
                 Action actionAssertFail = () => requesterThread.Queue((_) => Assert.Fail());
 
-                requesterFiber.Pause();
-
-                var fiberInPause = new PoolFiber();
-                using (var response = countChannel.SendRequest("hello"))
+                var timeoutTimer = workFiber.Schedule(() =>
                 {
-                    allSent.WaitOne(10000, false);
-                    var timeoutTimer = fiberInPause.Schedule(() =>
+                    actionAssertFail();
+                }, 1000);
+                int i = 0;
+                int state = 0;
+                using (var response = countChannel.SendRequest("hello", (result) => workFiber.Enqueue(() =>
+                {
+                    if (state == 0)
                     {
-                        response.Dispose();
+                        int copyI = i;
+                        int copyResult = result;
+                        requesterThread.Queue((_) => Assert.AreEqual(copyResult, copyI));
+                        i += 1;
+                        if (i >= 5)
+                        {
+                            state = 1;
+                        }
+                    }
+                    else if (state == 1)
+                    {
+                        timeoutTimer?.Dispose();
+                        timeoutTimer = null;
+                        Assert.AreEqual(5, result);
+                        requesterThread.Stop();
+                    }
+                    else
+                    {
                         actionAssertFail();
-                    }, 1000);
-                    int i = 0;
-                    int state = 0;
-                    Action[] actionList = new Action[1];
-                    Action action = () => fiberInPause.Enqueue(() =>
-                    {
-                        if (state == 0)
-                        {
-                            timeoutTimer?.Dispose();
-                            timeoutTimer = null;
-                            requesterFiber.Resume(() =>
-                            {
-                                bool received = response.TryReceive(out int result);
-                                Assert.IsTrue(received);
-                                Assert.AreEqual(result, i);
-                                i += 1;
-
-                                requesterFiber.Enqueue(() =>
-                                {
-                                    requesterFiber.Pause();
-                                    if (i < 5)
-                                    {
-                                        timeoutTimer?.Dispose();
-                                        timeoutTimer = fiberInPause.Schedule(() =>
-                                        {
-                                            response.Dispose();
-                                            actionAssertFail();
-                                        }, 1000);
-                                        response.SetCallbackOnReceive(actionList[0]);
-                                    }
-                                    else
-                                    {
-                                        timeoutTimer?.Dispose();
-                                        timeoutTimer = fiberInPause.Schedule(() =>
-                                        {
-                                            response.Dispose();
-                                            actionAssertFail();
-                                        }, 3000);
-                                        response.SetCallbackOnReceive(actionList[0]);
-
-                                        state = 1;
-                                    }
-                                });
-                            });
-                        }
-                        else if (state == 1)
-                        {
-                            timeoutTimer?.Dispose();
-                            timeoutTimer = null;
-                            requesterFiber.Resume(() =>
-                            {
-                                requesterFiber.Enqueue(() =>
-                                {
-                                    bool received = response.TryReceive(out int result);
-                                    Assert.IsTrue(received);
-                                    Assert.AreEqual(5, result);
-
-                                    requesterFiber.Pause();
-                                    timeoutTimer = fiberInPause.Schedule(() =>
-                                    {
-                                        response.Dispose();
-                                        requesterThread.Stop();
-                                    }, 3000);
-                                    response.SetCallbackOnReceive(actionList[0]);
-                                });
-                            });
-                        }
-                        else
-                        {
-                            actionAssertFail();
-                        }
-                    });
-                    actionList[0] = action;
-                    response.SetCallbackOnReceive(action);
+                    }
+                })))
+                {
                     requesterThread.Run();
                 }
             }
@@ -208,30 +156,28 @@ namespace AsyncFiberWorksTests
                 int indexRequest = 0;
 
                 int timeoutInMs = 500;
-                IReply<int> response = null;
                 var ownAction = new List<Action>();
                 Action action = () =>
                 {
-                    response?.Dispose();
+                    string requestData = requests[indexRequest];
+                    indexRequest += 1;
+
                     if (indexRequest >= requests.Count)
                     {
                         mainFiber.Enqueue(() => { mainThread.Stop(); });
                     }
                     else
                     {
-                        string requestData = requests[indexRequest];
-                        indexRequest += 1;
-                        response = countChannel.SendRequest(requestData);
+                        var disposables = new Unsubscriber();
                         var timeoutTimer = mainFiber.Schedule(() =>
                         {
-                            response.Dispose();
+                            disposables.Dispose();
                             Assert.Fail();
                         }, timeoutInMs);
-                        Action onReceive = () => mainFiber.Enqueue(() =>
+                        var response = countChannel.SendRequest(requestData, (responseData) => mainFiber.Enqueue(() =>
                         {
                             timeoutTimer.Dispose();
-                            bool isReceived = response.TryReceive(out int responseData);
-                            Assert.IsTrue(isReceived);
+                            disposables.Dispose();
                             if (dic.ContainsKey(requestData))
                             {
                                 Assert.AreEqual(dic[requestData], responseData);
@@ -241,106 +187,35 @@ namespace AsyncFiberWorksTests
                                 Assert.AreEqual(-1, responseData);
                             }
                             mainFiber.Enqueue(ownAction[0]);
-                        });
-                        response.SetCallbackOnReceive(onReceive);
+                        }));
+                        disposables.AppendDisposable(response);
                     }
                 };
                 ownAction.Add(action);
+
                 mainFiber.Enqueue(action);
                 mainThread.Run();
                 Assert.AreEqual(requests.Count, indexRequest);
             }
         }
 
-        [Test]
-        public async Task ChangeResponseAsync()
-        {
-            var countChannel = new RequestReplyChannel<string, int>();
-            var dic = new (string, int)[] {
-                ("apple", 100),
-                ("banana", 200),
-                ("carrot", 300),
-            }.ToDictionary(x => x.Item1, x => x.Item2);
-
-            // Responder.
-            {
-                IFiber responder = new PoolFiber();
-                Action<IRequest<string, int>> onRequest =
-                    (IRequest<string, int> req) =>
-                    {
-                        Task.Run(async () =>
-                        {
-                            await Task.Delay(20);
-                            await responder.SwitchTo();
-                            if (dic.TryGetValue(req.Request, out int value))
-                            {
-                                req.SendReply(value);
-                            }
-                            else
-                            {
-                                req.SendReply(-1);
-                            }
-                        });
-                    };
-                var subscriber = countChannel.AddResponder(responder.CreateAction(onRequest));
-            }
-
-            // Requester.
-            {
-                var requests = new List<string>();
-                requests.AddRange(dic.Keys);
-                requests.Add("daikon");
-
-                var mainFiber = new PoolFiber();
-
-                foreach (var requestData in requests)
-                {
-                    using (var response = countChannel.SendRequest(requestData))
-                    {
-                        try
-                        {
-                            int responseData = await WaitReply(response, 500);
-                            await mainFiber.SwitchTo();
-                            if (dic.ContainsKey(requestData))
-                            {
-                                Assert.AreEqual(dic[requestData], responseData);
-                            }
-                            else
-                            {
-                                Assert.AreEqual(-1, responseData);
-                            }
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            Assert.Fail();
-                        }
-                    }
-                }
-            }
-        }
-
-        private static Task<T> WaitReply<T>(IReply<T> reply, int timeoutInMs)
+        private static Task<int> WaitReply(RequestReplyChannel<int, int> countChannel, int requestData, int timeoutInMs)
         {
             var workFiber = new PoolFiber();
-            var tcs = new TaskCompletionSource<T>();
+            var disposables = new Unsubscriber();
+            var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
             var timeoutTimer = workFiber.Schedule(() =>
             {
                 tcs.TrySetCanceled();
+                disposables.Dispose();
             }, timeoutInMs);
-            Action onReceive = () => workFiber.Enqueue(() =>
+            var response = countChannel.SendRequest(requestData, (responseData) => workFiber.Enqueue(() =>
             {
                 timeoutTimer.Dispose();
-                bool isReceived = reply.TryReceive(out T responseData);
-                if (isReceived)
-                {
-                    tcs.TrySetResult(responseData);
-                }
-                else
-                {
-                    tcs.TrySetCanceled();
-                }
-            });
-            reply.SetCallbackOnReceive(onReceive);
+                tcs.TrySetResult(responseData);
+                disposables.Dispose();
+            }));
+            disposables.AppendDisposable(response);
             return tcs.Task;
         }
 
@@ -378,19 +253,13 @@ namespace AsyncFiberWorksTests
 
             // Requester.
             {
-                var response1 = countChannel.SendRequest(1);
-                var response2 = countChannel.SendRequest(2);
-                var response3 = countChannel.SendRequest(3);
-                var response4 = countChannel.SendRequest(4);
-                var response5 = countChannel.SendRequest(5);
-
                 try
                 {
-                    var t1 = WaitReply(response1, 500);
-                    var t2 = WaitReply(response2, 500);
-                    var t3 = WaitReply(response3, 500);
-                    var t4 = WaitReply(response4, 500);
-                    var t5 = WaitReply(response5, 500);
+                    var t1 = WaitReply(countChannel, 1, 500);
+                    var t2 = WaitReply(countChannel, 2, 500);
+                    var t3 = WaitReply(countChannel, 3, 500);
+                    var t4 = WaitReply(countChannel, 4, 500);
+                    var t5 = WaitReply(countChannel, 5, 500);
 
                     await Task.WhenAll(t1, t2, t3, t4, t5);
 
@@ -403,14 +272,6 @@ namespace AsyncFiberWorksTests
                 catch (OperationCanceledException)
                 {
                     Assert.Fail();
-                }
-                finally
-                {
-                    response1.Dispose();
-                    response2.Dispose();
-                    response3.Dispose();
-                    response4.Dispose();
-                    response5.Dispose();
                 }
             }
         }

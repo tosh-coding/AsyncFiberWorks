@@ -1,5 +1,4 @@
 using System;
-using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -26,10 +25,11 @@ namespace AsyncFiberWorks.Channels
         /// Send request to any and all subscribers.
         /// </summary>
         /// <param name="p"></param>
-        /// <returns>null if no subscribers registered for request.</returns>
-        public IReply<TReplyMessage> SendRequest(TRequestMessage p)
+        /// <param name="callbackOnReceive">Message receive handler.</param>
+        /// <returns>Handler for cancellation.</returns>
+        public IDisposable SendRequest(TRequestMessage p, Action<TReplyMessage> callbackOnReceive)
         {
-            var request = new RequestReplyChannelRequest<TRequestMessage, TReplyMessage>(p);
+            var request = new RequestReplyChannelRequest<TRequestMessage, TReplyMessage>(p, callbackOnReceive);
             _requestChannel.Publish(request);
             return request;
         }

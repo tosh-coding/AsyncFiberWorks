@@ -1,3 +1,5 @@
+using System;
+
 namespace AsyncFiberWorks.Channels
 {
     /// <summary>
@@ -11,7 +13,8 @@ namespace AsyncFiberWorks.Channels
         /// Send request on the channel.
         /// </summary>
         /// <param name="request"></param>
+        /// <param name="callbackOnReceive"></param>
         /// <returns></returns>
-        IReply<M> SendRequest(R request);
+        IDisposable SendRequest(R request, Action<M> callbackOnReceive);
     }
 }

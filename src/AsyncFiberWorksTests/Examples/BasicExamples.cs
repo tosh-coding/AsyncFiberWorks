@@ -162,21 +162,19 @@ namespace AsyncFiberWorksTests.Examples
                     fiber.CreateAction<IRequest<string, string>>(req => req.SendReply("bye")));
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
 
-                var reply = channel.SendRequest("hello");
+                var disposables = new Unsubscriber();
                 var timeoutTimer = testFiber.Schedule(() =>
                 {
-                    reply.Dispose();
+                    disposables.Dispose();
                     Assert.Fail();
                 }, 10000);
-                reply.SetCallbackOnReceive(() => testFiber.Enqueue(() =>
+                var reply = channel.SendRequest("hello", (result) => testFiber.Enqueue(() =>
                 {
                     timeoutTimer.Dispose();
-                    string result;
-                    bool received = reply.TryReceive(out result);
-                    Assert.IsTrue(received);
                     Assert.AreEqual("bye", result);
                     testThread.Stop();
                 }));
+                disposables.AppendDisposable(reply);
                 testThread.Run();
             }
         }

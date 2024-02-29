@@ -1,19 +1,18 @@
 using System;
-using System.Collections.Generic;
 
 namespace AsyncFiberWorks.Channels
 {
-    internal class RequestReplyChannelRequest<TRequestMessage, TReplyMessage> : IRequest<TRequestMessage, TReplyMessage>, IReply<TReplyMessage>
+    internal class RequestReplyChannelRequest<TRequestMessage, TReplyMessage> : IRequest<TRequestMessage, TReplyMessage>, IDisposable
     {
         private readonly object _lock = new object();
         private readonly TRequestMessage _req;
-        private readonly Queue<TReplyMessage> _resp = new Queue<TReplyMessage>();
+        private readonly Action<TReplyMessage> _callbackOnReceive;
         private bool _disposed;
-        private Action _callbackOnReceive = null;
 
-        public RequestReplyChannelRequest(TRequestMessage req)
+        public RequestReplyChannelRequest(TRequestMessage req, Action<TReplyMessage> callbackOnReceive)
         {
             _req = req;
+            _callbackOnReceive = callbackOnReceive;
         }
 
         public TRequestMessage Request
@@ -23,60 +22,14 @@ namespace AsyncFiberWorks.Channels
 
         public bool SendReply(TReplyMessage response)
         {
-            Action action;
             lock (_lock)
             {
                 if (_disposed)
                 {
                     return false;
                 }
-                _resp.Enqueue(response);
-
-                action = _callbackOnReceive;
-                _callbackOnReceive = null;
             }
-            action?.Invoke();
-            return true;
-        }
-
-        public bool TryReceive(out TReplyMessage result)
-        {
-            lock (_lock)
-            {
-                if (_resp.Count > 0)
-                {
-                    result = _resp.Dequeue();
-                    return true;
-                }
-                result = default(TReplyMessage);
-                return false;
-            }
-        }
-
-        public bool SetCallbackOnReceive(Action callbackOnReceive)
-        {
-            bool hasResponse = false;
-            lock (_lock)
-            {
-                if (_disposed)
-                {
-                    return false;
-                }
-
-                hasResponse = _resp.Count > 0;
-                if (hasResponse)
-                {
-                    _callbackOnReceive = null;
-                }
-                else
-                {
-                    _callbackOnReceive = callbackOnReceive;
-                }
-            }
-            if (hasResponse)
-            {
-                callbackOnReceive?.Invoke();
-            }
+            _callbackOnReceive?.Invoke(response);
             return true;
         }
 
@@ -92,7 +45,6 @@ namespace AsyncFiberWorks.Channels
                     return;
                 }
                 _disposed = true;
-                _callbackOnReceive = null;
             }
         }
     }
