@@ -19,11 +19,13 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(1, counter);
 
             fiber.Pause();
-            fiber.Enqueue(() => counter += 1);
-            Thread.Sleep(1);
-            Assert.AreEqual(1, counter);
-
+            {
+                fiber.Enqueue(() => counter += 1);
+                Thread.Sleep(1);
+                Assert.AreEqual(1, counter);
+            }
             fiber.Resume(() => counter = 5);
+
             Thread.Sleep(1);
             Assert.AreEqual(6, counter);
         }
@@ -38,13 +40,39 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(1, counter);
 
             fiber.Pause();
-            fiber.Enqueue(() => counter += 1);
-            fiber.ExecuteAll();
-            Assert.AreEqual(1, counter);
-
+            {
+                fiber.Enqueue(() => counter += 1);
+                fiber.ExecuteAll();
+                Assert.AreEqual(1, counter);
+            }
             fiber.Resume(() => counter = 5);
+
             fiber.ExecuteAll();
             Assert.AreEqual(6, counter);
+        }
+
+        [Test]
+        public void PauseAndTimerCallback()
+        {
+            using (var nonstopFiber = new ThreadFiber())
+            {
+                nonstopFiber.Start();
+                var pauseFiber = new PoolFiberSlim();
+                
+                pauseFiber.Pause();
+                var reset = new AutoResetEvent(false);
+                int counter = 0;
+                nonstopFiber.Schedule(() =>
+                {
+                    counter = 10;
+                    pauseFiber.Resume(() => { });
+                    reset.Set();
+                }, 10);
+                counter += 1;
+
+                reset.WaitOne(10000, false);
+                Assert.AreEqual(10, counter);
+            }
         }
 
         [Test]
@@ -57,15 +85,22 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(1, counter);
 
             fiber.Pause();
-            var taskQuery = SomeWebApiAccessAsync();
-            fiber.Enqueue(() => counter += 1);
-            fiber.Enqueue(() => counter += 1);
-            fiber.Enqueue(() => counter += 1);
-            Thread.Sleep(1);
-            Assert.AreEqual(1, counter);
+            {
+                // Call an async method while the fiber is paused.
+                var taskQuery = SomeWebApiAccessAsync();
 
-            _ = await taskQuery;
+                // Actions that are enqueued during pause are not executed immediately.
+                fiber.Enqueue(() => counter += 1);
+                fiber.Enqueue(() => counter += 1);
+                fiber.Enqueue(() => counter += 1);
+                Thread.Sleep(1);
+                Assert.AreEqual(1, counter);
+
+                _ = await taskQuery;
+            }
             fiber.Resume(() => counter = 5);
+            // At this timing, the actions that were previously enqueued will be executed.
+
             Thread.Sleep(1);
             Assert.AreEqual(8, counter);
         }
