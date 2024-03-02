@@ -13,10 +13,8 @@ namespace AsyncFiberWorks.Channels
         R Request { get; }
 
         /// <summary>
-        /// Send one or more responses.
+        /// Message reply to.
         /// </summary>
-        /// <param name="replyMsg">A message</param>
-        /// <returns>Returns false if it has already been disposed.</returns>
-        bool SendReply(M replyMsg);
+        IPublisher<M> ReplyTo { get; }
     }
 }

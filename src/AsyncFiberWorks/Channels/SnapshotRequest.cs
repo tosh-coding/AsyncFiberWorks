@@ -34,7 +34,8 @@ namespace AsyncFiberWorks.Channels
 
         internal void StartSubscribe(RequestReplyChannel<object, T> requestChannel, MessageHandlerList<T> _updatesChannel)
         {
-            _reply = requestChannel.SendRequest(new object(), (result) => DefaultThreadPool.Instance.Queue((_) =>
+            var replyChannel = new Channel<T>();
+            _reply = replyChannel.Subscribe((result) => DefaultThreadPool.Instance.Queue((_) =>
             {
                 lock (_lock)
                 {
@@ -69,6 +70,7 @@ namespace AsyncFiberWorks.Channels
                     }
                 }
             }));
+            requestChannel.SendRequest(new object(), replyChannel);
         }
 
         public void Dispose()

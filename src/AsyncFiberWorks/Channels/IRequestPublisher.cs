@@ -13,8 +13,7 @@ namespace AsyncFiberWorks.Channels
         /// Send request on the channel.
         /// </summary>
         /// <param name="request"></param>
-        /// <param name="callbackOnReceive"></param>
-        /// <returns></returns>
-        IDisposable SendRequest(R request, Action<M> callbackOnReceive);
+        /// <param name="replyTo"></param>
+        void SendRequest(R request, IPublisher<M> replyTo);
     }
 }

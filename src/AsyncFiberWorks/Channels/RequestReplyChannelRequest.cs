@@ -2,17 +2,16 @@ using System;
 
 namespace AsyncFiberWorks.Channels
 {
-    internal class RequestReplyChannelRequest<TRequestMessage, TReplyMessage> : IRequest<TRequestMessage, TReplyMessage>, IDisposable
+    internal class RequestReplyChannelRequest<TRequestMessage, TReplyMessage> : IRequest<TRequestMessage, TReplyMessage>
     {
         private readonly object _lock = new object();
         private readonly TRequestMessage _req;
-        private readonly Action<TReplyMessage> _callbackOnReceive;
-        private bool _disposed;
+        private readonly IPublisher<TReplyMessage> _replyTo;
 
-        public RequestReplyChannelRequest(TRequestMessage req, Action<TReplyMessage> callbackOnReceive)
+        public RequestReplyChannelRequest(TRequestMessage req, IPublisher<TReplyMessage> replyTo)
         {
             _req = req;
-            _callbackOnReceive = callbackOnReceive;
+            _replyTo = replyTo;
         }
 
         public TRequestMessage Request
@@ -20,32 +19,9 @@ namespace AsyncFiberWorks.Channels
             get { return _req; }
         }
 
-        public bool SendReply(TReplyMessage response)
+        public IPublisher<TReplyMessage> ReplyTo
         {
-            lock (_lock)
-            {
-                if (_disposed)
-                {
-                    return false;
-                }
-            }
-            _callbackOnReceive?.Invoke(response);
-            return true;
-        }
-
-        /// <summary>
-        /// Stop receiving replies.
-        /// </summary>
-        public void Dispose()
-        {
-            lock (_lock)
-            {
-                if (_disposed)
-                {
-                    return;
-                }
-                _disposed = true;
-            }
+            get { return _replyTo; }
         }
     }
 }
