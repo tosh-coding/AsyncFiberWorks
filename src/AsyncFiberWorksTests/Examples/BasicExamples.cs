@@ -187,7 +187,7 @@ namespace AsyncFiberWorksTests.Examples
             using (var fiberReply = new PoolFiber())
             {
                 var updatesChannel = new Channel<int>();
-                var channel = new SnapshotChannel<int>();
+                var  requestChannel = new Channel<IRequest<Channel<int>, IDisposable>>();
                 var lockerResponseValue = new object();
 
                 // A value managed by the responder.
@@ -195,7 +195,7 @@ namespace AsyncFiberWorksTests.Examples
 
                 // Set up responder. 
                 var subscriptionFiber = fiberReply.BeginSubscription();
-                var subscriptionChannel = channel.ReplyToPrimingRequest(
+                var subscriptionChannel = requestChannel.Subscribe(
                     fiberReply.CreateAction<IRequest<Channel<int>, IDisposable>>(request =>
                     {
                         int value;
@@ -211,7 +211,7 @@ namespace AsyncFiberWorksTests.Examples
                         request.ReplyTo.Publish(disposableOfReceiver);
                     }));
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
-                Assert.AreEqual(1, channel.NumSubscribers);
+                Assert.AreEqual(1, requestChannel.NumSubscribers);
 
                 // Start changing values.
 
@@ -286,7 +286,8 @@ namespace AsyncFiberWorksTests.Examples
                 {
                     actionControl(msg);
                 }));
-                var handleReceive = channel.PrimedSubscribe(controlChannel, receiveChannel);
+                var handleReceive = new SnapshotRequest<int>(controlChannel, receiveChannel);
+                handleReceive.StartSubscribe(requestChannel);
                 var timeoutTimer = fiberRequest.Schedule(() =>
                 {
                     handleReceive.Dispose();

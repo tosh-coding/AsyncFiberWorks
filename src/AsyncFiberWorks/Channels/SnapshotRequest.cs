@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.Channels
     /// Subscribes for an initial snapshot and then incremental update.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    internal class SnapshotRequest<T> : IDisposable
+    public class SnapshotRequest<T> : IDisposable
     {
         private readonly object _lock = new object();
         private readonly Channel<SnapshotRequestControlEvent> _control;
@@ -29,7 +29,7 @@ namespace AsyncFiberWorks.Channels
             _receive = receive;
         }
 
-        internal void StartSubscribe(Channel<IRequest<Channel<T>, IDisposable>> requestChannel)
+        public void StartSubscribe(Channel<IRequest<Channel<T>, IDisposable>> requestChannel)
         {
             var replyChannel = new Channel<IDisposable>();
             _reply = replyChannel.Subscribe((disposableOfReceiver) => DefaultThreadPool.Instance.Queue((_) =>
