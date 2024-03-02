@@ -193,16 +193,17 @@ namespace AsyncFiberWorksTests.Examples
                 int currentValue = 0;
 
                 // Set up responder. 
-                Func<int> reply = () =>
-                {
-                    lock (lockerResponseValue)
-                    {
-                        return currentValue;
-                    }
-                };
                 var subscriptionFiber = fiberReply.BeginSubscription();
                 var subscriptionChannel = channel.ReplyToPrimingRequest(
-                    fiberReply.CreateAction<IRequest<object, int>>(request => request.ReplyTo.Publish(reply())));
+                    fiberReply.CreateAction<IRequest<object, int>>(request =>
+                    {
+                        var value = currentValue;
+                        lock (lockerResponseValue)
+                        {
+                            value = currentValue;
+                        }
+                        request.ReplyTo.Publish(value);
+                    }));
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 Assert.AreEqual(1, channel.NumSubscribers);
 

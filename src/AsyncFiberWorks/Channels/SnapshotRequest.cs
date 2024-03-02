@@ -32,7 +32,7 @@ namespace AsyncFiberWorks.Channels
             _receive = receive;
         }
 
-        internal void StartSubscribe(Channel<IRequest<object, T>> requestChannel, MessageHandlerList<T> _updatesChannel)
+        internal void StartSubscribe(Channel<IRequest<object, T>> requestChannel, Channel<T> _updatesChannel)
         {
             var replyChannel = new Channel<T>();
             _reply = replyChannel.Subscribe((result) => DefaultThreadPool.Instance.Queue((_) =>
@@ -54,7 +54,7 @@ namespace AsyncFiberWorks.Channels
                     _fiber.Enqueue(() => _receive(msg));
                 };
                 action(result);
-                var disposableOfReceiver = _updatesChannel.AddHandler(action);
+                var disposableOfReceiver = _updatesChannel.Subscribe(action);
 
                 lock (_lock)
                 {
