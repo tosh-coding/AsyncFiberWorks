@@ -270,7 +270,17 @@ namespace AsyncFiberWorksTests.Examples
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
                 };
-                var handleReceive = channel.PrimedSubscribe(fiberRequest, actionControl, actionReceive);
+                var receiveChannel = new Channel<int>();
+                var disposableReceive = receiveChannel.Subscribe((msg) =>
+                {
+                    fiberRequest.Enqueue(() => actionReceive(msg));
+                });
+                var controlChannel = new Channel<SnapshotRequestControlEvent>();
+                var disposableControl = controlChannel.Subscribe((msg) => fiberRequest.Enqueue(() =>
+                {
+                    actionControl(msg);
+                }));
+                var handleReceive = channel.PrimedSubscribe(controlChannel, receiveChannel);
                 var timeoutTimer = fiberRequest.Schedule(() =>
                 {
                     handleReceive.Dispose();
@@ -280,6 +290,8 @@ namespace AsyncFiberWorksTests.Examples
 
                 requesterThread.Run();
                 handleReceive.Dispose();
+                disposableReceive.Dispose();
+                disposableControl.Dispose();
             }
         }
 

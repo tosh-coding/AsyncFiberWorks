@@ -16,12 +16,11 @@ namespace AsyncFiberWorks.Channels
         ///<summary>
         /// Subscribes for an initial snapshot and then incremental update.
         ///</summary>
-        /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="control"></param>
         /// <param name="receive"></param>
-        public IDisposable PrimedSubscribe(IExecutionContext fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive)
+        public IDisposable PrimedSubscribe(Channel<SnapshotRequestControlEvent> control, Channel<T> receive)
         {
-            var requester = new SnapshotRequest<T>(fiber, control, receive);
+            var requester = new SnapshotRequest<T>(control, receive);
             requester.StartSubscribe(_requestChannel, _updatesChannel);
             return requester;
         }

@@ -11,9 +11,8 @@ namespace AsyncFiberWorks.Channels
     internal class SnapshotRequest<T> : IDisposable
     {
         private readonly object _lock = new object();
-        private readonly IExecutionContext _fiber;
-        private readonly Action<SnapshotRequestControlEvent> _control;
-        private readonly Action<T> _receive;
+        private readonly Channel<SnapshotRequestControlEvent> _control;
+        private readonly Channel<T> _receive;
 
         private IDisposable _reply;
         private bool _disposed = false;
@@ -22,12 +21,10 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="control"></param>
         /// <param name="receive"></param>
-        public SnapshotRequest(IExecutionContext fiber, Action<SnapshotRequestControlEvent> control, Action<T> receive)
+        public SnapshotRequest(Channel<SnapshotRequestControlEvent> control, Channel<T> receive)
         {
-            _fiber = fiber;
             _control = control;
             _receive = receive;
         }
@@ -47,11 +44,11 @@ namespace AsyncFiberWorks.Channels
                     _reply = null;
                 }
 
-                _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Connecting));
+                _control.Publish(SnapshotRequestControlEvent.Connecting);
 
                 Action<T> action = (msg) =>
                 {
-                    _fiber.Enqueue(() => _receive(msg));
+                    _receive.Publish(msg);
                 };
                 action(result);
                 var disposableOfReceiver = _updatesChannel.Subscribe(action);
@@ -66,7 +63,7 @@ namespace AsyncFiberWorks.Channels
                     else
                     {
                         _disposableOfReceiver = disposableOfReceiver;
-                        _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Connected));
+                        _control.Publish(SnapshotRequestControlEvent.Connected);
                     }
                 }
             }));
@@ -93,7 +90,7 @@ namespace AsyncFiberWorks.Channels
                     _disposableOfReceiver.Dispose();
                     _disposableOfReceiver = null;
                 }
-                _fiber.Enqueue(() => _control(SnapshotRequestControlEvent.Stopped));
+                _control.Publish(SnapshotRequestControlEvent.Stopped);
             }
         }
     }
