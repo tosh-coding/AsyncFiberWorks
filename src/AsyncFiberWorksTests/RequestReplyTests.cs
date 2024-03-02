@@ -11,7 +11,7 @@ using AsyncFiberWorks.Fibers;
 namespace AsyncFiberWorksTests
 {
     [TestFixture]
-    public class RequestReplyChannelTests
+    public class RequestReplyTests
     {
         [Test]
         public void SynchronousRequestReply()
