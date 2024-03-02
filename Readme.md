@@ -125,8 +125,6 @@ A channel is a messaging mechanism that abstracts the communication destination.
 (Quote from [Retlang page](https://code.google.com/archive/p/retlang/). Broken links were replaced.)
 
 ### Channel classes ###
-There are four channel types.
 
  * _[Channel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/Channel.cs)_ - Forward published messages to all subscribers.  One-way.  Used for 1:1 unicasting, 1:N broadcasting and N:1 message aggregation.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/Examples/BasicExamples.cs#L20).
- * _[RequestReplyChannel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/RequestReplyChannel.cs)_ - Subscribers respond to requests from publishers. Two-way.  Used for 1:1/N:1 request/reply messaging, 1:N/N:M bulk queries to multiple nodes.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/RequestReplyChannelTests.cs).
  * _[SnapshotChannel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/SnapshotChannel.cs)_ - Subscribers are also notified when they start subscribing, and separately thereafter.  One-way. Used for replication with incremental update notifications.  Only one responder can be handled within a single channel.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/Examples/BasicExamples.cs#L189).

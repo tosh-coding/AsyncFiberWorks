@@ -1,10 +1,7 @@
-using System;
-
 namespace AsyncFiberWorks.Channels
 {
-    internal class RequestReplyChannelRequest<TRequestMessage, TReplyMessage> : IRequest<TRequestMessage, TReplyMessage>
+    public class RequestReplyChannelRequest<TRequestMessage, TReplyMessage> : IRequest<TRequestMessage, TReplyMessage>
     {
-        private readonly object _lock = new object();
         private readonly TRequestMessage _req;
         private readonly IPublisher<TReplyMessage> _replyTo;
 

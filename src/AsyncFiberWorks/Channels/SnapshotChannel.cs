@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Channels
     public class SnapshotChannel<T> : ISnapshotChannel<T>
     {
         private readonly MessageHandlerList<T> _updatesChannel = new MessageHandlerList<T>();
-        private readonly RequestReplyChannel<object, T> _requestChannel = new RequestReplyChannel<object, T>();
+        private readonly Channel<IRequest<object, T>> _requestChannel = new Channel<IRequest<object, T>>();
 
         ///<summary>
         /// Subscribes for an initial snapshot and then incremental update.
@@ -47,7 +47,7 @@ namespace AsyncFiberWorks.Channels
             {
                 throw new InvalidOperationException("Only one responder can be handled within a single channel.");
             }
-            return _requestChannel.AddResponder(onRequest);
+            return _requestChannel.Subscribe(onRequest);
         }
 
         ///<summary>

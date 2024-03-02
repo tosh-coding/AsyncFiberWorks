@@ -156,9 +156,9 @@ namespace AsyncFiberWorksTests.Examples
 
             using (var fiber = new PoolFiber())
             {
-                var channel = new RequestReplyChannel<string, string>();
+                var channel = new Channel<IRequest<string, string>>();
                 var subscriptionFiber = fiber.BeginSubscription();
-                var subscriptionChannel = channel.AddResponder(
+                var subscriptionChannel = channel.Subscribe(
                     fiber.CreateAction<IRequest<string, string>>(req => req.ReplyTo.Publish("bye")));
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
 
@@ -175,7 +175,7 @@ namespace AsyncFiberWorksTests.Examples
                     Assert.AreEqual("bye", result);
                     testThread.Stop();
                 }));
-                channel.SendRequest("hello", replyChannel);
+                channel.Publish(new RequestReplyChannelRequest<string, string>("hello", replyChannel));
                 disposables.AppendDisposable(reply);
                 testThread.Run();
             }
