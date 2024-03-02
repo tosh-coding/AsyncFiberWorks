@@ -231,14 +231,9 @@ namespace AsyncFiberWorksTests.Examples
                 var fiberRequest = new PoolFiber(requesterThread, new DefaultExecutor());
                 var receivedValues = new List<int>();
                 var timeoutTimerCancellation = new Unsubscriber();
-                Action<SnapshotRequestControlEvent> actionControl = (controlEvent) =>
+                Action<bool> actionControl = (dummy) =>
                 {
                     timeoutTimerCancellation.Dispose();
-                    if (controlEvent == SnapshotRequestControlEvent.Connecting)
-                    {
-                        return;
-                    }
-                    if (controlEvent == SnapshotRequestControlEvent.Connected)
                     {
                         lock (lockerResponseValue)
                         {
@@ -281,7 +276,7 @@ namespace AsyncFiberWorksTests.Examples
                 {
                     fiberRequest.Enqueue(() => actionReceive(msg));
                 });
-                var controlChannel = new Channel<SnapshotRequestControlEvent>();
+                var controlChannel = new Channel<bool>();
                 var disposableControl = controlChannel.Subscribe((msg) => fiberRequest.Enqueue(() =>
                 {
                     actionControl(msg);
@@ -297,6 +292,7 @@ namespace AsyncFiberWorksTests.Examples
 
                 requesterThread.Run();
                 handleReceive.Dispose();
+                timeoutTimerCancellation.Dispose();
                 disposableReceive.Dispose();
                 disposableControl.Dispose();
             }
