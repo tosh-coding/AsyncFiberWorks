@@ -10,8 +10,7 @@ namespace AsyncFiberWorks.Channels
     ///<typeparam name="T"></typeparam>
     public class SnapshotChannel<T> : ISnapshotChannel<T>
     {
-        private readonly Channel<T> _updatesChannel = new Channel<T>();
-        private readonly Channel<IRequest<object, T>> _requestChannel = new Channel<IRequest<object, T>>();
+        private readonly Channel<IRequest<Channel<T>, IDisposable>> _requestChannel = new Channel<IRequest<Channel<T>, IDisposable>>();
 
         ///<summary>
         /// Subscribes for an initial snapshot and then incremental update.
@@ -21,17 +20,8 @@ namespace AsyncFiberWorks.Channels
         public IDisposable PrimedSubscribe(Channel<SnapshotRequestControlEvent> control, Channel<T> receive)
         {
             var requester = new SnapshotRequest<T>(control, receive);
-            requester.StartSubscribe(_requestChannel, _updatesChannel);
+            requester.StartSubscribe(_requestChannel);
             return requester;
-        }
-
-        ///<summary>
-        /// Publishes the incremental update.
-        ///</summary>
-        ///<param name="update"></param>
-        public void Publish(T update)
-        {
-            _updatesChannel.Publish(update);
         }
 
         /// <summary>
@@ -40,7 +30,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="onRequest"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException">Only one responder can be handled within a single channel.</exception>
-        public IDisposable ReplyToPrimingRequest(Action<IRequest<object, T>> onRequest)
+        public IDisposable ReplyToPrimingRequest(Action<IRequest<Channel<T>, IDisposable>> onRequest)
         {
             if (_requestChannel.NumSubscribers > 0)
             {

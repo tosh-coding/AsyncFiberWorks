@@ -186,6 +186,7 @@ namespace AsyncFiberWorksTests.Examples
         {
             using (var fiberReply = new PoolFiber())
             {
+                var updatesChannel = new Channel<int>();
                 var channel = new SnapshotChannel<int>();
                 var lockerResponseValue = new object();
 
@@ -195,14 +196,19 @@ namespace AsyncFiberWorksTests.Examples
                 // Set up responder. 
                 var subscriptionFiber = fiberReply.BeginSubscription();
                 var subscriptionChannel = channel.ReplyToPrimingRequest(
-                    fiberReply.CreateAction<IRequest<object, int>>(request =>
+                    fiberReply.CreateAction<IRequest<Channel<int>, IDisposable>>(request =>
                     {
-                        var value = currentValue;
+                        int value;
                         lock (lockerResponseValue)
                         {
                             value = currentValue;
                         }
-                        request.ReplyTo.Publish(value);
+                        request.Request.Publish(value);
+                        var disposableOfReceiver = updatesChannel.Subscribe((msg) =>
+                        {
+                            request.Request.Publish(msg);
+                        });
+                        request.ReplyTo.Publish(disposableOfReceiver);
                     }));
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 Assert.AreEqual(1, channel.NumSubscribers);
@@ -212,12 +218,12 @@ namespace AsyncFiberWorksTests.Examples
                 lock (lockerResponseValue)
                 {
                     currentValue = 1;
-                    channel.Publish(currentValue);
+                    updatesChannel.Publish(currentValue);
                 }
                 lock (lockerResponseValue)
                 {
                     currentValue = 2;
-                    channel.Publish(currentValue);
+                    updatesChannel.Publish(currentValue);
                 }
 
                 // Start requesting.
@@ -237,12 +243,12 @@ namespace AsyncFiberWorksTests.Examples
                         lock (lockerResponseValue)
                         {
                             currentValue = 4;
-                            channel.Publish(currentValue);
+                            updatesChannel.Publish(currentValue);
                         }
                         lock (lockerResponseValue)
                         {
                             currentValue = 8;
-                            channel.Publish(currentValue);
+                            updatesChannel.Publish(currentValue);
                         }
 
                         fiberRequest.Schedule(() =>

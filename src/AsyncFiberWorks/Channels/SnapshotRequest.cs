@@ -29,30 +29,11 @@ namespace AsyncFiberWorks.Channels
             _receive = receive;
         }
 
-        internal void StartSubscribe(Channel<IRequest<object, T>> requestChannel, Channel<T> _updatesChannel)
+        internal void StartSubscribe(Channel<IRequest<Channel<T>, IDisposable>> requestChannel)
         {
-            var replyChannel = new Channel<T>();
-            _reply = replyChannel.Subscribe((result) => DefaultThreadPool.Instance.Queue((_) =>
+            var replyChannel = new Channel<IDisposable>();
+            _reply = replyChannel.Subscribe((disposableOfReceiver) => DefaultThreadPool.Instance.Queue((_) =>
             {
-                lock (_lock)
-                {
-                    if (_reply == null)
-                    {
-                        return;
-                    }
-                    _reply.Dispose();
-                    _reply = null;
-                }
-
-                _control.Publish(SnapshotRequestControlEvent.Connecting);
-
-                Action<T> action = (msg) =>
-                {
-                    _receive.Publish(msg);
-                };
-                action(result);
-                var disposableOfReceiver = _updatesChannel.Subscribe(action);
-
                 lock (_lock)
                 {
                     if (_disposed)
@@ -60,14 +41,15 @@ namespace AsyncFiberWorks.Channels
                         disposableOfReceiver.Dispose();
                         return;
                     }
-                    else
-                    {
-                        _disposableOfReceiver = disposableOfReceiver;
-                        _control.Publish(SnapshotRequestControlEvent.Connected);
-                    }
+
+                    _reply.Dispose();
+                    _reply = null;
+                    _control.Publish(SnapshotRequestControlEvent.Connecting);
+                    _disposableOfReceiver = disposableOfReceiver;
+                    _control.Publish(SnapshotRequestControlEvent.Connected);
                 }
             }));
-            requestChannel.Publish(new RequestReplyChannelRequest<object, T>(new object(), replyChannel));
+            requestChannel.Publish(new RequestReplyChannelRequest<Channel<T>, IDisposable>(_receive, replyChannel));
         }
 
         public void Dispose()
