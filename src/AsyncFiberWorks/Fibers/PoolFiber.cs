@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.Fibers
     /// <summary>
     /// Fiber implementation backed by shared threads. Mainly thread pool.
     /// </summary>
-    public class PoolFiber : IFiber
+    public class PoolFiber : IFiber, IPauseableExecutionContext
     {
         private readonly PoolFiberSlim _poolFiberSlim;
         private readonly Subscriptions _subscriptions = new Subscriptions();

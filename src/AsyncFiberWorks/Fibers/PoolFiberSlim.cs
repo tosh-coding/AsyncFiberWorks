@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.Fibers
     /// <summary>
     /// Fiber implementation backed by shared threads. Mainly thread pool.
     /// </summary>
-    public sealed class PoolFiberSlim : IExecutionContext
+    public sealed class PoolFiberSlim : IPauseableExecutionContext
     {
         private readonly object _lock = new object();
         private readonly IThreadPool _pool;
@@ -186,37 +186,6 @@ namespace AsyncFiberWorks.Fibers
                 _resuming = true;
                 _pool.Queue((_) => ResumeAction(action));
             }
-        }
-
-        /// <summary>
-        /// Pause the fiber until the task is completed.
-        /// </summary>
-        /// <param name="task">Tasks to be monitored. The task should return a resume function.</param>
-        /// <returns>Tasks until the fiber resumes.</returns>
-        public Task PauseWhileRunning(Task<Action> task)
-        {
-            Pause();
-            return Task.Run(async () =>
-            {
-                var action = await task;
-                Resume(action);
-            });
-        }
-
-        /// <summary>
-        /// Pause the fiber until the task is completed.
-        /// </summary>
-        /// <param name="func">Function to retrieve the task to be monitored. The task should return a resume function.</param>
-        /// <returns>Tasks until the fiber resumes.</returns>
-        public Task PauseWhileRunning(Func<Task<Action>> func)
-        {
-            Pause();
-            var task = func();
-            return Task.Run(async () =>
-            {
-                var action = await task;
-                Resume(action);
-            });
         }
     }
 }
