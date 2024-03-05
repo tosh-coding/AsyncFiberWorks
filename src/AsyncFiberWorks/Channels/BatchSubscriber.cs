@@ -12,7 +12,7 @@ namespace AsyncFiberWorks.Channels
     /// faster than the arrival rate.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class BatchSubscriber<T> : IMessageReceiver<T>, IDisposable
+    public class BatchSubscriber<T> : IDisposable
     {
         private readonly object _batchLock = new object();
 

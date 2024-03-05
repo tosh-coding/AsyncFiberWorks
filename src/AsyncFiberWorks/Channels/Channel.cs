@@ -21,16 +21,6 @@ namespace AsyncFiberWorks.Channels
         }
 
         /// <summary>
-        /// Subscribe a channel.
-        /// </summary>
-        /// <param name="messageReceiver">Subscriber.</param>
-        /// <returns></returns>
-        public IDisposable Subscribe(IMessageReceiver<T> messageReceiver)
-        {
-            return this._channel.AddHandler(messageReceiver.ReceiveOnProducerThread);
-        }
-
-        /// <summary>
         /// <see cref="IPublisher{T}.Publish(T)"/>
         /// </summary>
         /// <param name="msg"></param>

@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Channels
     /// has a chance to process the message, the pending message is replaced by the newer message. The old message is discarded.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class LastSubscriber<T> : IMessageReceiver<T>, IDisposable
+    public class LastSubscriber<T> : IDisposable
     {
         private readonly object _batchLock = new object();
         private readonly IMessageFilter<T> _filter;

@@ -92,7 +92,7 @@ namespace AsyncFiberWorksTests
                 channel.Publish(x + 1);
                 msgs.Add(x);
             });
-            var unsubscriber = channel.Subscribe(subscriber);
+            var unsubscriber = channel.Subscribe(subscriber.ReceiveOnProducerThread);
 
             channel.Publish(0);
             sut.ExecuteAll();
@@ -117,7 +117,7 @@ namespace AsyncFiberWorksTests
             
             var subscriptionFiber2 = sut.BeginSubscription();
             var subscriber = new ChannelSubscription<int>(sut, x => { });
-            var subscriptionChannel = channel.Subscribe(subscriber);
+            var subscriptionChannel = channel.Subscribe(subscriber.ReceiveOnProducerThread);
             subscriptionFiber2.AppendDisposable(subscriptionChannel);
             channel.Publish(2);
 

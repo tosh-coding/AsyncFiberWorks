@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Channels
     /// </summary>
     /// <typeparam name="K"></typeparam>
     /// <typeparam name="T"></typeparam>
-    public class KeyedBatchSubscriber<K, T> : IMessageReceiver<T>, IDisposable
+    public class KeyedBatchSubscriber<K, T> : IDisposable
     {
         private readonly object _batchLock = new object();
 

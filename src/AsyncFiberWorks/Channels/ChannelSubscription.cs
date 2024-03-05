@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.Channels
     /// Subscribe to messages on this channel. The provided action will be invoked via a Action on the provided executor.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ChannelSubscription<T> : IMessageReceiver<T>
+    public class ChannelSubscription<T>
     {
         private readonly IMessageFilter<T> _filter;
         private readonly IExecutionContext _fiber;

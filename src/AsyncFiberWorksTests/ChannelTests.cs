@@ -78,7 +78,7 @@ namespace AsyncFiberWorksTests
                 {
                     node.ReceivedMessages.Add(msg);
                 });
-                channel.Subscribe(subscriber);
+                channel.Subscribe(subscriber.ReceiveOnProducerThread);
             }
 
             channel.Publish(new MessageFrame() { NodeId = 2, Message = "Hello" });

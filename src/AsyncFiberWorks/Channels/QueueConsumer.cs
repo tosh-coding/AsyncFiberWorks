@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.Channels
     /// Queue incoming messages once. It is then dequeued from the callback processing performed on the fiber.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class QueueConsumer<T> : IMessageReceiver<T>
+    public class QueueConsumer<T>
     {
         private readonly object _lock = new object();
         private bool _flushPending;

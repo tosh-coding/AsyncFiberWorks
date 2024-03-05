@@ -21,7 +21,7 @@ namespace WpfExample
             var subscriptionFiber = fiber.BeginSubscription();
 
             var subscriber = new LastSubscriber<DateTime>(0, fiber, OnTimeUpdate);
-            var subscriptionChannel = channels.TimeUpdate.Subscribe(subscriber);
+            var subscriptionChannel = channels.TimeUpdate.Subscribe(subscriber.ReceiveOnProducerThread);
             subscriptionFiber.AppendDisposable(subscriber, subscriptionChannel);
 
             new UpdateController(channels);
