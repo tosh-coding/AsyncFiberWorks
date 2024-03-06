@@ -30,7 +30,7 @@ namespace AsyncFiberWorksTests
                 };
                 var subscriptionFiber = one.BeginSubscription();
                 var consumer = new QueueConsumerFilter<int>(one, onMsg);
-                var subscriptionChannel = channel.Subscribe(consumer.Receive);
+                var subscriptionChannel = channel.Subscribe(one, consumer.Receive);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 for (var i = 0; i < 20; i++)
                 {
@@ -59,7 +59,7 @@ namespace AsyncFiberWorksTests
                 };
                 var subscriptionFiber = one.BeginSubscription();
                 var consumer = new QueueConsumerFilter<int>(one, onMsg);
-                var subscriptionChannel = channel.Subscribe(consumer.Receive);
+                var subscriptionChannel = channel.Subscribe(one, consumer.Receive);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish(0);
                 channel.Publish(1);
@@ -97,7 +97,7 @@ namespace AsyncFiberWorksTests
                 var subscriptionFiber = fiber.BeginSubscription();
 
                 var consumer = new QueueConsumerFilter<int>(fiber, onReceive);
-                var subscriptionChannel = channel.Subscribe(consumer.Receive);
+                var subscriptionChannel = channel.Subscribe(fiber, consumer.Receive);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
             }
             for (var i = 0; i < messageCount; i++)

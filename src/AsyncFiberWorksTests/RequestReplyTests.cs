@@ -23,7 +23,7 @@ namespace AsyncFiberWorksTests
             {
                 var fiber = new PoolFiber();
                 Action<IRequest<string, DateTime>> onRequest = (req) => req.ReplyTo.Publish(now);
-                var subscriber = timeCheck.Subscribe(fiber.CreateAction(onRequest));
+                var subscriber = timeCheck.Subscribe(fiber, onRequest);
             }
 
             // Requester.
@@ -40,7 +40,7 @@ namespace AsyncFiberWorksTests
                 }, 10000);
                 var disposableRequest = new Unsubscriber();
                 var responseChannel = new Channel<DateTime>();
-                var response = responseChannel.Subscribe((result) => workFiber.Enqueue(() =>
+                var response = responseChannel.Subscribe(workFiber, (result) =>
                 {
                     timeoutTimer.Dispose();
                     disposableRequest.Dispose();
@@ -49,7 +49,7 @@ namespace AsyncFiberWorksTests
                         Assert.AreEqual(result, now);
                         requesterThread.Stop();
                     });
-                }));
+                });
                 timeCheck.Publish(new RequestReplyChannelRequest<string, DateTime>("hello", responseChannel));
                 disposableRequest.AppendDisposable(response);
                 requesterThread.Run();
@@ -71,7 +71,7 @@ namespace AsyncFiberWorksTests
                         for (var i = 0; i <= 5; i++)
                             req.ReplyTo.Publish(i);
                     };
-                var subscriber = countChannel.Subscribe(fiber.CreateAction(onRequest));
+                var subscriber = countChannel.Subscribe(fiber, onRequest);
             }
 
             // Requester.
@@ -87,7 +87,7 @@ namespace AsyncFiberWorksTests
                 int i = 0;
                 int state = 0;
                 var responseChannel = new Channel<int>();
-                using (var response = responseChannel.Subscribe((result) => workFiber.Enqueue(() =>
+                using (var response = responseChannel.Subscribe(workFiber, (result) =>
                 {
                     if (state == 0)
                     {
@@ -111,7 +111,7 @@ namespace AsyncFiberWorksTests
                     {
                         actionAssertFail();
                     }
-                })))
+                }))
                 {
                     countChannel.Publish(new RequestReplyChannelRequest<string, int>("hello", responseChannel));
                     requesterThread.Run();
@@ -145,7 +145,7 @@ namespace AsyncFiberWorksTests
                             req.ReplyTo.Publish(-1);
                         }
                     };
-                var subscriber = countChannel.Subscribe(responder.CreateAction(onRequest));
+                var subscriber = countChannel.Subscribe(responder, onRequest);
             }
 
             // Requester.
@@ -178,7 +178,7 @@ namespace AsyncFiberWorksTests
                             Assert.Fail();
                         }, timeoutInMs);
                         var responseChannel = new Channel<int>();
-                        var response = responseChannel.Subscribe((responseData) => mainFiber.Enqueue(() =>
+                        var response = responseChannel.Subscribe(mainFiber, (responseData) =>
                         {
                             timeoutTimer.Dispose();
                             disposables.Dispose();
@@ -191,7 +191,7 @@ namespace AsyncFiberWorksTests
                                 Assert.AreEqual(-1, responseData);
                             }
                             mainFiber.Enqueue(ownAction[0]);
-                        }));
+                        });
                         countChannel.Publish(new RequestReplyChannelRequest<string, int>(requestData, responseChannel));
                         disposables.AppendDisposable(response);
                     }
@@ -215,12 +215,12 @@ namespace AsyncFiberWorksTests
                 disposables.Dispose();
             }, timeoutInMs);
             var responseChannel = new Channel<int>();
-            var response = responseChannel.Subscribe((responseData) => workFiber.Enqueue(() =>
+            var response = responseChannel.Subscribe(workFiber, (responseData) =>
             {
                 timeoutTimer.Dispose();
                 tcs.TrySetResult(responseData);
                 disposables.Dispose();
-            }));
+            });
 
             countChannel.Publish(new RequestReplyChannelRequest<int, int>(requestData, responseChannel));
             disposables.AppendDisposable(response);
@@ -256,7 +256,7 @@ namespace AsyncFiberWorksTests
                             }
                         });
                     };
-                var subscriber = countChannel.Subscribe(responder.CreateAction(onRequest));
+                var subscriber = countChannel.Subscribe(responder, onRequest);
             }
 
             // Requester.

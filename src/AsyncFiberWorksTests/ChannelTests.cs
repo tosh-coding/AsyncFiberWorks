@@ -20,26 +20,18 @@ namespace AsyncFiberWorksTests
             int multiCount = 5;
             var nodeList = CreateNodeList<string>(multiCount);
 
-            Action<Node<string>, string> receiveAction = (node, msg) =>
-            {
-                node.Fiber.Enqueue(() =>
-                {
-                    node.ReceivedMessages.Add(msg);
-                });
-            };
-
             foreach (var node in nodeList)
             {
-                channel.Subscribe((msg) =>
+                channel.Subscribe(node.Fiber, (msg) =>
                 {
-                    receiveAction(node, msg);
+                    node.ReceivedMessages.Add(msg);
                 });
             }
 
             channel.Publish("Hello");
             channel.Publish("World");
 
-            Thread.Sleep(1);
+            Thread.Sleep(10);
 
             foreach (var node in nodeList)
             {
@@ -78,7 +70,7 @@ namespace AsyncFiberWorksTests
                 {
                     node.ReceivedMessages.Add(msg);
                 });
-                channel.Subscribe(filter.Receive);
+                channel.Subscribe(node.Fiber, filter.Receive);
             }
 
             channel.Publish(new MessageFrame() { NodeId = 2, Message = "Hello" });
@@ -112,18 +104,18 @@ namespace AsyncFiberWorksTests
 
             foreach (var node in nodeList)
             {
-                channelCall.Subscribe(node.Fiber.CreateAction<MessageFrame>((msg) =>
+                channelCall.Subscribe(node.Fiber, (msg) =>
                 {
                     channelResponse.Publish(new MessageFrame()
                     {
                         NodeId = node.NodeId,
                         Message = msg.Message.Split(new char[] { ' ' }, 2)[1],
                     });
-                }));
-                channelResponse.Subscribe(node.Fiber.CreateAction<MessageFrame>((msg) =>
+                });
+                channelResponse.Subscribe(node.Fiber, (msg) =>
                 {
                     node.ReceivedMessages.Add(msg);
-                }));
+                });
             }
 
             channelCall.Publish(new MessageFrame() { NodeId = 2, Message = "Say Ho" });

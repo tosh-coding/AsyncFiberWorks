@@ -82,7 +82,7 @@ namespace AsyncFiberWorksTests
             var channel = new Channel<int>();
             const int count = 4;
 
-            var subscriber = new ChannelSubscription<int>(sut, delegate (int x)
+            var unsubscriber = channel.Subscribe(sut, delegate (int x)
             {
                 if (x == count)
                 {
@@ -92,7 +92,6 @@ namespace AsyncFiberWorksTests
                 channel.Publish(x + 1);
                 msgs.Add(x);
             });
-            var unsubscriber = channel.Subscribe(subscriber.ReceiveOnProducerThread);
 
             channel.Publish(0);
             sut.ExecuteAll();
@@ -116,8 +115,7 @@ namespace AsyncFiberWorksTests
             sut.ExecuteOnlyPendingNow();
             
             var subscriptionFiber2 = sut.BeginSubscription();
-            var subscriber = new ChannelSubscription<int>(sut, x => { });
-            var subscriptionChannel = channel.Subscribe(subscriber.ReceiveOnProducerThread);
+            var subscriptionChannel = channel.Subscribe(sut, x => { });
             subscriptionFiber2.AppendDisposable(subscriptionChannel);
             channel.Publish(2);
 

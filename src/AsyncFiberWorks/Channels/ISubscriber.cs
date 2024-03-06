@@ -1,3 +1,4 @@
+using AsyncFiberWorks.Core;
 using System;
 
 namespace AsyncFiberWorks.Channels
@@ -11,8 +12,16 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Subscribe a channel.
         /// </summary>
-        /// <param name="receiveOnProducerThread">Subscriber.</param>
-        /// <returns></returns>
-        IDisposable Subscribe(Action<T> receiveOnProducerThread);
+        /// <param name="executionContext">The execution context of the message receive handler.</param>
+        /// <param name="receive">Subscriber.</param>
+        /// <returns>Unsubscriber.</returns>
+        IDisposable Subscribe(IExecutionContext executionContext, Action<T> receive);
+
+        /// <summary>
+        /// Subscribe a channel.
+        /// </summary>
+        /// <param name="actionWithContext">A pair of message receive handlers and execution contexts.</param>
+        /// <returns>Unsubscriber.</returns>
+        IDisposable Subscribe((IExecutionContext executionContext, Action<T> receive) actionWithContext);
     }
 }

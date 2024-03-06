@@ -65,8 +65,7 @@ namespace AsyncFiberWorksTests
                     }
                 };
                 var subscriptionFiber = fiber.BeginSubscription();
-                var subscriber = new ChannelSubscription<MsgStruct>(fiber, onMsg);
-                var subscriptionChannel = channel.Subscribe(subscriber.ReceiveOnProducerThread);
+                var subscriptionChannel = channel.Subscribe(fiber, onMsg);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 using (new PerfTimer(max))
                 {
@@ -96,8 +95,7 @@ namespace AsyncFiberWorksTests
                                                   }
                                               };
                 var subscriptionFiber = fiber.BeginSubscription();
-                var subscriber = new ChannelSubscription<MsgStruct>(fiber, onMsg);
-                var subscriptionChannel = channel.Subscribe(subscriber.ReceiveOnProducerThread);
+                var subscriptionChannel = channel.Subscribe(fiber, onMsg);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 using (new PerfTimer(max))
                 {
@@ -128,8 +126,7 @@ namespace AsyncFiberWorksTests
                                             }
                                         };
                 var subscriptionFiber = fiber.BeginSubscription();
-                var subscriber = new ChannelSubscription<int>(fiber, onMsg);
-                var subscriptionChannel = channel.Subscribe(subscriber.ReceiveOnProducerThread);
+                var subscriptionChannel = channel.Subscribe(fiber, onMsg);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 using (new PerfTimer(max))
                 {
@@ -161,8 +158,7 @@ namespace AsyncFiberWorksTests
                                                }
                                            };
                 var subscriptionFiber = fiber.BeginSubscription();
-                var subscriber = new ChannelSubscription<object>(fiber, onMsg);
-                var subscriptionChannel = channel.Subscribe(subscriber.ReceiveOnProducerThread);
+                var subscriptionChannel = channel.Subscribe(fiber, onMsg);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 using (new PerfTimer(max))
                 {

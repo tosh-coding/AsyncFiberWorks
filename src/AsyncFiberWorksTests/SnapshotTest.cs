@@ -24,8 +24,8 @@ namespace AsyncFiberWorksTests
 
                 // Set up responder. 
                 var subscriptionFiber = fiberReply.BeginSubscription();
-                var subscriptionChannel = requestChannel.Subscribe(
-                    fiberReply.CreateAction<IRequest<Channel<int>, IDisposable>>(request =>
+                var subscriptionChannel = requestChannel.Subscribe(fiberReply,
+                    (request) =>
                     {
                         int value;
                         lock (lockerResponseValue)
@@ -33,12 +33,13 @@ namespace AsyncFiberWorksTests
                             value = currentValue;
                         }
                         request.Request.Publish(value);
-                        var disposableOfReceiver = updatesChannel.Subscribe((msg) =>
+                        var workFiber = new PoolFiberSlim();
+                        var disposableOfReceiver = updatesChannel.Subscribe(workFiber, (msg) =>
                         {
                             request.Request.Publish(msg);
                         });
                         request.ReplyTo.Publish(disposableOfReceiver);
-                    }));
+                    });
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 Assert.AreEqual(1, requestChannel.NumSubscribers);
 
@@ -61,19 +62,16 @@ namespace AsyncFiberWorksTests
                 var receivedValues = new List<int>();
                 var timeoutTimerCancellation = new Unsubscriber();
                 var receiveChannel = new Channel<int>();
-                var disposableReceive = receiveChannel.Subscribe((v) =>
+                var disposableReceive = receiveChannel.Subscribe(fiberRequest, (v) =>
                 {
-                    fiberRequest.Enqueue(() =>
-                    {
-                        receivedValues.Add(v);
-                        Console.WriteLine("Received: " + v);
-                    });
+                    receivedValues.Add(v);
+                    Console.WriteLine("Received: " + v);
                 });
                 IDisposable handleReceiveReply = null;
                 bool handleReceiveDisposed = false;
                 IDisposable handleReceiveDisposableOfReceiver = null;
                 var replyChannel = new Channel<IDisposable>();
-                handleReceiveReply = replyChannel.Subscribe((disposableOfReceiver) => fiberRequest.Enqueue(() =>
+                handleReceiveReply = replyChannel.Subscribe(fiberRequest, (disposableOfReceiver) =>
                 {
                     if (handleReceiveDisposed)
                     {
@@ -117,7 +115,7 @@ namespace AsyncFiberWorksTests
                             requesterThread.Stop();
                         }, 200);
                     });
-                }));
+                });
                 requestChannel.Publish(new RequestReplyChannelRequest<Channel<int>, IDisposable>(receiveChannel, replyChannel));
                 var timeoutTimer = fiberRequest.Schedule(() =>
                 {

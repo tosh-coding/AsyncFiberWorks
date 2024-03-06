@@ -21,8 +21,7 @@ namespace AsyncFiberWorksTests.Examples
 
                 var reset = new AutoResetEvent(false);
                 var subscriptionFiber = fiber.BeginSubscription();
-                var subscriber = new ChannelSubscription<string>(fiber, delegate { reset.Set(); });
-                var subscriptionChannel = channel.Subscribe(subscriber.ReceiveOnProducerThread);
+                var subscriptionChannel = channel.Subscribe(fiber, delegate { reset.Set(); });
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish("hello");
 
@@ -40,8 +39,7 @@ namespace AsyncFiberWorksTests.Examples
 
                 var reset = new AutoResetEvent(false);
                 var subscriptionFiber = fiber.BeginSubscription();
-                var subscriber = new ChannelSubscription<string>(fiber, delegate { reset.Set(); });
-                var subscriptionChannel = channel.Subscribe(subscriber.ReceiveOnProducerThread);
+                var subscriptionChannel = channel.Subscribe(fiber, delegate { reset.Set(); });
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish("hello");
 
@@ -67,11 +65,10 @@ namespace AsyncFiberWorksTests.Examples
                     }
                 };
                 var subscriptionFiber = fiber.BeginSubscription();
-                var subscriber = new ChannelSubscription<int>(fiber, onMsg);
                 var filters = new List<Filter<int>>();
                 filters.Add(x => x % 2 == 0);
-                var filter = new MessageFilter<int>(filters, fiber, subscriber.ReceiveOnProducerThread);
-                var subscriptionChannel = channel.Subscribe(filter.Receive);
+                var filter = new MessageFilter<int>(filters, fiber, onMsg);
+                var subscriptionChannel = channel.Subscribe(fiber, filter.Receive);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish(1);
                 channel.Publish(2);
@@ -102,7 +99,7 @@ namespace AsyncFiberWorksTests.Examples
 
                 var subscriptionFiber = fiber.BeginSubscription();
                 var subscriber = new BatchFilter<int>(1, fiber, cb);
-                var subscriptionChannel = counter.Subscribe(subscriber.Receive);
+                var subscriptionChannel = counter.Subscribe(fiber, subscriber.Receive);
                 subscriptionFiber.AppendDisposable(subscriber, subscriptionChannel);
 
                 for (var i = 0; i < 10; i++)
@@ -135,7 +132,7 @@ namespace AsyncFiberWorksTests.Examples
                 Converter<int, String> keyResolver = x => x.ToString();
                 var subscriber = new KeyedBatchFilter<string, int>(keyResolver, 0, fiber, cb);
                 disposables.Add(subscriber);
-                var subscriptionChannel = counter.Subscribe(subscriber.Receive);
+                var subscriptionChannel = counter.Subscribe(fiber, subscriber.Receive);
                 disposables.Add(subscriptionChannel);
                 subscriptionFiber.AppendDisposable(disposables);
 
@@ -159,8 +156,7 @@ namespace AsyncFiberWorksTests.Examples
             {
                 var channel = new Channel<IRequest<string, string>>();
                 var subscriptionFiber = fiber.BeginSubscription();
-                var subscriptionChannel = channel.Subscribe(
-                    fiber.CreateAction<IRequest<string, string>>(req => req.ReplyTo.Publish("bye")));
+                var subscriptionChannel = channel.Subscribe(fiber, (req) => req.ReplyTo.Publish("bye"));
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
 
                 var disposables = new Unsubscriber();
@@ -170,12 +166,12 @@ namespace AsyncFiberWorksTests.Examples
                     Assert.Fail();
                 }, 10000);
                 var replyChannel = new Channel<string>();
-                var reply = replyChannel.Subscribe((result) => testFiber.Enqueue(() =>
+                var reply = replyChannel.Subscribe(testFiber, (result) =>
                 {
                     timeoutTimer.Dispose();
                     Assert.AreEqual("bye", result);
                     testThread.Stop();
-                }));
+                });
                 channel.Publish(new RequestReplyChannelRequest<string, string>("hello", replyChannel));
                 disposables.AppendDisposable(reply);
                 testThread.Run();
@@ -191,8 +187,7 @@ namespace AsyncFiberWorksTests.Examples
             Assert.AreEqual(0, fiber.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
             var subscriptionFiber = fiber.BeginSubscription();
-            var subscriber = new ChannelSubscription<int>(fiber, x => { });
-            var subscriptionCHannel = channel.Subscribe(subscriber.ReceiveOnProducerThread);
+            var subscriptionCHannel = channel.Subscribe(fiber, x => { });
             subscriptionFiber.AppendDisposable(subscriptionCHannel);
 
             Assert.AreEqual(1, fiber.NumSubscriptions);
@@ -213,8 +208,7 @@ namespace AsyncFiberWorksTests.Examples
             Assert.AreEqual(0, fiber.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
             var subscriptionFiber = fiber.BeginSubscription();
-            var subscriber = new ChannelSubscription<int>(fiber, x => { });
-            var subscriptionChannel = channel.Subscribe(subscriber.ReceiveOnProducerThread);
+            var subscriptionChannel = channel.Subscribe(fiber, x => { });
             subscriptionFiber.AppendDisposable(subscriptionChannel);
 
             Assert.AreEqual(1, fiber.NumSubscriptions);
@@ -234,8 +228,7 @@ namespace AsyncFiberWorksTests.Examples
             Assert.AreEqual(0, fiber.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
             var subscriptionFiber = fiber.BeginSubscription();
-            var subscriber = new ChannelSubscription<int>(fiber, x => { });
-            var subscriptionChannel = channel.Subscribe(subscriber.ReceiveOnProducerThread);
+            var subscriptionChannel = channel.Subscribe(fiber, x => { });
             subscriptionFiber.AppendDisposable(subscriptionChannel);
 
             Assert.AreEqual(1, fiber.NumSubscriptions);
@@ -256,8 +249,7 @@ namespace AsyncFiberWorksTests.Examples
             Assert.AreEqual(0, channel.NumSubscribers);
 
             var subscriptionFiber = fiber.BeginSubscription();
-            var subscriber = new ChannelSubscription<int>(fiber, x => { });
-            var subscriptionChannel = channel.Subscribe(subscriber.ReceiveOnProducerThread);
+            var subscriptionChannel = channel.Subscribe(fiber, x => { });
             subscriptionFiber.AppendDisposable(subscriptionChannel);
 
             Assert.AreEqual(1, fiber.NumSubscriptions);

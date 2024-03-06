@@ -16,8 +16,7 @@ namespace WpfExample
             channels = winChannels;
             var threadFiber = new ThreadFiber();
             var subscriptionFiber = threadFiber.BeginSubscription();
-            var subscriber = new ChannelSubscription<RoutedEventArgs>(threadFiber, OnStart);
-            var subscriptionChannel = channels.StartChannel.Subscribe(subscriber.ReceiveOnProducerThread);
+            var subscriptionChannel = channels.StartChannel.Subscribe(threadFiber, OnStart);
             subscriptionFiber.AppendDisposable(subscriptionChannel);
             threadFiber.Start();
             fiber = threadFiber;

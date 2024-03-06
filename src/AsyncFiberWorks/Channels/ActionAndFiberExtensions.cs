@@ -16,25 +16,22 @@ namespace AsyncFiberWorks.Channels
         /// <param name="fiber">Target fiber.</param>
         /// <param name="action">Action.</param>
         /// <returns>Action with enqueue.</returns>
-        public static Action<T> CreateAction<T>(this IExecutionContext fiber, Action<T> action)
-        {
-            if (fiber == null)
-            {
-                return action;
-            }
-            else
-            {
-                return (msg) => fiber.Enqueue(() => action(msg));
-            }
-        }
-
-        public static Action<T> CreateAction<T>(this IPauseableExecutionContext fiber, Func<T, Task> func)
+        public static (IExecutionContext, Action<T>) CreateAction<T>(this IExecutionContext fiber, Action<T> action)
         {
             if (fiber == null)
             {
                 throw new ArgumentNullException(nameof(fiber));
             }
-            return (msg) => fiber.Enqueue(async () =>
+            return (fiber, action);
+        }
+
+        public static (IExecutionContext, Action<T>) CreateAction<T>(this IPauseableExecutionContext fiber, Func<T, Task> func)
+        {
+            if (fiber == null)
+            {
+                throw new ArgumentNullException(nameof(fiber));
+            }
+            return (fiber, async (msg) =>
             {
                 var task = func(msg);
                 await fiber.PauseWhileRunning(async () =>
@@ -45,13 +42,13 @@ namespace AsyncFiberWorks.Channels
             });
         }
 
-        public static Action<T> CreateAction<T>(this IPauseableExecutionContext fiber, Func<T, Task<Action>> func)
+        public static (IExecutionContext, Action<T>) CreateAction<T>(this IPauseableExecutionContext fiber, Func<T, Task<Action>> func)
         {
             if (fiber == null)
             {
                 throw new ArgumentNullException(nameof(fiber));
             }
-            return (msg) => fiber.Enqueue(async () =>
+            return (fiber, async (msg) =>
             {
                 var task = func(msg);
                 await fiber.PauseWhileRunning(task);
