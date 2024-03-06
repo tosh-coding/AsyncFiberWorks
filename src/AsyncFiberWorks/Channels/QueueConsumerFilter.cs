@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.Channels
     /// Queue incoming messages once. It is then dequeued from the callback processing performed on the fiber.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class QueueConsumer<T>
+    public class QueueConsumerFilter<T>
     {
         private readonly object _lock = new object();
         private bool _flushPending;
@@ -18,10 +18,10 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="fiber"></param>
-        /// <param name="callback"></param>
+        /// <param name="fiber">the target executor to receive the message</param>
+        /// <param name="callback">Message receiving handler.</param>
         /// <param name="queue"></param>
-        public QueueConsumer(IExecutionContext fiber, Action<T> callback, IMessageQueue<T> queue = null)
+        public QueueConsumerFilter(IExecutionContext fiber, Action<T> callback, IMessageQueue<T> queue = null)
         {
             if (queue == null)
             {
@@ -36,7 +36,7 @@ namespace AsyncFiberWorks.Channels
         /// Message receiving function.
         /// </summary>
         /// <param name="msg">A message.</param>
-        public void ReceiveOnProducerThread(T msg)
+        public void Receive(T msg)
         {
             lock (_lock)
             {

@@ -6,11 +6,12 @@ using AsyncFiberWorks.Fibers;
 namespace AsyncFiberWorks.Channels
 {
     /// <summary>
-    /// Channel subscription that drops duplicates based upon a key.
+    /// Arriving events are buffered once and sent to the next recipient a few moments later.
+    /// If there are duplicate keys, the newer one takes precedence. The old one disappears.
     /// </summary>
     /// <typeparam name="K"></typeparam>
     /// <typeparam name="T"></typeparam>
-    public class KeyedBatchSubscriber<K, T> : IDisposable
+    public class KeyedBatchFilter<K, T> : IDisposable
     {
         private readonly object _batchLock = new object();
 
@@ -26,22 +27,22 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Construct new instance.
         /// </summary>
-        /// <param name="keyResolver"></param>
-        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="keyResolver">The process of retrieving a key from a message.</param>
+        /// <param name="intervalInMs">Batch processing interval. Milliseconds.</param>
         /// <param name="receive">Message receiving handler.</param>
-        public KeyedBatchSubscriber(Converter<T, K> keyResolver, long intervalInMs, Action<IDictionary<K, T>> receive)
-            : this(keyResolver, intervalInMs, null, receive)
+        public KeyedBatchFilter(Converter<T, K> keyResolver, long intervalInMs, Action<IDictionary<K, T>> receive)
+            : this(keyResolver, intervalInMs, new PoolFiberSlim(), receive)
         {
         }
 
         /// <summary>
         /// Construct new instance.
         /// </summary>
-        /// <param name="keyResolver"></param>
-        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="keyResolver">The process of retrieving a key from a message.</param>
+        /// <param name="intervalInMs">Batch processing interval. Milliseconds.</param>
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="receive">Message receiving handler.</param>
-        public KeyedBatchSubscriber(Converter<T, K> keyResolver, long intervalInMs, IExecutionContext fiber, Action<IDictionary<K, T>> receive)
+        public KeyedBatchFilter(Converter<T, K> keyResolver, long intervalInMs, IExecutionContext fiber, Action<IDictionary<K, T>> receive)
             : this(keyResolver, intervalInMs, null, fiber, receive)
         {
         }
@@ -49,22 +50,22 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Construct new instance.
         /// </summary>
-        /// <param name="keyResolver"></param>
-        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="keyResolver">The process of retrieving a key from a message.</param>
+        /// <param name="intervalInMs">Batch processing interval. Milliseconds.</param>
         /// <param name="batchFiber">Fiber used for batch processing.</param>
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="receive">Message receiving handler.</param>
-        public KeyedBatchSubscriber(Converter<T, K> keyResolver, long intervalInMs, IExecutionContext batchFiber, IExecutionContext fiber, Action<IDictionary<K, T>> receive)
+        public KeyedBatchFilter(Converter<T, K> keyResolver, long intervalInMs, IExecutionContext batchFiber, IExecutionContext fiber, Action<IDictionary<K, T>> receive)
         {
             _keyResolver = keyResolver;
             _intervalInMs = intervalInMs;
-            _batchFiber = batchFiber ?? ((IExecutionContext)fiber) ?? new PoolFiberSlim();
-            _executeFiber = fiber;
+            _batchFiber = batchFiber ?? ((IExecutionContext)fiber);
+            _executeFiber = fiber ?? throw new ArgumentNullException(nameof(fiber));
             _receive = receive;
         }
 
         /// <summary>
-        /// Unsubscribe the fiber, discards added disposables, and cancel the batching timer
+        /// Cancel the batching timer.
         /// </summary>
         public void Dispose()
         {
@@ -82,7 +83,7 @@ namespace AsyncFiberWorks.Channels
         /// Message receiving function.
         /// </summary>
         /// <param name="msg"></param>
-        public void ReceiveOnProducerThread(T msg)
+        public void Receive(T msg)
         {
             lock (_batchLock)
             {
@@ -101,14 +102,7 @@ namespace AsyncFiberWorks.Channels
             var toReturn = ClearPending();
             if (toReturn != null)
             {
-                if ((_executeFiber != null) && (_batchFiber != _executeFiber))
-                {
-                    _executeFiber.Enqueue(() => _receive(toReturn));
-                }
-                else
-                {
-                    _receive(toReturn);
-                }
+                _executeFiber.Enqueue(() => _receive(toReturn));
             }
         }
 

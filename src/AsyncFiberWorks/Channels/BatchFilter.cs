@@ -6,12 +6,10 @@ using AsyncFiberWorks.Fibers;
 namespace AsyncFiberWorks.Channels
 {
     /// <summary>
-    /// Batches actions for the consuming thread.
-    /// Subscribes to actions on the channel in batch form. The events will be batched if the consumer is unable to process the events 
-    /// faster than the arrival rate.
+    /// Arriving events are buffered once and sent to the next recipient a few moments later.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class BatchSubscriber<T> : IDisposable
+    public class BatchFilter<T> : IDisposable
     {
         private readonly object _batchLock = new object();
         
@@ -26,20 +24,20 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Construct new instance.
         /// </summary>
-        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="intervalInMs">Batch processing interval. Milliseconds.</param>
         /// <param name="receive">Message receiving handler.</param>
-        public BatchSubscriber(long intervalInMs, Action<IList<T>> receive)
-            : this(intervalInMs, null, receive)
+        public BatchFilter(long intervalInMs, Action<IList<T>> receive)
+            : this(intervalInMs, new PoolFiberSlim(), receive)
         {
         }
 
         /// <summary>
         /// Construct new instance.
         /// </summary>
-        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="intervalInMs">Batch processing interval. Milliseconds.</param>
         /// <param name="fiber">The target context to execute the action</param>
         /// <param name="receive">Message receiving handler.</param>
-        public BatchSubscriber(long intervalInMs, IExecutionContext fiber, Action<IList<T>> receive)
+        public BatchFilter(long intervalInMs, IExecutionContext fiber, Action<IList<T>> receive)
             : this(intervalInMs, null, fiber, receive)
         {
         }
@@ -47,20 +45,20 @@ namespace AsyncFiberWorks.Channels
         /// <summary>
         /// Construct new instance.
         /// </summary>
-        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
+        /// <param name="intervalInMs">Batch processing interval. Milliseconds.</param>
         /// <param name="batchFiber">Fiber used for batch processing.</param>
         /// <param name="fiber">The target context to execute the action</param>
         /// <param name="receive">Message receiving handler.</param>
-        public BatchSubscriber(long intervalInMs, IExecutionContext batchFiber, IExecutionContext fiber, Action<IList<T>> receive)
+        public BatchFilter(long intervalInMs, IExecutionContext batchFiber, IExecutionContext fiber, Action<IList<T>> receive)
         {
             _intervalInMs = intervalInMs;
-            _batchFiber = batchFiber ?? ((IExecutionContext)fiber) ?? new PoolFiberSlim();
-            _executeFiber = fiber;
+            _batchFiber = batchFiber ?? ((IExecutionContext)fiber);
+            _executeFiber = fiber ?? throw new ArgumentNullException(nameof(fiber));
             _receive = receive;
         }
 
         /// <summary>
-        /// Unsubscribe the fiber, discards added disposables, and cancel the batching timer
+        /// Cancel the batching timer.
         /// </summary>
         public void Dispose()
         {
@@ -78,7 +76,7 @@ namespace AsyncFiberWorks.Channels
         /// Receives message and batches as needed.
         /// </summary>
         /// <param name="msg"></param>
-        public void ReceiveOnProducerThread(T msg)
+        public void Receive(T msg)
         {
             lock (_batchLock)
             {
@@ -104,14 +102,7 @@ namespace AsyncFiberWorks.Channels
             }
             if (toFlush != null)
             {
-                if ((_executeFiber != null) && (_batchFiber != _executeFiber))
-                {
-                    _executeFiber.Enqueue(() => _receive(toFlush));
-                }
-                else
-                {
-                    _receive(toFlush);
-                }
+                _executeFiber.Enqueue(() => _receive(toFlush));
             }
         }
     }

@@ -9,7 +9,7 @@ using AsyncFiberWorks.Fibers;
 namespace AsyncFiberWorksTests
 {
     [TestFixture]
-    public class QueueConsumerTests
+    public class QueueConsumerFilterTests
     {
         [Test]
         public void SingleConsumer()
@@ -29,8 +29,8 @@ namespace AsyncFiberWorksTests
                     }
                 };
                 var subscriptionFiber = one.BeginSubscription();
-                var consumer = new QueueConsumer<int>(one, onMsg);
-                var subscriptionChannel = channel.Subscribe(consumer.ReceiveOnProducerThread);
+                var consumer = new QueueConsumerFilter<int>(one, onMsg);
+                var subscriptionChannel = channel.Subscribe(consumer.Receive);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 for (var i = 0; i < 20; i++)
                 {
@@ -58,8 +58,8 @@ namespace AsyncFiberWorksTests
                     reset.Set();
                 };
                 var subscriptionFiber = one.BeginSubscription();
-                var consumer = new QueueConsumer<int>(one, onMsg);
-                var subscriptionChannel = channel.Subscribe(consumer.ReceiveOnProducerThread);
+                var consumer = new QueueConsumerFilter<int>(one, onMsg);
+                var subscriptionChannel = channel.Subscribe(consumer.Receive);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish(0);
                 channel.Publish(1);
@@ -96,8 +96,8 @@ namespace AsyncFiberWorksTests
                 queues.Add(fiber);
                 var subscriptionFiber = fiber.BeginSubscription();
 
-                var consumer = new QueueConsumer<int>(fiber, onReceive);
-                var subscriptionChannel = channel.Subscribe(consumer.ReceiveOnProducerThread);
+                var consumer = new QueueConsumerFilter<int>(fiber, onReceive);
+                var subscriptionChannel = channel.Subscribe(consumer.Receive);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
             }
             for (var i = 0; i < messageCount; i++)

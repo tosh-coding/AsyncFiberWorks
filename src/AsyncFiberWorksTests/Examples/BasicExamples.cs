@@ -101,8 +101,8 @@ namespace AsyncFiberWorksTests.Examples
                                             };
 
                 var subscriptionFiber = fiber.BeginSubscription();
-                var subscriber = new BatchSubscriber<int>(1, fiber, cb);
-                var subscriptionChannel = counter.Subscribe(subscriber.ReceiveOnProducerThread);
+                var subscriber = new BatchFilter<int>(1, fiber, cb);
+                var subscriptionChannel = counter.Subscribe(subscriber.Receive);
                 subscriptionFiber.AppendDisposable(subscriber, subscriptionChannel);
 
                 for (var i = 0; i < 10; i++)
@@ -133,9 +133,9 @@ namespace AsyncFiberWorksTests.Examples
                 var disposables = new List<IDisposable>();
                 var subscriptionFiber = fiber.BeginSubscription();
                 Converter<int, String> keyResolver = x => x.ToString();
-                var subscriber = new KeyedBatchSubscriber<string, int>(keyResolver, 0, fiber, cb);
+                var subscriber = new KeyedBatchFilter<string, int>(keyResolver, 0, fiber, cb);
                 disposables.Add(subscriber);
-                var subscriptionChannel = counter.Subscribe(subscriber.ReceiveOnProducerThread);
+                var subscriptionChannel = counter.Subscribe(subscriber.Receive);
                 disposables.Add(subscriptionChannel);
                 subscriptionFiber.AppendDisposable(disposables);
 
