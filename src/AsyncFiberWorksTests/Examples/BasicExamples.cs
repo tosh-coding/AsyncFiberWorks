@@ -66,11 +66,12 @@ namespace AsyncFiberWorksTests.Examples
                         reset.Set();
                     }
                 };
-                var filter = new MessageFilter<int>();
-                filter.AddFilterOnProducerThread(x => x % 2 == 0);
                 var subscriptionFiber = fiber.BeginSubscription();
-                var subscriber = new ChannelSubscription<int>(filter, fiber, onMsg);
-                var subscriptionChannel = channel.Subscribe(subscriber.ReceiveOnProducerThread);
+                var subscriber = new ChannelSubscription<int>(fiber, onMsg);
+                var filters = new List<Filter<int>>();
+                filters.Add(x => x % 2 == 0);
+                var filter = new MessageFilter<int>(filters, fiber, subscriber.ReceiveOnProducerThread);
+                var subscriptionChannel = channel.Subscribe(filter.Receive);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish(1);
                 channel.Publish(2);
@@ -132,7 +133,7 @@ namespace AsyncFiberWorksTests.Examples
                 var disposables = new List<IDisposable>();
                 var subscriptionFiber = fiber.BeginSubscription();
                 Converter<int, String> keyResolver = x => x.ToString();
-                var subscriber = new KeyedBatchSubscriber<string, int>(null, keyResolver, 0, fiber, cb);
+                var subscriber = new KeyedBatchSubscriber<string, int>(keyResolver, 0, fiber, cb);
                 disposables.Add(subscriber);
                 var subscriptionChannel = counter.Subscribe(subscriber.ReceiveOnProducerThread);
                 disposables.Add(subscriptionChannel);

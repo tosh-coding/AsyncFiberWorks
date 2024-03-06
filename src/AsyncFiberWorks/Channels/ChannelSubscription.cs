@@ -10,7 +10,6 @@ namespace AsyncFiberWorks.Channels
     /// <typeparam name="T"></typeparam>
     public class ChannelSubscription<T>
     {
-        private readonly IMessageFilter<T> _filter;
         private readonly IExecutionContext _fiber;
         private readonly Action<T> _receive;
 
@@ -29,40 +28,16 @@ namespace AsyncFiberWorks.Channels
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="receive">Message receiving handler.</param>
         public ChannelSubscription(IExecutionContext fiber, Action<T> receive)
-            : this(null, fiber, receive)
         {
-        }
-
-        /// <summary>
-        /// Construct the subscription
-        /// </summary>
-        /// <param name="filter">Message pass filter.</param>
-        /// <param name="fiber">the target executor to receive the message</param>
-        /// <param name="receive">Message receiving handler.</param>
-        public ChannelSubscription(IMessageFilter<T> filter, IExecutionContext fiber, Action<T> receive)
-        {
-            _filter = filter;
             _fiber = fiber;
             _receive = receive;
-        }
-
-        /// <summary>
-        /// Message receiving function.
-        /// </summary>
-        /// <param name="msg"></param>
-        public void ReceiveOnProducerThread(T msg)
-        {
-            if (_filter?.PassesProducerThreadFilter(msg) ?? true)
-            {
-                OnMessageOnProducerThread(msg);
-            }
         }
 
         /// <summary>
         /// Receives the action and queues the execution on the target fiber.
         /// </summary>
         /// <param name="msg"></param>
-        protected void OnMessageOnProducerThread(T msg)
+        public void ReceiveOnProducerThread(T msg)
         {
             if (_fiber != null)
             {

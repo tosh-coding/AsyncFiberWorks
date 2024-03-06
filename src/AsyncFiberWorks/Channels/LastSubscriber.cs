@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 
@@ -14,7 +13,6 @@ namespace AsyncFiberWorks.Channels
     public class LastSubscriber<T> : IDisposable
     {
         private readonly object _batchLock = new object();
-        private readonly IMessageFilter<T> _filter;
         private readonly long _intervalInMs;
         private readonly IExecutionContext _batchFiber;
         private readonly IExecutionContext _executeFiber;
@@ -38,36 +36,22 @@ namespace AsyncFiberWorks.Channels
         /// New instance.
         /// </summary>
         /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
-        /// <param name="fiber"></param>
-        /// <param name="receive">Message receiving handler.</param>
-        public LastSubscriber(long intervalInMs, IExecutionContext fiber, Action<T> receive)
-            : this(null, intervalInMs, fiber, receive)
-        {
-        }
-
-        /// <summary>
-        /// New instance.
-        /// </summary>
-        /// <param name="filter">Message pass filter.</param>
-        /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
         /// <param name="fiber">The target context to execute the action</param>
         /// <param name="receive">Message receiving handler.</param>
-        public LastSubscriber(IMessageFilter<T> filter, long intervalInMs, IExecutionContext fiber, Action<T> receive)
-            : this(filter, intervalInMs, null, fiber, receive)
+        public LastSubscriber(long intervalInMs, IExecutionContext fiber, Action<T> receive)
+            : this(intervalInMs, null, fiber, receive)
         {
         }
 
         /// <summary>
         /// New instance.
         /// </summary>
-        /// <param name="filter">Message pass filter.</param>
         /// <param name="intervalInMs">Time in Ms to batch actions. If 0 events will be delivered as fast as consumer can process</param>
         /// <param name="batchFiber">Fiber used for batch processing.</param>
         /// <param name="fiber">The target context to execute the action</param>
         /// <param name="receive">Message receiving handler.</param>
-        public LastSubscriber(IMessageFilter<T> filter, long intervalInMs, IExecutionContext batchFiber, IExecutionContext fiber, Action<T> receive)
+        public LastSubscriber(long intervalInMs, IExecutionContext batchFiber, IExecutionContext fiber, Action<T> receive)
         {
-            _filter = filter;
             _intervalInMs = intervalInMs;
             _batchFiber = batchFiber ?? ((IExecutionContext)fiber) ?? new PoolFiberSlim();
             _executeFiber = fiber;
@@ -94,18 +78,6 @@ namespace AsyncFiberWorks.Channels
         /// </summary>
         /// <param name="msg"></param>
         public void ReceiveOnProducerThread(T msg)
-        {
-            if (_filter?.PassesProducerThreadFilter(msg) ?? true)
-            {
-                OnMessageOnProducerThread(msg);
-            }
-        }
-
-        /// <summary>
-        /// Receives message from producer thread.
-        /// </summary>
-        /// <param name="msg"></param>
-        protected void OnMessageOnProducerThread(T msg)
         {
             lock (_batchLock)
             {

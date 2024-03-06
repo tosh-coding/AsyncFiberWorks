@@ -1,26 +1,31 @@
+using AsyncFiberWorks.Core;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AsyncFiberWorks.Channels
 {
     /// <summary>
-    /// A message filter that run in the producer/publisher thread.
+    /// A message filter.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class MessageFilter<T> : IMessageFilter<T>
+    public class MessageFilter<T>
     {
-        private List<Filter<T>> _filterOnProducerThread;
+        private Filter<T>[] _filter;
+        private readonly IExecutionContext _fiber;
+        private readonly Action<T> _receive;
 
         /// <summary>
-        /// Add a filter.
+        /// Set filters and a receiver.
         /// </summary>
-        /// <param name="filter"></param>
-        public void AddFilterOnProducerThread(Filter<T> filter)
+        /// <param name="filters">Message pass filters.</param>
+        /// <param name="fiber">the target executor to receive the message</param>
+        /// <param name="receive">Message receiving handler.</param>
+        public MessageFilter(IEnumerable<Filter<T>> filters, IExecutionContext fiber, Action<T> receive)
         {
-            if (_filterOnProducerThread == null)
-            {
-                _filterOnProducerThread = new List<Filter<T>>();
-            }
-            _filterOnProducerThread.Add(filter);
+            _filter = filters.ToArray();
+            _fiber = fiber;
+            _receive = receive;
         }
 
         /// <summary>
@@ -28,13 +33,9 @@ namespace AsyncFiberWorks.Channels
         /// </summary>
         /// <param name="msg"></param>
         /// <returns>True to pass, false otherwise.</returns>
-        public bool PassesProducerThreadFilter(T msg)
+        public bool PassesFilter(T msg)
         {
-            if (_filterOnProducerThread == null)
-            {
-                return true;
-            }
-            foreach (var filter in _filterOnProducerThread)
+            foreach (var filter in _filter)
             {
                 if (!filter(msg))
                 {
@@ -42,6 +43,18 @@ namespace AsyncFiberWorks.Channels
                 }
             }
             return true;
+        }
+
+        /// <summary>
+        /// Message receiving function.
+        /// </summary>
+        /// <param name="msg"></param>
+        public void Receive(T msg)
+        {
+            if (PassesFilter(msg))
+            {
+                _fiber.Enqueue(() => _receive(msg));
+            }
         }
     }
 }
