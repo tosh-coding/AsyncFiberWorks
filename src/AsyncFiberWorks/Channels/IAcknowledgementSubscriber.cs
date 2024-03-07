@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -14,6 +15,6 @@ namespace AsyncFiberWorks.Channels
         /// </summary>
         /// <param name="messageReceiver">Subscriber.</param>
         /// <returns>Unsubscriber.</returns>
-        IDisposable Subscribe(IAcknowledgeMessageReceiver<TMessage, TAck> messageReceiver);
+        IDisposable Subscribe(Func<TMessage, Task<TAck>> messageReceiver);
     }
 }

@@ -37,11 +37,8 @@ namespace AsyncFiberWorksTests
                 return default;
             };
 
-            var messageReceiver1 = new DefaultAcknowledgementChannelSubscription<int>(receiverFunc1);
-            var messageReceiver2 = new DefaultAcknowledgementChannelSubscription<int>(receiverFunc2);
-
-            var disposable1 = channel.Subscribe(messageReceiver1);
-            var disposable2 = channel.Subscribe(messageReceiver2);
+            var disposable1 = channel.Subscribe(receiverFunc1);
+            var disposable2 = channel.Subscribe(receiverFunc2);
 
             var control = new DefaultAcknowledgementControl<int>();
             await channel.Publish(123, control);
@@ -75,11 +72,8 @@ namespace AsyncFiberWorksTests
                 return default;
             };
 
-            var messageReceiver1 = new DefaultAcknowledgementChannelSubscription<int>(receiverFunc1);
-            var messageReceiver2 = new DefaultAcknowledgementChannelSubscription<int>(receiverFunc2);
-
-            var disposable1 = channel.Subscribe(messageReceiver1);
-            var disposable2 = channel.Subscribe(messageReceiver2);
+            var disposable1 = channel.Subscribe(receiverFunc1);
+            var disposable2 = channel.Subscribe(receiverFunc2);
 
             var control = new ReverseOrderAcknowledgementControl<int>();
             await channel.Publish(123, control).ConfigureAwait(false);
@@ -106,11 +100,8 @@ namespace AsyncFiberWorksTests
                 return false;
             };
 
-            var messageReceiver1 = new DefaultAcknowledgementChannelSubscription<int>(receiverFunc1);
-            var messageReceiver2 = new DefaultAcknowledgementChannelSubscription<int>(receiverFunc2);
-
-            var disposable1 = channel.Subscribe(messageReceiver1);
-            var disposable2 = channel.Subscribe(messageReceiver2);
+            var disposable1 = channel.Subscribe(receiverFunc1);
+            var disposable2 = channel.Subscribe(receiverFunc2);
 
             var control = new DefaultAcknowledgementControl<int>();
             await channel.Publish(123, control);

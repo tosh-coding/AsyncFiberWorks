@@ -17,9 +17,9 @@ namespace AsyncFiberWorks.Channels
         /// </summary>
         /// <param name="messageReceiver">Subscriber.</param>
         /// <returns>Unsubscriber.</returns>
-        public IDisposable Subscribe(IAcknowledgeMessageReceiver<TMessage, TAck> messageReceiver)
+        public IDisposable Subscribe(Func<TMessage, Task<TAck>> messageReceiver)
         {
-            return this._channel.AddHandler(messageReceiver.OnReceive);
+            return this._channel.AddHandler(messageReceiver);
         }
 
         /// <summary>
