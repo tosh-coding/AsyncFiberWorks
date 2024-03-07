@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Channels
@@ -14,6 +13,8 @@ namespace AsyncFiberWorks.Channels
     {
         private object _lock = new object();
         private LinkedList<Func<TMessage, Task<TAck>>> _handlers = new LinkedList<Func<TMessage, Task<TAck>>>();
+        private List<Func<TMessage, Task<TAck>>> _copied = new List<Func<TMessage, Task<TAck>>>();
+        private bool _publishing;
 
         /// <summary>
         /// Add a message handler.
@@ -22,7 +23,10 @@ namespace AsyncFiberWorks.Channels
         /// <returns>Function for removing the handler.</returns>
         public IDisposable AddHandler(Func<TMessage, Task<TAck>> action)
         {
-            _handlers.AddLast(action);
+            lock (_lock)
+            {
+                _handlers.AddLast(action);
+            }
 
             var unsubscriber = new Unsubscriber(() => {
                 lock (_lock)
@@ -42,12 +46,27 @@ namespace AsyncFiberWorks.Channels
         /// <returns>A task that waits for IAcknowledgeControl.OnPublish to complete.</returns>
         public async Task Publish(TMessage msg, IAcknowledgementControl<TMessage, TAck> control)
         {
-            Func<TMessage, Task<TAck>>[] copied;
             lock (_lock)
             {
-                copied = _handlers.ToArray();
+                if (_publishing)
+                {
+                    throw new InvalidOperationException("Cannot be executed in parallel.");
+                }
+                _publishing = true;
+                _copied.Clear();
+                _copied.AddRange(_handlers);
             }
-            await control.OnPublish(msg, copied).ConfigureAwait(false);
+            try
+            {
+                await control.OnPublish(msg, _copied).ConfigureAwait(false);
+            }
+            finally
+            {
+                lock (_lock)
+                {
+                    _publishing = false;
+                }
+            }
         }
 
         /// <summary>

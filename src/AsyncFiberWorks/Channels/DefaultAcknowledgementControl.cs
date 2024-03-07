@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Channels
@@ -17,7 +18,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="msg">The message to send.</param>
         /// <param name="handlers">A list of message recipients.</param>
         /// <returns>Wait for the publishing process to complete.</returns>
-        public async Task OnPublish(TMessage msg, Func<TMessage, Task<bool>>[] handlers)
+        public async Task OnPublish(TMessage msg, IReadOnlyList<Func<TMessage, Task<bool>>> handlers)
         {
             if (handlers != null)
             {
