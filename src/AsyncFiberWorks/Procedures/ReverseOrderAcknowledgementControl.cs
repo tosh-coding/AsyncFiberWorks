@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
     /// Call the handlers in the reverse order in which they were registered.

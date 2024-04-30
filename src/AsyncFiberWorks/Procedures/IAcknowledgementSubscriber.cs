@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
     /// Acknowledgement channel subscription interface.

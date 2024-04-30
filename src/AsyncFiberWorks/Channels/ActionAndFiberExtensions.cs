@@ -39,7 +39,8 @@ namespace AsyncFiberWorks.Channels
                     await task;
                     return () => { };
                 });
-            });
+            }
+            );
         }
 
         public static (IExecutionContext, Action<T>) CreateAction<T>(this IPauseableExecutionContext fiber, Func<T, Task<Action>> func)
@@ -52,7 +53,8 @@ namespace AsyncFiberWorks.Channels
             {
                 var task = func(msg);
                 await fiber.PauseWhileRunning(task);
-            });
+            }
+            );
         }
 
         /// <summary>

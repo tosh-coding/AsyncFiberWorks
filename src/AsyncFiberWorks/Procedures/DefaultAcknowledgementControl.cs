@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
     /// Call all handlers in the order in which they are registered.

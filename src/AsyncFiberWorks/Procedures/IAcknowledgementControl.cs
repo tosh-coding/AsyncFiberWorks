@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
     /// Control message transmission.

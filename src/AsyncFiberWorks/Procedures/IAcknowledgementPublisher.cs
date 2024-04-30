@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
     /// Sender interface to channels with acknowledgments.

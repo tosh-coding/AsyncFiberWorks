@@ -1,9 +1,9 @@
 ﻿using NUnit.Framework;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Procedures;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncFiberWorks.Channels;
 using System;
 
 namespace AsyncFiberWorksTests

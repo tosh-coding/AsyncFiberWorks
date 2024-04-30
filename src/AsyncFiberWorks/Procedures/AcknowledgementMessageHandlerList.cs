@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AsyncFiberWorks.Channels;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
     /// List of message handlers with acknowledgement.
@@ -28,10 +29,11 @@ namespace AsyncFiberWorks.Channels
                 _handlers.AddLast(action);
             }
 
-            var unsubscriber = new Unsubscriber(() => {
+            var unsubscriber = new Unsubscriber(() =>
+            {
                 lock (_lock)
                 {
-                    this._handlers.Remove(action);
+                    _handlers.Remove(action);
                 }
             });
 

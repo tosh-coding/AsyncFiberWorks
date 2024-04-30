@@ -1,6 +1,6 @@
 using System;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
     /// This channel is a publishing interface controlled by an acknowledgment.

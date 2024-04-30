@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
     /// This channel is a publishing interface controlled by an acknowledgment.
@@ -19,7 +19,7 @@ namespace AsyncFiberWorks.Channels
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(Func<TMessage, Task<TAck>> messageReceiver)
         {
-            return this._channel.AddHandler(messageReceiver);
+            return _channel.AddHandler(messageReceiver);
         }
 
         /// <summary>
