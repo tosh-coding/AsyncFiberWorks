@@ -16,15 +16,6 @@ namespace AsyncFiberWorks.Channels
         /// <param name="fiber">Target fiber.</param>
         /// <param name="action">Action.</param>
         /// <returns>Action with enqueue.</returns>
-        public static (IExecutionContext, Action<T>) CreateAction<T>(this IExecutionContext fiber, Action<T> action)
-        {
-            if (fiber == null)
-            {
-                throw new ArgumentNullException(nameof(fiber));
-            }
-            return (fiber, action);
-        }
-
         public static (IExecutionContext, Action<T>) CreateAction<T>(this IPauseableExecutionContext fiber, Func<T, Task> func)
         {
             if (fiber == null)

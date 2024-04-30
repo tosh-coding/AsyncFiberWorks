@@ -16,12 +16,5 @@ namespace AsyncFiberWorks.Channels
         /// <param name="receive">Subscriber.</param>
         /// <returns>Unsubscriber.</returns>
         IDisposable Subscribe(IExecutionContext executionContext, Action<T> receive);
-
-        /// <summary>
-        /// Subscribe a channel.
-        /// </summary>
-        /// <param name="actionWithContext">A pair of message receive handlers and execution contexts.</param>
-        /// <returns>Unsubscriber.</returns>
-        IDisposable Subscribe((IExecutionContext executionContext, Action<T> receive) actionWithContext);
     }
 }
