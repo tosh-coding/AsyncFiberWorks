@@ -1,13 +1,14 @@
 ﻿using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 using System;
+using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Fibers
 {
     /// <summary>
     /// Fiber implementation backed by shared threads. Mainly thread pool.
     /// </summary>
-    public class PoolFiber : IFiber, IPauseableExecutionContext
+    public class PoolFiber : IFiber, IAsyncExecutionContext
     {
         private readonly PoolFiberSlim _poolFiberSlim;
         private readonly Subscriptions _subscriptions = new Subscriptions();
@@ -89,6 +90,15 @@ namespace AsyncFiberWorks.Fibers
         public void Resume(Action action)
         {
             _poolFiberSlim.Resume(action);
+        }
+
+        /// <summary>
+        /// Enqueue a single task.
+        /// </summary>
+        /// <param name="func">Task generator. This is done after a pause in the fiber. The generated task is monitored and takes action to resume after completion.</param>
+        public void Enqueue(Func<Task<Action>> func)
+        {
+            _poolFiberSlim.Enqueue(func);
         }
     }
 }

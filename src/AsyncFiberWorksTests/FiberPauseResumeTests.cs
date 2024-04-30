@@ -153,38 +153,34 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task PauseWhileRunningTest()
+        public async Task EnqueueTaskTest()
         {
             var fiber = new PoolFiberSlim();
             var counter = new IntClass();
             counter.Value = 0;
             var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            fiber.Enqueue(() => PauseWhileRunningTestFuncInFiber(fiber, counter, tcs));
-            fiber.Enqueue(() => counter.Value += 1);
-            Thread.Sleep(1);
-            Assert.AreEqual(0, counter.Value);
-
-            // For the completion of the test.
-            await tcs.Task.ConfigureAwait(false);
-            Assert.AreEqual(11, counter.Value);
-        }
-
-        void PauseWhileRunningTestFuncInFiber(PoolFiberSlim fiber, IntClass counter, TaskCompletionSource<bool> tcs)
-        {
-            // Pause and start async method.
-            fiber.PauseWhileRunning(async () =>
+            fiber.Enqueue(() => counter.Value += 3);
+            fiber.Enqueue(async () =>
             {
                 // Some kind of asynchronous operation.
                 _ = await SomeWebApiAccessAsync();
                 return () =>
                 {
                     counter.Value = 10;
+
+                    // For the completion of the test.
+                    tcs.SetResult(true);
                 };
             });
+            fiber.Enqueue(() => counter.Value += 1);
+            Thread.Sleep(1);
+            Assert.AreEqual(3, counter.Value);
 
             // For the completion of the test.
-            fiber.Enqueue(() => tcs.SetResult(true));
+            await tcs.Task.ConfigureAwait(false);
+            Thread.Sleep(20);
+            Assert.AreEqual(11, counter.Value);
         }
     }
 
