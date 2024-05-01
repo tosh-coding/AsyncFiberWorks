@@ -61,5 +61,33 @@ namespace AsyncFiberWorksTests
             await driver.Invoke();
             Assert.AreEqual(301, counter);
         }
+
+        [Test]
+        public async Task AsyncInvokingWithArgument()
+        {
+            var driver = new AsyncActionDriver<int>();
+
+            long counter = 0;
+
+            Func<int, Task> action1 = async (value) =>
+            {
+                await Task.Delay(100).ConfigureAwait(false);
+                counter += value;
+            };
+
+            Func<int, Task> action2 = async (value) =>
+            {
+                await Task.Yield();
+                counter += value / 10;
+            };
+
+            var disposable1 = driver.Subscribe(action1);
+            var disposable2 = driver.Subscribe(action2);
+
+            await driver.Invoke(200);
+            Assert.AreEqual(200 + 20, counter);
+            await driver.Invoke(10);
+            Assert.AreEqual(200 + 20 + 10 + 1, counter);
+        }
     }
 }
