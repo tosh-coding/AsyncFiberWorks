@@ -116,7 +116,7 @@ ThreadFiber does not support pause. It is specifically intended for performance-
  * _[ThreadPoolAdaptorFromQueueForThread](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Core/ThreadPoolAdaptorFromQueueForThread.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
 
 ## Channels ##
-A channel is a messaging mechanism that abstracts the communication destination.  Fibers act as actors.
+A channel is a messaging mechanism that abstracts the communication destination.  Fibers act as actors. Arrival messages are processed in parallel for each fiber.
 
  * _[Channel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/Channel.cs)_ - Forward published messages to all subscribers.  One-way.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ChannelTests.cs#L18).
 
@@ -130,7 +130,7 @@ Channel functionality has not changed much from the original Retlang design conc
 (Quote from [Retlang page](https://code.google.com/archive/p/retlang/). Broken links were replaced.)
 
 ## Drivers ##
-Drivers provide the timing of execution. It provides methods for invoking and subscribing to actions.
+Drivers provide the timing of execution. It provides methods for invoking and subscribing to actions. Execution is done serially.
 
  * _[ActionDriver](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/ActionDriver.cs)_ - Execute registered actions in bulk. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ActionDriverTests.cs#L12).
  * _[AsyncActionDriver](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/AsyncActionDriver.cs)_ - Executes registered asynchronous tasks in bulk. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ActionDriverTests.cs#L38).
