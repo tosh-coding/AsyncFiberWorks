@@ -1,5 +1,6 @@
 using AsyncFiberWorks.Core;
 using System;
+using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -20,6 +21,20 @@ namespace AsyncFiberWorks.Channels
         public IDisposable Subscribe(IExecutionContext executionContext, Action<T> receive)
         {
             return this._channel.AddHandler((msg) => executionContext.Enqueue(() => receive(msg)));
+        }
+
+        /// <summary>
+        /// Subscribe a channel.
+        /// </summary>
+        /// <param name="executionContext">The execution context of the message receive handler.</param>
+        /// <param name="receive">Subscriber.</param>
+        /// <returns>Unsubscriber.</returns>
+        public IDisposable Subscribe(IAsyncExecutionContext executionContext, Func<T, Task<Action>> receive)
+        {
+            return this._channel.AddHandler((msg) =>
+            {
+                executionContext.Enqueue(() => receive.Invoke(msg));
+            });
         }
 
         /// <summary>

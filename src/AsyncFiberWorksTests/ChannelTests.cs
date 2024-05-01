@@ -6,6 +6,7 @@ using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AsyncFiberWorksTests
 {
@@ -131,7 +132,39 @@ namespace AsyncFiberWorksTests
             }
         }
 
+        [Test]
+        public void AsyncHandler()
+        {
+            var channel = new Channel<int>();
 
+            int multiCount = 5;
+            var nodeList = CreateNodeList<int>(multiCount);
+
+            foreach (var node in nodeList)
+            {
+                channel.Subscribe(node.Fiber, async (msg) =>
+                {
+                    if (msg > 0)
+                    {
+                        await Task.Delay(msg).ConfigureAwait(false);
+                    }
+                    node.ReceivedMessages.Add(msg);
+                    return () => { };
+                });
+            }
+
+            channel.Publish(20);
+            channel.Publish(0);
+
+            Thread.Sleep(50);
+
+            foreach (var node in nodeList)
+            {
+                Assert.AreEqual(node.ReceivedMessages.Count, 2);
+                Assert.AreEqual(20, node.ReceivedMessages[0]);
+                Assert.AreEqual(0, node.ReceivedMessages[1]);
+            }
+        }
     }
 
     class Node<T>
