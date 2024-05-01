@@ -113,7 +113,7 @@ namespace AsyncFiberWorksTests
     {
         public List<Exception> failed = new List<Exception>();
 
-        public void Execute(List<Action> toExecute)
+        public void Execute(IReadOnlyList<Action> toExecute)
         {
             foreach (var action in toExecute)
             {

@@ -1,3 +1,4 @@
+using AsyncFiberWorks.Core;
 using System;
 
 namespace AsyncFiberWorks.Procedures
@@ -5,10 +6,19 @@ namespace AsyncFiberWorks.Procedures
     /// <summary>
     /// Default driver implementation. Invokes all of the subscriber's actions.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     public class ActionDriver : IActionDriver
     {
         private readonly ActionList _actions = new ActionList();
+        private readonly IExecutorSingle _executor;
+
+        /// <summary>
+        /// Create a driver.
+        /// </summary>
+        /// <param name="executor"></param>
+        public ActionDriver(IExecutorSingle executor = default)
+        {
+            _executor = executor;
+        }
 
         /// <summary>
         /// Subscribe a channel.
@@ -17,7 +27,17 @@ namespace AsyncFiberWorks.Procedures
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(Action action)
         {
-            return _actions.AddHandler(action);
+            if (_executor != null)
+            {
+                return _actions.AddHandler(() =>
+                {
+                    _executor.Execute(action);
+                });
+            }
+            else
+            {
+                return _actions.AddHandler(action);
+            }
         }
 
         /// <summary>

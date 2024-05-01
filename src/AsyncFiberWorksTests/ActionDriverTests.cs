@@ -1,4 +1,5 @@
-﻿using AsyncFiberWorks.Procedures;
+﻿using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Procedures;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
@@ -88,6 +89,27 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(200 + 20, counter);
             await driver.Invoke(10);
             Assert.AreEqual(200 + 20 + 10 + 1, counter);
+        }
+
+        [Test]
+        public void InvokingWithDefaultExecutorSingle()
+        {
+            var executor = new DefaultExecutorSingle();
+            var driver = new ActionDriver(executor);
+
+            long counter = 0;
+
+            Action action = () =>
+            {
+                counter += 1;
+                executor.IsEnabled = false;
+            };
+
+            var disposable1 = driver.Subscribe(action);
+            var disposable2 = driver.Subscribe(action);
+
+            driver.Invoke();
+            Assert.AreEqual(1, counter);
         }
     }
 }
