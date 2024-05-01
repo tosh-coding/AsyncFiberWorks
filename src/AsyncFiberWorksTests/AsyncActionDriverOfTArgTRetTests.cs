@@ -9,10 +9,10 @@ using System;
 namespace AsyncFiberWorksTests
 {
     [TestFixture]
-    public class AcknowledgementChannelTests
+    public class AsyncActionDriverOfTArgTRetTests
     {
         [Test]
-        public async Task DefaultAck()
+        public async Task DefaultOrder()
         {
             var channel = new AsyncActionDriver<int, bool>(new DefaultAsyncExecutorOfTArgTRet<int>());
 
@@ -46,7 +46,7 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task ReverseOrderAck()
+        public async Task ReverseOrder()
         {
             var channel = new AsyncActionDriver<int, bool>(new ReverseOrderAsyncExecutorOfTArgTRet<int>());
 
@@ -80,7 +80,7 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task DiscontinuedDuringPublishing()
+        public async Task DiscontinuedDuringInvoking()
         {
             var channel = new AsyncActionDriver<int, bool>(new DefaultAsyncExecutorOfTArgTRet<int>());
 
