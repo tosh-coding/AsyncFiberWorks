@@ -116,11 +116,10 @@ ThreadFiber does not support pause. It is specifically intended for performance-
  * _[ThreadPoolAdaptorFromQueueForThread](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Core/ThreadPoolAdaptorFromQueueForThread.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
 
 ## Channels ##
-A channel is a messaging mechanism that abstracts the communication destination.  Used for 1:1 unicasting, 1:N broadcasting and N:1 message aggregation.
+A channel is a messaging mechanism that abstracts the communication destination.  Fibers act as actors.
 
  * _[Channel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/Channel.cs)_ - Forward published messages to all subscribers.  One-way.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ChannelTests.cs#L18).
- * _[AcknowledgementChannel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/AcknowledgementChannel.cs)_ - Forward and acknowledge the published message to all or some of the subscribers.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/AcknowledgementChannelTests.cs#L17).
-
+ 
 ### Design concept ###
 Channel functionality has not changed much from the original Retlang design concept. The following explanation is quoted from Retlang.
 
@@ -129,3 +128,12 @@ Channel functionality has not changed much from the original Retlang design conc
 > The library is intended for use in [message based concurrency](http://en.wikipedia.org/wiki/Message_passing) similar to [event based actors in Scala](http://lampwww.epfl.ch/~phaller/doc/haller07actorsunify.pdf).  The library does not provide remote messaging capabilities. It is designed specifically for high performance in-memory messaging.
 
 (Quote from [Retlang page](https://code.google.com/archive/p/retlang/). Broken links were replaced.)
+
+## Drivers ##
+Drivers provide the timing of execution. It provides methods for invoking and subscribing to actions.
+
+ * _[ActionDriver](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/ActionDriver.cs)_ - Execute registered actions in bulk. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ActionDriverTests.cs#L12).
+ * _[AsyncActionDriver](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/AsyncActionDriver.cs)_ - Executes registered asynchronous tasks in bulk. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ActionDriverTests.cs#L38).
+ * _[AsyncActionDriver{T}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/AsyncActionDriver.cs)_ - Executes registered asynchronous tasks in bulk.  Arguments can be specified.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ActionDriverTests.cs#L66).
+ * _[AsyncActionDriver{TArg, TRet}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/AsyncActionDriverOfTArgTRet.cs)_ - Executes registered asynchronous tasks in bulk.  Arguments and return values can be specified.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/AsyncActionDriverOfTArgTRetTests.cs).
+ 
