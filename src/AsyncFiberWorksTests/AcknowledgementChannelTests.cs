@@ -14,7 +14,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task DefaultAck()
         {
-            var channel = new AcknowledgementChannel<int, bool>();
+            var channel = new AsyncActionDriver<int, bool>(new DefaultAsyncExecutorOfTArgTRet<int>());
 
             long counter = 0;
 
@@ -40,8 +40,7 @@ namespace AsyncFiberWorksTests
             var disposable1 = channel.Subscribe(receiverFunc1);
             var disposable2 = channel.Subscribe(receiverFunc2);
 
-            var control = new DefaultAcknowledgementControl<int>();
-            await channel.Publish(123, control);
+            await channel.Invoke(123);
             Thread.Sleep(50);
             Assert.AreEqual(301, counter);
         }
@@ -49,7 +48,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task ReverseOrderAck()
         {
-            var channel = new AcknowledgementChannel<int, bool>();
+            var channel = new AsyncActionDriver<int, bool>(new ReverseOrderAsyncExecutorOfTArgTRet<int>());
 
             long counter = 0;
 
@@ -75,8 +74,7 @@ namespace AsyncFiberWorksTests
             var disposable1 = channel.Subscribe(receiverFunc1);
             var disposable2 = channel.Subscribe(receiverFunc2);
 
-            var control = new ReverseOrderAcknowledgementControl<int>();
-            await channel.Publish(123, control).ConfigureAwait(false);
+            await channel.Invoke(123).ConfigureAwait(false);
             Thread.Sleep(50);
             Assert.AreEqual(300, counter);
         }
@@ -84,7 +82,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task DiscontinuedDuringPublishing()
         {
-            var channel = new AcknowledgementChannel<int, bool>();
+            var channel = new AsyncActionDriver<int, bool>(new DefaultAsyncExecutorOfTArgTRet<int>());
 
             long counter = 0;
 
@@ -103,8 +101,7 @@ namespace AsyncFiberWorksTests
             var disposable1 = channel.Subscribe(receiverFunc1);
             var disposable2 = channel.Subscribe(receiverFunc2);
 
-            var control = new DefaultAcknowledgementControl<int>();
-            await channel.Publish(123, control);
+            await channel.Invoke(123);
             Thread.Sleep(50);
             Assert.AreEqual(300, counter);
         }

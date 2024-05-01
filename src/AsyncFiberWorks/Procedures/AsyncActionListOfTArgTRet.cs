@@ -6,23 +6,23 @@ using AsyncFiberWorks.Channels;
 namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
-    /// List of message handlers with acknowledgement.
+    /// List of actions.
     /// </summary>
-    /// <typeparam name="TMessage"></typeparam>
-    /// <typeparam name="TAck"></typeparam>
-    internal sealed class AcknowledgementMessageHandlerList<TMessage, TAck>
+    /// <typeparam name="TArg">Type of argument.</typeparam>
+    /// <typeparam name="TRet">Type of return value.</typeparam>
+    internal sealed class AsyncActionList<TArg, TRet>
     {
         private object _lock = new object();
-        private LinkedList<Func<TMessage, Task<TAck>>> _handlers = new LinkedList<Func<TMessage, Task<TAck>>>();
-        private List<Func<TMessage, Task<TAck>>> _copied = new List<Func<TMessage, Task<TAck>>>();
+        private LinkedList<Func<TArg, Task<TRet>>> _handlers = new LinkedList<Func<TArg, Task<TRet>>>();
+        private List<Func<TArg, Task<TRet>>> _copied = new List<Func<TArg, Task<TRet>>>();
         private bool _publishing;
 
         /// <summary>
-        /// Add a message handler.
+        /// Add an action.
         /// </summary>
-        /// <param name="action">A message handler.</param>
-        /// <returns>Function for removing the handler.</returns>
-        public IDisposable AddHandler(Func<TMessage, Task<TAck>> action)
+        /// <param name="action">An action.</param>
+        /// <returns>Function for removing the action.</returns>
+        public IDisposable AddHandler(Func<TArg, Task<TRet>> action)
         {
             lock (_lock)
             {
@@ -41,12 +41,12 @@ namespace AsyncFiberWorks.Procedures
         }
 
         /// <summary>
-        /// Send a message to receive handlers.
+        /// Invoke all actions.
         /// </summary>
-        /// <param name="msg">The message to send.</param>
-        /// <param name="control">Publishing controller.</param>
-        /// <returns>A task that waits for IAcknowledgeControl.OnPublish to complete.</returns>
-        public async Task Publish(TMessage msg, IAcknowledgementControl<TMessage, TAck> control)
+        /// <param name="arg">An argument.</param>
+        /// <param name="executor"></param>
+        /// <returns>A task that waits for actions to be performed.</returns>
+        public async Task Invoke(TArg arg, IAsyncExecutor<TArg, TRet> executor)
         {
             lock (_lock)
             {
@@ -60,7 +60,7 @@ namespace AsyncFiberWorks.Procedures
             }
             try
             {
-                await control.OnPublish(msg, _copied).ConfigureAwait(false);
+                await executor.Execute(arg, _copied).ConfigureAwait(false);
             }
             finally
             {
