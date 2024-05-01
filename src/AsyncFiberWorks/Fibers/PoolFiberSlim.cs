@@ -132,7 +132,10 @@ namespace AsyncFiberWorks.Fibers
             {
                 if (_flushPaused || (!_flushPending))
                 {
-                    action?.Invoke();
+                    if (action != null)
+                    {
+                        _executor.Execute(action);
+                    }
                     _paused = false;
                     _flushPaused = false;
                     _resuming = false;
