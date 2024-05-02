@@ -129,7 +129,7 @@ namespace AsyncFiberWorks.Threading
         {
             if (_actions.Count > 0)
             {
-                Lists.Swap(ref _actions, ref _toPass);
+                ListUtil.Swap(ref _actions, ref _toPass);
                 _actions.Clear();
                 return _toPass;
             }

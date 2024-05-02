@@ -122,7 +122,7 @@ namespace AsyncFiberWorks.Fibers
                     _flushPending = false;
                     return null;
                 }
-                Queues.Swap(ref _queue, ref _toPass);
+                QueueUtil.Swap(ref _queue, ref _toPass);
                 return _toPass;
             }
         }

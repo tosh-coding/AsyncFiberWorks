@@ -74,7 +74,7 @@ namespace AsyncFiberWorks.Threading
             {
                 if (ReadyToDequeue())
                 {
-                    Lists.Swap(ref _actions, ref _toPass);
+                    ListUtil.Swap(ref _actions, ref _toPass);
                     _actions.Clear();
                     return _toPass;
                 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace AsyncFiberWorks.Core
 {
-    internal static class Lists
+    internal static class ListUtil
     {
         public static void Swap(ref List<Action> a, ref List<Action> b)
         {
