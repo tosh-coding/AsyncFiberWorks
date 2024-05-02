@@ -12,7 +12,7 @@ namespace AsyncFiberWorks.Fibers
     /// </summary>
     public class ThreadFiber : IThreadFiber
     {
-        private readonly IConsumerThread _queue;
+        private readonly IDedicatedConsumerThread _queue;
         private readonly UserWorkerThread _workerThread;
         private readonly Subscriptions _subscriptions = new Subscriptions();
         private bool _stopped = false;

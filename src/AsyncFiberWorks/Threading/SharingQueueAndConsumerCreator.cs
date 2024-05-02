@@ -54,7 +54,7 @@ namespace AsyncFiberWorks.Threading
         /// <summary>
         /// The created queue.
         /// </summary>
-        public IConsumerThread Queue { get { return _queue; } }
+        public SharingQueue Queue { get { return _queue; } }
 
         /// <summary>
         /// Created consumers.

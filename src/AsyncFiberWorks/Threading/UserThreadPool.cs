@@ -13,7 +13,7 @@ namespace AsyncFiberWorks.Threading
     {
         private static int POOL_COUNT = 0;
         private readonly string _poolName;
-        private readonly IConsumerThread _queuingContext;
+        private readonly SharingQueueAndConsumerCreator _queuingContext;
         private UserWorkerThread[] _threadList = null;
         private long _executionStateLong;
 
@@ -22,21 +22,24 @@ namespace AsyncFiberWorks.Threading
         /// </summary>
         public static UserThreadPool Create(int numberOfThread = 1, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
-            var creator = new SharingQueueAndConsumerCreator(numberOfThread);
-            return new UserThreadPool(creator.Queue, creator.Consumers, poolName, isBackground, priority);
+            return new UserThreadPool(numberOfThread, poolName, isBackground, priority);
         }
 
         /// <summary>
         /// Create a thread pool.
         /// </summary>
-        /// <param name="queuingContext"></param>
-        /// <param name="consumers"></param>
+        /// <param name="numberOfThread"></param>
         /// <param name="poolName"></param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentOutOfRangeException">The numberOfThread must be at least 1.</exception>
-        public UserThreadPool(IConsumerThread queuingContext, IEnumerable<IThreadWork> consumers, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public UserThreadPool(int numberOfThread = 1, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
+            var creator = new SharingQueueAndConsumerCreator(numberOfThread);
+            var queuingContext = creator.Queue;
+            var consumers = creator.Consumers;
+
             if (queuingContext == null)
             {
                 throw new ArgumentNullException(nameof(queuingContext));
@@ -57,7 +60,7 @@ namespace AsyncFiberWorks.Threading
                 poolName = "UserThreadPool" + GetNextPoolId();
             }
             _poolName = poolName;
-            _queuingContext = queuingContext;
+            _queuingContext = creator;
             ExecutionState = ExecutionStateEnum.Created;
 
             _threadList = new UserWorkerThread[consumersArray.Length];
@@ -126,7 +129,7 @@ namespace AsyncFiberWorks.Threading
         /// <param name="action"></param>
         public void Enqueue(Action action)
         {
-            _queuingContext.Enqueue(action);
+            _queuingContext.Queue.Enqueue(action);
         }
 
         /// <summary>

@@ -6,7 +6,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Queue shared by multiple consumers.
     /// </summary>
-    internal class SharingQueue : IConsumerThread
+    public class SharingQueue
     {
         private readonly BlockingCollection<Action> _actions;
 
@@ -20,8 +20,9 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
-        /// <see cref="IConsumerThread.Enqueue(Action)"/>
+        /// Enqueue an action.
         /// </summary>
+        /// <param name="action"></param>
         public void Enqueue(Action action)
         {
             _actions.Add(action);
