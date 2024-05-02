@@ -1,6 +1,6 @@
 # AsyncFiberWorks documents
 
-AsyncFiberWorks is a fiber-based C# threading library. Forked from Retlang. A new feature is the ability to switch the fiber in use within an async method.
+C# threading library with async/await friendly fiber.
 
 - [Introduction](docs/intro.md)
 - [Api Documentation](api/index.md)
