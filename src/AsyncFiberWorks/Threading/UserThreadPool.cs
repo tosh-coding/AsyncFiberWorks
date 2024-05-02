@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +10,9 @@ namespace AsyncFiberWorks.Threading
     /// </summary>
     public class UserThreadPool : IThreadPool, IDisposable
     {
-        private static int POOL_COUNT = 0;
+        private static readonly object _staticLockObj = new object();
+        private static int _staticPoolCounter = 0;
+
         private readonly string _poolName;
         private readonly IDedicatedConsumerThreadPool _queue;
         private UserWorkerThread[] _threadList = null;
@@ -23,40 +24,6 @@ namespace AsyncFiberWorks.Threading
         public static UserThreadPool Create(int numberOfThread = 1, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
             return new UserThreadPool(numberOfThread, poolName, isBackground, priority);
-        }
-
-        /// <summary>
-        /// Create a thread pool.
-        /// </summary>
-        /// <param name="numberOfThread"></param>
-        /// <param name="poolName"></param>
-        /// <param name="isBackground"></param>
-        /// <param name="priority"></param>
-        /// <exception cref="ArgumentOutOfRangeException">The numberOfThread must be at least 1.</exception>
-        public UserThreadPool(int numberOfThread = 1, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
-        {
-            if (numberOfThread < 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(numberOfThread));
-            }
-            if (poolName == null)
-            {
-                poolName = "UserThreadPool" + GetNextPoolId();
-            }
-
-            var queue = new SharedBlockingCollectionQueue(numberOfThread);
-            _poolName = poolName;
-            _queue = queue;
-            ExecutionState = ExecutionStateEnum.Created;
-
-            var works = queue.Works;
-            _threadList = new UserWorkerThread[works.Length];
-            for (int i = 0; i < _threadList.Length; i++)
-            {
-                string threadName = poolName + "-" + i;
-                var th = new UserWorkerThread(works[i], threadName, isBackground, priority);
-                _threadList[i] = th;
-            }
         }
 
         /// <summary>
@@ -72,6 +39,52 @@ namespace AsyncFiberWorks.Threading
             var pool = UserThreadPool.Create(numberOfThread, poolName, isBackground, priority);
             pool.Start();
             return pool;
+        }
+
+        /// <summary>
+        /// Create a thread pool.
+        /// </summary>
+        /// <param name="queueAndWork"></param>
+        /// <param name="poolName"></param>
+        /// <param name="isBackground"></param>
+        /// <param name="priority"></param>
+        /// <exception cref="ArgumentOutOfRangeException">The numberOfThread must be at least 1.</exception>
+        public UserThreadPool(IDedicatedConsumerThreadPool queueAndWork, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        {
+            if (queueAndWork == null)
+            {
+                throw new ArgumentNullException(nameof(queueAndWork));
+            }
+            if (poolName == null)
+            {
+                poolName = "UserThreadPool" + GetNextPoolId();
+            }
+
+            _poolName = poolName;
+            _queue = queueAndWork;
+            ExecutionState = ExecutionStateEnum.Created;
+
+            var works = queueAndWork.Works;
+            _threadList = new UserWorkerThread[works.Length];
+            for (int i = 0; i < _threadList.Length; i++)
+            {
+                string threadName = $"{poolName}-{i}";
+                var th = new UserWorkerThread(works[i], threadName, isBackground, priority);
+                _threadList[i] = th;
+            }
+        }
+
+        /// <summary>
+        /// Create a thread pool.
+        /// </summary>
+        /// <param name="numberOfThread"></param>
+        /// <param name="poolName"></param>
+        /// <param name="isBackground"></param>
+        /// <param name="priority"></param>
+        /// <exception cref="ArgumentOutOfRangeException">The numberOfThread must be at least 1.</exception>
+        public UserThreadPool(int numberOfThread = 1, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+            : this(new SharedBlockingCollectionQueue(numberOfThread), poolName, isBackground, priority)
+        {
         }
 
         /// <summary>
@@ -98,7 +111,11 @@ namespace AsyncFiberWorks.Threading
 
         private static int GetNextPoolId()
         {
-            return Interlocked.Increment(ref POOL_COUNT);
+            lock (_staticLockObj)
+            {
+                _staticPoolCounter += 1;
+                return _staticPoolCounter;
+            }
         }
 
         /// <summary>
