@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.Threading
 {
     /// <summary>
     /// Adapter from IQueueForThread to IThreadPool.

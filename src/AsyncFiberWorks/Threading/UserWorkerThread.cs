@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.Threading
 {
     /// <summary>
     /// A thread pool implementation with only one worker thread.

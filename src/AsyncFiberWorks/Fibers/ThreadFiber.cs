@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Threading;
 
 namespace AsyncFiberWorks.Fibers
 {

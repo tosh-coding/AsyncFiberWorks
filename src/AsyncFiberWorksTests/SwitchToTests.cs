@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Threading;
 
 namespace AsyncFiberWorksTests
 {

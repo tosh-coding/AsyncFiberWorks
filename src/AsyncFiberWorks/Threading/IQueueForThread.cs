@@ -1,6 +1,6 @@
 using System;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.Threading
 {
     /// <summary>
     /// Holds on to actions until the execution context can process them.

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.Threading
 {
     /// <summary>
     /// Consumer sharing one queue.

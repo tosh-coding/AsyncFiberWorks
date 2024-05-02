@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Windows.Threading;
-using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Threading;
 
 namespace WpfExample
 {

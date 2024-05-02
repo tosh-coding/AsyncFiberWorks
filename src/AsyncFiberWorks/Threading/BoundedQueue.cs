@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.Threading
 {
     /// <summary>
     /// Queue with bounded capacity.  Will throw exception if capacity does not recede prior to wait time.

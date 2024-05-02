@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using NUnit.Framework;
 using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Threading;
 using Rhino.Mocks;
 
 namespace AsyncFiberWorksTests

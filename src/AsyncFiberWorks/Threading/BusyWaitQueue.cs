@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.Threading
 {
     /// <summary>
     /// Busy waits on lock to execute.  Can improve performance in certain situations.
@@ -36,11 +37,11 @@ namespace AsyncFiberWorks.Core
         ///<summary>
         /// BusyWaitQueue with default executor.
         ///</summary>
-        public BusyWaitQueue(int spinsBeforeTimeCheck, int msBeforeBlockingWait) 
+        public BusyWaitQueue(int spinsBeforeTimeCheck, int msBeforeBlockingWait)
             : this(new DefaultExecutor(), spinsBeforeTimeCheck, msBeforeBlockingWait)
         {
         }
-        
+
         /// <summary>
         /// Enqueue action.
         /// </summary>
@@ -73,12 +74,12 @@ namespace AsyncFiberWorks.Core
                 Monitor.PulseAll(_lock);
             }
         }
-        
+
         private List<Action> DequeueAll()
         {
             var spins = 0;
             var stopwatch = Stopwatch.StartNew();
-            
+
             while (true)
             {
                 try

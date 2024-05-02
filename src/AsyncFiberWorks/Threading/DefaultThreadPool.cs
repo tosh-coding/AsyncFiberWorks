@@ -1,6 +1,7 @@
 using System.Threading;
+using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.Threading
 {
     /// <summary>
     /// Default implementation that uses the .NET thread pool.

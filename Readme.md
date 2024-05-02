@@ -7,6 +7,8 @@ The main thread can be handled via fiber.
 
 ```csharp
 using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Threading;
 
 namespace Sample
 {
@@ -23,30 +25,30 @@ namespace Sample
             // Run the adapter on the main thread. It does not return until Stop is called.
             mainThreadAdaptor.Run();
         }
-    }
 
-    async void RunAsync(ThreadPoolAdaptorFromQueueForThread mainThreadAdaptor)
-    {
-        await Task.Yield();
+        static async void RunAsync(ThreadPoolAdaptorFromQueueForThread mainThreadAdaptor)
+        {
+            await Task.Yield();
 
-        // Create a pool fiber backed the main thread.
-        var mainFiber = new PoolFiber(mainThreadAdaptor, new DefaultExecutor());
+            // Create a pool fiber backed the main thread.
+            var mainFiber = new PoolFiber(mainThreadAdaptor, new DefaultExecutor());
 
-        // Enqueue actions to the main thread via fiber.
-        int counter = 0;
-        mainFiber.Enqueue(() => counter += 1);
-        mainFiber.Enqueue(() => counter += 2);
+            // Enqueue actions to the main thread via fiber.
+            int counter = 0;
+            mainFiber.Enqueue(() => counter += 1);
+            mainFiber.Enqueue(() => counter += 2);
 
-        // Switch the context to the main thread.
-        await mainFiber.SwitchTo();
-        counter += 3;
-        counter += 4;
+            // Switch the context to the main thread.
+            await mainFiber.SwitchTo();
+            counter += 3;
+            counter += 4;
 
-        // Switch the context to a .NET ThreadPool worker thread.
-        await Task.Yield();
+            // Switch the context to a .NET ThreadPool worker thread.
+            await Task.Yield();
 
-        // Stop the Run method on the main thread.
-        mainThreadAdaptor.Stop();
+            // Stop the Run method on the main thread.
+            mainThreadAdaptor.Stop();
+        }
     }
 }
 ```

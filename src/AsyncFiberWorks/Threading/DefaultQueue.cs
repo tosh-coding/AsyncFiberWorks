@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.Threading
 {
     /// <summary>
     /// Default implementation.
@@ -29,7 +30,7 @@ namespace AsyncFiberWorks.Core
         ///<summary>
         /// Default queue with default executor
         ///</summary>
-        public DefaultQueue() 
+        public DefaultQueue()
             : this(new DefaultExecutor())
         {
         }

@@ -7,6 +7,7 @@ using NUnit.Framework;
 using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Threading;
 
 namespace AsyncFiberWorksTests
 {
