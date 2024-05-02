@@ -34,7 +34,7 @@ namespace AsyncFiberWorks.Threading
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
         /// <exception cref="ArgumentOutOfRangeException">The numberOfThread must be at least 1.</exception>
-        public UserThreadPool(IQueueForThread queue, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public UserThreadPool(IDedicatedConsumerThread queue, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
             : this(queue, new IThreadWork[] { queue }, poolName, isBackground, priority)
         {
         }

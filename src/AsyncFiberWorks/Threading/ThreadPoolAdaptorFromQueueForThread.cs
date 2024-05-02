@@ -7,13 +7,13 @@ namespace AsyncFiberWorks.Threading
     /// </summary>
     public class ThreadPoolAdaptorFromQueueForThread : IThreadPool, IThreadWork
     {
-        private readonly IQueueForThread _queue;
+        private readonly IDedicatedConsumerThread _queue;
 
         /// <summary>
         /// Create a pseudo-thread pool with the specified queue.
         /// </summary>
         /// <param name="queue"></param>
-        public ThreadPoolAdaptorFromQueueForThread(IQueueForThread queue)
+        public ThreadPoolAdaptorFromQueueForThread(IDedicatedConsumerThread queue)
         {
             _queue = queue;
         }

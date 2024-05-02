@@ -29,7 +29,7 @@ namespace AsyncFiberWorks.Fibers
         /// Create a thread fiber with the specified queue.
         /// </summary>
         /// <param name="queue"></param>
-        public ThreadFiber(IQueueForThread queue)
+        public ThreadFiber(IDedicatedConsumerThread queue)
             : this(queue, null)
         {
         }
@@ -50,7 +50,7 @@ namespace AsyncFiberWorks.Fibers
         /// <param name="threadName"></param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
-        public ThreadFiber(IQueueForThread queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public ThreadFiber(IDedicatedConsumerThread queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
             _queue = queue;
             _workerThread = new UserWorkerThread(queue, threadName, isBackground, priority);

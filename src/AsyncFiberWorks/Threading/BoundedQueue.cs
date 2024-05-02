@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Queue with bounded capacity.  Will throw exception if capacity does not recede prior to wait time.
     /// </summary>
-    public class BoundedQueue : IQueueForThread
+    public class BoundedQueue : IDedicatedConsumerThread
     {
         private readonly object _lock = new object();
         private readonly IExecutor _executor;

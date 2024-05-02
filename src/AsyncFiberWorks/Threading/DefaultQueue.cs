@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Default implementation.
     /// </summary>
-    public class DefaultQueue : IQueueForThread
+    public class DefaultQueue : IDedicatedConsumerThread
     {
         private readonly object _lock = new object();
         private readonly IExecutor _executor;
