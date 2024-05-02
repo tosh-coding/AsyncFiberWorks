@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Consumer sharing one queue.
     /// </summary>
-    internal class SharingQueueConsumer : IThreadWork
+    internal class SharedBlockingCollectionQueueConsumer : IThreadWork
     {
         private readonly object _lock = new object();
         private readonly IExecutor _executor;
@@ -23,7 +23,7 @@ namespace AsyncFiberWorks.Threading
         /// <param name="actions"></param>
         /// <param name="executor"></param>
         /// <param name="callbackOnStop"></param>
-        public SharingQueueConsumer(BlockingCollection<Action> actions, IExecutor executor, Action callbackOnStop)
+        public SharedBlockingCollectionQueueConsumer(BlockingCollection<Action> actions, IExecutor executor, Action callbackOnStop)
         {
             _actions = actions;
             _executor = executor;

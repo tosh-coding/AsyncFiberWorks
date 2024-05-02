@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Threading
 {
     /// <summary>
-    /// Help create a queue and it's consumers.
+    /// Queue shared by multiple consumers.
     /// </summary>
-    public class SharingQueueAndConsumerCreator
+    public class SharedBlockingCollectionQueue : IDedicatedConsumerThreadPool
     {
         private readonly object _lock = new object();
         private readonly BlockingCollection<Action> _actions = new BlockingCollection<Action>();
-        private readonly SharingQueue _queue;
-        private readonly SharingQueueConsumer[] _consumerList;
+        private readonly SharedBlockingCollectionQueueConsumer[] _consumerList;
         private int _disposedConsumers;
 
         /// <summary>
@@ -20,7 +20,7 @@ namespace AsyncFiberWorks.Threading
         /// </summary>
         /// <param name="numberOfConsumers">Number of consumers.</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public SharingQueueAndConsumerCreator(int numberOfConsumers = 1)
+        public SharedBlockingCollectionQueue(int numberOfConsumers = 1)
         {
             if (numberOfConsumers < 1)
             {
@@ -28,11 +28,10 @@ namespace AsyncFiberWorks.Threading
             }
 
             _disposedConsumers = 0;
-            _queue = new SharingQueue(_actions);
-            _consumerList = new SharingQueueConsumer[numberOfConsumers];
+            _consumerList = new SharedBlockingCollectionQueueConsumer[numberOfConsumers];
             for (int i = 0; i < _consumerList.Length; i++)
             {
-                _consumerList[i] = new SharingQueueConsumer(_actions, new DefaultExecutor(), () =>
+                _consumerList[i] = new SharedBlockingCollectionQueueConsumer(_actions, new DefaultExecutor(), () =>
                 {
                     bool lastConsumer = false;
                     lock (_lock)
@@ -52,14 +51,27 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
-        /// The created queue.
+        /// Enqueue an action.
         /// </summary>
-        public SharingQueue Queue { get { return _queue; } }
+        /// <param name="action"></param>
+        public void Enqueue(Action action)
+        {
+            _actions.Add(action);
+        }
+
+        /// <summary>
+        /// Enqueue an action.
+        /// </summary>
+        /// <param name="action"></param>
+        public void Queue(WaitCallback callback)
+        {
+            Enqueue(() => callback(null));
+        }
 
         /// <summary>
         /// Created consumers.
         /// When all these consumers stop, the queue is disposed.
         /// </summary>
-        public IThreadWork[] Consumers { get { return _consumerList; } }
+        public IThreadWork[] Works { get { return _consumerList; } }
     }
 }
