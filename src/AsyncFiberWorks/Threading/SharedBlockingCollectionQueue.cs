@@ -31,7 +31,7 @@ namespace AsyncFiberWorks.Threading
             _consumerList = new SharedBlockingCollectionQueueConsumer[numberOfConsumers];
             for (int i = 0; i < _consumerList.Length; i++)
             {
-                _consumerList[i] = new SharedBlockingCollectionQueueConsumer(_actions, new DefaultExecutor(), () =>
+                _consumerList[i] = new SharedBlockingCollectionQueueConsumer(_actions, SimpleExecutor.Instance, () =>
                 {
                     bool lastConsumer = false;
                     lock (_lock)
