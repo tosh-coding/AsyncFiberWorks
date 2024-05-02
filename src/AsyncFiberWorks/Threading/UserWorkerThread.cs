@@ -1,34 +1,35 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Threading
 {
     /// <summary>
-    /// A thread pool implementation with only one worker thread.
+    /// A worker thread.
     /// </summary>
     public sealed class UserWorkerThread
     {
-        private static int THREAD_COUNT;
+        private static readonly object _staticLockObj = new object();
+        private static int _staticThreadCounter = 0;
+
         private readonly Thread _thread;
-        private readonly IConsumerQueueForThread _queue;
+        private readonly IConsumerQueueForThread _work;
         private readonly TaskCompletionSource<bool> _taskCompletionSource;
 
         /// <summary>
         /// Creates a worker thread.
         /// </summary>
-        /// <param name="queue"></param>
-        /// <param name="threadName"></param>
+        /// <param name="work">The work that the thread performs.</param>
+        /// <param name="threadName">Thread name. If null, auto naming.</param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
-        public UserWorkerThread(IConsumerQueueForThread queue, string threadName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public UserWorkerThread(IConsumerQueueForThread work, string threadName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
             if (threadName == null)
             {
-                threadName = "UserWorkerThread-" + GetNextThreadId();
+                threadName = CreateThreadName();
             }
 
-            _queue = queue;
+            _work = work;
             _thread = new Thread(RunThread);
             _thread.Name = threadName;
             _thread.IsBackground = isBackground;
@@ -44,16 +45,22 @@ namespace AsyncFiberWorks.Threading
             get { return _thread; }
         }
 
-        private static int GetNextThreadId()
+        private static string CreateThreadName()
         {
-            return Interlocked.Increment(ref THREAD_COUNT);
+            int count;
+            lock (_staticLockObj)
+            {
+                _staticThreadCounter += 1;
+                count = _staticThreadCounter;
+            }
+            return $"UserWorkerThread-{count}";
         }
 
         private void RunThread()
         {
             try
             {
-                _queue.Run();
+                _work.Run();
             }
             finally
             {
@@ -70,19 +77,20 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
+        /// Stop the thread.
+        /// Once a thread is stopped, it cannot be started again.
+        /// </summary>
+        public void Stop()
+        {
+            _work.Stop();
+        }
+
+        /// <summary>
         /// Returns a task waiting for thread termination.
         /// </summary>
         public Task Join()
         {
             return _taskCompletionSource.Task;
-        }
-
-        /// <summary>
-        /// Stop the thread.
-        /// </summary>
-        public void Stop()
-        {
-            _queue.Stop();
         }
     }
 }
