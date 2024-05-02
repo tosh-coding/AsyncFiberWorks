@@ -106,7 +106,7 @@ The following is a brief description of some typical functions.
 
 1. IThreadPool - Base layer. High-speed consumer loop.
 2. IExecutionContext - Second layer. Fiber. Guaranteed execution order.
-3. Context triggered by message subscription.
+3. Context triggered by event/message subscription.
 4. Context triggered by timing subscriptions.
 
 ### Context usage ###
@@ -125,13 +125,13 @@ executionContext.Enqueue(action);
 
 #### 3. Subscribe(...) ####
 ```csharp
-driver1.Subscribe(async () => {...});
-driver2.Subscribe(async (ev) => {...});
+driver1.Subscribe(async (ev) => {...});
+driver2.Subscribe(async () => {...});
 ```
 
-#### 4. WaitSetting() ####
+#### 4. Subscribe(...) via AsyncRegister ####
 ```csharp
-using var reg = new AsyncRegister<Event>(driver);
+using var reg = new AsyncRegister<SomeEvent>(driver3);
 while (...)
 {
     var ev = await reg.WaitSetting();
