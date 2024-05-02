@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Threading
@@ -6,7 +7,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// A worker thread.
     /// </summary>
-    public sealed class UserWorkerThread
+    public sealed class UserWorkerThread : IDisposable
     {
         private static readonly object _staticLockObj = new object();
         private static int _staticThreadCounter = 0;
@@ -83,6 +84,14 @@ namespace AsyncFiberWorks.Threading
         public void Stop()
         {
             _work.Stop();
+        }
+
+        /// <summary>
+        /// Stop the threads.
+        /// </summary>
+        public void Dispose()
+        {
+            Stop();
         }
 
         /// <summary>
