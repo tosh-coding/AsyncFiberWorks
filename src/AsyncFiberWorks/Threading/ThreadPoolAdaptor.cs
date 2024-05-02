@@ -3,25 +3,25 @@
 namespace AsyncFiberWorks.Threading
 {
     /// <summary>
-    /// Adapter from IQueueForThread to IThreadPool.
+    /// Wrapper that shows IDedicatedConsumerThread as an IThreadPool.
     /// </summary>
-    public class ThreadPoolAdaptorFromQueueForThread : IThreadPool, IThreadWork
+    public class ThreadPoolAdaptor : IDedicatedThreadPool
     {
         private readonly IDedicatedConsumerThread _queue;
 
         /// <summary>
-        /// Create a pseudo-thread pool with the specified queue.
+        /// Create an IThreadPool wrapper by the specified queue.
         /// </summary>
         /// <param name="queue"></param>
-        public ThreadPoolAdaptorFromQueueForThread(IDedicatedConsumerThread queue)
+        public ThreadPoolAdaptor(IDedicatedConsumerThread queue)
         {
             _queue = queue;
         }
 
         /// <summary>
-        /// Create a pseudo-thread pool with BlockingCollectionQueue.
+        /// Create an IThreadPool wrapper using some IDedicatedConsumerThread.
         /// </summary>
-        public ThreadPoolAdaptorFromQueueForThread()
+        public ThreadPoolAdaptor()
             : this(new BlockingCollectionQueue())
         {
         }
@@ -36,7 +36,8 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
-        /// Execute actions until stopped.
+        /// Start consumption. Continue until stopped.
+        /// Make the current thread available as an IThreadPool.
         /// </summary>
         public void Run()
         {
@@ -44,7 +45,7 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
-        /// Stop consuming the actions.
+        /// Stop consumption.
         /// </summary>
         public void Stop()
         {

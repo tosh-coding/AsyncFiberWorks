@@ -58,7 +58,7 @@ namespace AsyncFiberWorksTests
                 }
 
                 // Start requesting.
-                var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
+                var requesterThread = new ThreadPoolAdaptor();
                 var fiberRequest = new PoolFiber(requesterThread, new DefaultExecutor());
                 var receivedValues = new List<int>();
                 var timeoutTimerCancellation = new Unsubscriber();

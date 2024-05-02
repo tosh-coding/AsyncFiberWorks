@@ -51,7 +51,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void SwitchToFiberSlim()
         {
-            var mainThread = new ThreadPoolAdaptorFromQueueForThread();
+            var mainThread = new ThreadPoolAdaptor();
             var t = SwitchToFiberSlimAsync(mainThread);
             try
             {
@@ -63,7 +63,7 @@ namespace AsyncFiberWorksTests
             t.Wait();
         }
 
-        public async Task SwitchToFiberSlimAsync(ThreadPoolAdaptorFromQueueForThread mainThread)
+        public async Task SwitchToFiberSlimAsync(ThreadPoolAdaptor mainThread)
         {
             await Task.Yield();
 
@@ -146,7 +146,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void SwitchToFiber()
         {
-            var mainThread = new ThreadPoolAdaptorFromQueueForThread();
+            var mainThread = new ThreadPoolAdaptor();
             var t = SwitchToFiberAsync(mainThread);
             try
             {
@@ -158,7 +158,7 @@ namespace AsyncFiberWorksTests
             t.Wait();
         }
 
-        public async Task SwitchToFiberAsync(ThreadPoolAdaptorFromQueueForThread mainThread)
+        public async Task SwitchToFiberAsync(ThreadPoolAdaptor mainThread)
         {
             await Task.Yield();
 

@@ -29,7 +29,7 @@ namespace AsyncFiberWorksTests
 
             // Requester.
             {
-                var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
+                var requesterThread = new ThreadPoolAdaptor();
                 var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
 
                 requesterFiber.Pause();
@@ -77,7 +77,7 @@ namespace AsyncFiberWorksTests
 
             // Requester.
             {
-                var requesterThread = new ThreadPoolAdaptorFromQueueForThread();
+                var requesterThread = new ThreadPoolAdaptor();
                 var workFiber = new PoolFiber(requesterThread, new DefaultExecutor());
                 Action actionAssertFail = () => requesterThread.Queue((_) => Assert.Fail());
 
@@ -151,7 +151,7 @@ namespace AsyncFiberWorksTests
 
             // Requester.
             {
-                var mainThread = new ThreadPoolAdaptorFromQueueForThread();
+                var mainThread = new ThreadPoolAdaptor();
                 var mainFiber = new PoolFiber(mainThread, new DefaultExecutor());
 
                 var requests = new List<string>();

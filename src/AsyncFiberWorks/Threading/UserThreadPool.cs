@@ -29,19 +29,6 @@ namespace AsyncFiberWorks.Threading
         /// <summary>
         /// Create a thread pool.
         /// </summary>
-        /// <param name="queue"></param>
-        /// <param name="poolName"></param>
-        /// <param name="isBackground"></param>
-        /// <param name="priority"></param>
-        /// <exception cref="ArgumentOutOfRangeException">The numberOfThread must be at least 1.</exception>
-        public UserThreadPool(IDedicatedConsumerThread queue, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
-            : this(queue, new IThreadWork[] { queue }, poolName, isBackground, priority)
-        {
-        }
-
-        /// <summary>
-        /// Create a thread pool.
-        /// </summary>
         /// <param name="queuingContext"></param>
         /// <param name="consumers"></param>
         /// <param name="poolName"></param>
