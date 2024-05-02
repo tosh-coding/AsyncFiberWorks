@@ -8,13 +8,13 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Another thread pool implementation.
     /// </summary>
-    public class UserThreadPool : IThreadPool, IDisposable
+    public class UserThreadPool : IDedicatedThreadPool, IDisposable
     {
         private static readonly object _staticLockObj = new object();
         private static int _staticPoolCounter = 0;
 
         private readonly string _poolName;
-        private readonly IDedicatedConsumerThreadPool _queue;
+        private readonly IDedicatedConsumerThreadPoolWork _queue;
         private UserWorkerThread[] _threadList = null;
         private long _executionStateLong;
 
@@ -49,7 +49,7 @@ namespace AsyncFiberWorks.Threading
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
         /// <exception cref="ArgumentOutOfRangeException">The numberOfThread must be at least 1.</exception>
-        public UserThreadPool(IDedicatedConsumerThreadPool queueAndWork, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public UserThreadPool(IDedicatedConsumerThreadPoolWork queueAndWork, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
             if (queueAndWork == null)
             {

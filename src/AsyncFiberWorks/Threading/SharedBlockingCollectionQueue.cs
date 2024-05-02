@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Queue shared by multiple consumers.
     /// </summary>
-    public class SharedBlockingCollectionQueue : IDedicatedConsumerThreadPool
+    public class SharedBlockingCollectionQueue : IDedicatedConsumerThreadPoolWork
     {
         private readonly object _lock = new object();
         private readonly BlockingCollection<Action> _actions = new BlockingCollection<Action>();

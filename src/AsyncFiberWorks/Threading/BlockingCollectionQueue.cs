@@ -6,7 +6,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Queue for consumer threads. Internally using BlockingCollection class.
     /// </summary>
-    public class BlockingCollectionQueue : IDedicatedConsumerThread
+    public class BlockingCollectionQueue : IDedicatedConsumerThreadWork
     {
         private readonly object _lockObj = new object();
         private readonly BlockingCollection<Action> _queue = new BlockingCollection<Action>();

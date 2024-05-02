@@ -1,9 +1,9 @@
 ﻿namespace AsyncFiberWorks.Threading
 {
     /// <summary>
-    /// Provide "Add Action" and "Stop All Threads" operations for a thread pool.
+    /// Work to be performed by threads.
     /// </summary>
-    public interface IDedicatedConsumerThreadPool : IThreadPool
+    public interface IDedicatedConsumerThreadPoolWork : IThreadPool
     {
         /// <summary>
         /// Work list. The same number of worker threads are required.

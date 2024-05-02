@@ -12,7 +12,7 @@ namespace AsyncFiberWorks.Fibers
     /// </summary>
     public class ThreadFiber : IThreadFiber
     {
-        private readonly IDedicatedConsumerThread _queue;
+        private readonly IDedicatedConsumerThreadWork _queue;
         private readonly UserWorkerThread _workerThread;
         private readonly Subscriptions _subscriptions = new Subscriptions();
         private bool _stopped = false;
@@ -29,7 +29,7 @@ namespace AsyncFiberWorks.Fibers
         /// Create a thread fiber with the specified queue.
         /// </summary>
         /// <param name="queue"></param>
-        public ThreadFiber(IDedicatedConsumerThread queue)
+        public ThreadFiber(IDedicatedConsumerThreadWork queue)
             : this(queue, null)
         {
         }
@@ -50,7 +50,7 @@ namespace AsyncFiberWorks.Fibers
         /// <param name="threadName"></param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
-        public ThreadFiber(IDedicatedConsumerThread queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public ThreadFiber(IDedicatedConsumerThreadWork queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
             _queue = queue;
             _workerThread = new UserWorkerThread(queue, threadName, isBackground, priority);

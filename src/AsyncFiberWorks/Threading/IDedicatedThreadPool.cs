@@ -1,9 +1,9 @@
 ﻿namespace AsyncFiberWorks.Threading
 {
     /// <summary>
-    /// Provide "Add Action" and "Stop Threads" operations for a thread pool.
+    /// Thread pool that can be started and stopped.
     /// </summary>
-    public interface IDedicatedThreadPool : IThreadWork, IThreadPool
+    public interface IDedicatedThreadPool : IThreadPoolController, IThreadPool
     {
     }
 }
