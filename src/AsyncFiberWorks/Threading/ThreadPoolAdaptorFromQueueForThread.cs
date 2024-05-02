@@ -5,7 +5,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Adapter from IQueueForThread to IThreadPool.
     /// </summary>
-    public class ThreadPoolAdaptorFromQueueForThread : IThreadPool, IConsumerQueueForThread
+    public class ThreadPoolAdaptorFromQueueForThread : IThreadPool, IThreadWork
     {
         private readonly IQueueForThread _queue;
 

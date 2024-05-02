@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Consumer sharing one queue.
     /// </summary>
-    internal class SharingQueueConsumer : IConsumerQueueForThread
+    internal class SharingQueueConsumer : IThreadWork
     {
         private readonly object _lock = new object();
         private readonly IExecutor _executor;
@@ -31,7 +31,7 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
-        /// <see cref="IConsumerQueueForThread.Run"/>
+        /// <see cref="IThreadWork.Run"/>
         /// </summary>
         public void Run()
         {
@@ -39,7 +39,7 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
-        /// <see cref="IConsumerQueueForThread.Stop"/>
+        /// <see cref="IThreadWork.Stop"/>
         /// </summary>
         public void Stop()
         {

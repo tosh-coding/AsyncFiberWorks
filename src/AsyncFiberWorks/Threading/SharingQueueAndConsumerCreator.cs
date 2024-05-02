@@ -60,6 +60,6 @@ namespace AsyncFiberWorks.Threading
         /// Created consumers.
         /// When all these consumers stop, the queue is disposed.
         /// </summary>
-        public IConsumerQueueForThread[] Consumers { get { return _consumerList; } }
+        public IThreadWork[] Consumers { get { return _consumerList; } }
     }
 }

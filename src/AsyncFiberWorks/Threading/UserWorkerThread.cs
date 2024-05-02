@@ -12,7 +12,7 @@ namespace AsyncFiberWorks.Threading
         private static int _staticThreadCounter = 0;
 
         private readonly Thread _thread;
-        private readonly IConsumerQueueForThread _work;
+        private readonly IThreadWork _work;
         private readonly TaskCompletionSource<bool> _taskCompletionSource;
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace AsyncFiberWorks.Threading
         /// <param name="threadName">Thread name. If null, auto naming.</param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
-        public UserWorkerThread(IConsumerQueueForThread work, string threadName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public UserWorkerThread(IThreadWork work, string threadName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
             if (threadName == null)
             {
