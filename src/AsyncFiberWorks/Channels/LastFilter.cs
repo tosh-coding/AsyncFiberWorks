@@ -19,6 +19,7 @@ namespace AsyncFiberWorks.Channels
         private bool _flushPending;
         private T _pending;
         private IDisposable _timerAction;
+        private bool _disposed;
 
         /// <summary>
         /// New instance.
@@ -63,6 +64,12 @@ namespace AsyncFiberWorks.Channels
         {
             lock (_batchLock)
             {
+                if (_disposed)
+                {
+                    return;
+                }
+                _disposed = true;
+
                 if (_timerAction != null)
                 {
                     _timerAction.Dispose();
@@ -79,6 +86,10 @@ namespace AsyncFiberWorks.Channels
         {
             lock (_batchLock)
             {
+                if (_disposed)
+                {
+                    return;
+                }
                 if (!_flushPending)
                 {
                     _timerAction = OneshotTimerAction.StartNew(() => _batchFiber.Enqueue(Flush), _intervalInMs);
