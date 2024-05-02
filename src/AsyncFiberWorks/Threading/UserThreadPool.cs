@@ -13,7 +13,7 @@ namespace AsyncFiberWorks.Threading
     {
         private static int POOL_COUNT = 0;
         private readonly string _poolName;
-        private readonly IQueuingContextForThread _queuingContext;
+        private readonly IConsumerThread _queuingContext;
         private UserWorkerThread[] _threadList = null;
         private long _executionStateLong;
 
@@ -48,7 +48,7 @@ namespace AsyncFiberWorks.Threading
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
         /// <exception cref="ArgumentOutOfRangeException">The numberOfThread must be at least 1.</exception>
-        public UserThreadPool(IQueuingContextForThread queuingContext, IEnumerable<IThreadWork> consumers, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public UserThreadPool(IConsumerThread queuingContext, IEnumerable<IThreadWork> consumers, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
             if (queuingContext == null)
             {
