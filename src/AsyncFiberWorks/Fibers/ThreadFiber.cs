@@ -13,7 +13,7 @@ namespace AsyncFiberWorks.Fibers
     public class ThreadFiber : IThreadFiber
     {
         private readonly IQueuingContextForThread _queue;
-        private readonly IConsumerThread _workerThread;
+        private readonly UserWorkerThread _workerThread;
         private readonly Subscriptions _subscriptions = new Subscriptions();
         private bool _stopped = false;
 
@@ -60,7 +60,7 @@ namespace AsyncFiberWorks.Fibers
         /// Creates a thread fiber.
         /// </summary>
         /// <param name="consumerThread">A consumer thread.</param>
-        public ThreadFiber(IConsumerThread consumerThread)
+        public ThreadFiber(UserWorkerThread consumerThread)
         {
             _workerThread = consumerThread;
         }

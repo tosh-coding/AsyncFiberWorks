@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// A thread pool implementation with only one worker thread.
     /// </summary>
-    public sealed class UserWorkerThread : IConsumerThread
+    public sealed class UserWorkerThread
     {
         private static int THREAD_COUNT;
         private readonly Thread _thread;
