@@ -17,7 +17,7 @@ namespace Sample
         static void Main(string[] args)
         {
             // Create an adapter.
-            var mainThreadAdaptor = new ThreadPoolAdaptorFromQueueForThread();
+            var mainThreadAdaptor = new ThreadPoolAdaptor();
 
             // Starts an asynchronous operation. Pass the adapter.
             RunAsync(mainThreadAdaptor);
@@ -26,7 +26,7 @@ namespace Sample
             mainThreadAdaptor.Run();
         }
 
-        static async void RunAsync(ThreadPoolAdaptorFromQueueForThread mainThreadAdaptor)
+        static async void RunAsync(ThreadPoolAdaptor mainThreadAdaptor)
         {
             await Task.Yield();
 
@@ -113,9 +113,9 @@ PoolFiber and StubFiber are supports pausing and resuming task consumption. This
 ThreadFiber does not support pause. It is specifically intended for performance-critical uses, and pausing is not suitable for that purpose.  Use PoolFiber instead.
 
 ## ThreadPools ##
- * _[DefaultThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Core/DefaultThreadPool.cs)_ - Default implementation that uses the .NET thread pool.
- * _[UserThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Core/UserThreadPool.cs)_ - Another thread pool implementation, using the Thread class to create a thread pool.  If you need to use blocking functions, you should use the user thread pool. This does not disturb the .NET ThreadPool.
- * _[ThreadPoolAdaptorFromQueueForThread](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Core/ThreadPoolAdaptorFromQueueForThread.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
+ * _[DefaultThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/DefaultThreadPool.cs)_ - Default implementation that uses the .NET thread pool.
+ * _[UserThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/UserThreadPool.cs)_ - Another thread pool implementation, using the Thread class to create a thread pool.  If you need to use blocking functions, you should use the user thread pool. This does not disturb the .NET ThreadPool.
+ * _[ThreadPoolAdaptor](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/ThreadPoolAdaptor.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
 
 ## Channels ##
 A channel is a messaging mechanism that abstracts the communication destination.  Fibers act as actors. Arrival messages are processed in parallel for each fiber.
