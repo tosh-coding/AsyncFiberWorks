@@ -82,8 +82,8 @@ async Task SampleAsync()
 ```
 
 # Features #
-  * The main thread is available from Fibers.
   * Fiber with high affinity for asynchronous methods.
+  * The main thread is available from Fibers.
   * Ready-to-use user thread pool.
   * .NET Standard 2.0.3 compliant simple dependencies.
 
@@ -100,12 +100,59 @@ See https://tosh-coding.github.io/AsyncFiberWorks/api/
 
 The following is a brief description of some typical functions.
 
+## Hierarchical structure ##
+
+### Contexts ###
+
+1. IThreadPool - Base layer. High-speed consumer loop.
+2. IExecutionContext - Second layer. Fiber. Guaranteed execution order.
+3. Context triggered by message subscription.
+4. Context triggered by timing subscriptions.
+
+### Context usage ###
+
+#### 1. SwitchTo() ####
+```csharp
+await threadPool.SwitchTo();
+await executionContext.SwitchTo();
+```
+
+#### 2. Enqueue(Action) ####
+```csharp
+threadPool.Queue((_) => action());
+executionContext.Enqueue(action);
+```
+
+#### 3. Subscribe(...) ####
+```csharp
+driver1.Subscribe(async () => {...});
+driver2.Subscribe(async (ev) => {...});
+```
+
+#### 4. WaitSetting() ####
+```csharp
+using var reg = new AsyncRegister<Event>(driver);
+while (...)
+{
+    var ev = await reg.WaitSetting();
+    ...
+}
+```
+
+### Context generation method ###
+
+- Create `PoolFiber`. Most basic method.
+- Create `ThreadPoolAdaptor`. Allows the main thread to be used like a thread pool.
+- Create `UserThreadPool`. Suitable for handling blocking processes.
+- Create `AsyncActionDriver` and use it with a repeating timer, which works well with tick-based game loop implementations.
+- Create `AsyncActionDriver<T>` and use it for event distribution.
+
 ## Fibers ##
 Fiber is a mechanism for sequential processing.  Actions added to a fiber are executed sequentially.
 
   * _[PoolFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/PoolFiber.cs)_ - The most commonly used fiber.  Internally, the [.NET thread pool is used](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Core/DefaultThreadPool.cs#L21) by default, and a user thread pool is also available.
   * _[ThreadFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/ThreadFiber.cs)_ - This fiber generates and uses a dedicated thread internally.
-  * _[StubFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/StubFiber.cs)_ - Fiber without consumer thread. Buffered actions are not performed automatically and must be pumped manually.  This works well with tick-based game loop implementations.
+  * _[StubFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/StubFiber.cs)_ - Fiber without consumer thread. Buffered actions are not performed automatically and must be pumped manually.
 
 ### Pause fiber ###
 PoolFiber and StubFiber are supports pausing and resuming task consumption. This is useful when you want to stop consuming subsequent tasks until some asynchronous processing completes. It can be regarded as a synchronous process on that fiber.  See [unit test](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/FiberPauseResumeTests.cs#L51).
@@ -117,20 +164,6 @@ ThreadFiber does not support pause. It is specifically intended for performance-
  * _[UserThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/UserThreadPool.cs)_ - Another thread pool implementation, using the Thread class to create a thread pool.  If you need to use blocking functions, you should use the user thread pool. This does not disturb the .NET ThreadPool.
  * _[ThreadPoolAdaptor](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/ThreadPoolAdaptor.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
 
-## Channels ##
-A channel is a messaging mechanism that abstracts the communication destination.  Fibers act as actors. Arrival messages are processed in parallel for each fiber.
-
- * _[Channel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/Channel.cs)_ - Forward published messages to all subscribers.  One-way.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ChannelTests.cs#L18).
-
-### Design concept ###
-Channel functionality has not changed much from the original Retlang design concept. The following explanation is quoted from Retlang.
-
-> Message based concurrency in .NET
-> \[...\]
-> The library is intended for use in [message based concurrency](http://en.wikipedia.org/wiki/Message_passing) similar to [event based actors in Scala](http://lampwww.epfl.ch/~phaller/doc/haller07actorsunify.pdf).  The library does not provide remote messaging capabilities. It is designed specifically for high performance in-memory messaging.
-
-(Quote from [Retlang page](https://code.google.com/archive/p/retlang/). Broken links were replaced.)
-
 ## Drivers ##
 Drivers provide the timing of execution. It provides methods for invoking and subscribing to actions. Execution is done serially.
 
@@ -138,4 +171,19 @@ Drivers provide the timing of execution. It provides methods for invoking and su
  * _[AsyncActionDriver](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/AsyncActionDriver.cs)_ - Executes registered asynchronous tasks in bulk. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ActionDriverTests.cs#L38).
  * _[AsyncActionDriver{T}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/AsyncActionDriverOfT.cs)_ - Executes registered asynchronous tasks in bulk.  Arguments can be specified.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ActionDriverTests.cs#L66).
  * _[AsyncActionDriver{TArg, TRet}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/AsyncActionDriverOfTArgTRet.cs)_ - Executes registered asynchronous tasks in bulk.  Arguments and return values can be specified.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/AsyncActionDriverOfTArgTRetTests.cs).
- 
+
+## Channels ##
+This is a mechanism for parallel processing. If you do not need that much performance, `AsyncActionDriver{T}` is recommended because it is easier to handle.
+
+A channel is a messaging mechanism that abstracts the communication destination.  Fibers act as actors. Arrival messages are processed in parallel for each fiber. 
+
+ * _[Channel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/Channel.cs)_ - Forward published messages to all subscribers.  One-way.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ChannelTests.cs#L18).
+
+### Channel design concept ###
+The design concept of the channel has not changed much from its source, Retlang. The following description is taken from Retlang.
+
+> Message based concurrency in .NET
+> \[...\]
+> The library is intended for use in [message based concurrency](http://en.wikipedia.org/wiki/Message_passing) similar to [event based actors in Scala](http://lampwww.epfl.ch/~phaller/doc/haller07actorsunify.pdf).  The library does not provide remote messaging capabilities. It is designed specifically for high performance in-memory messaging.
+
+(Quote from [Retlang page](https://code.google.com/archive/p/retlang/). Broken links were replaced.)
