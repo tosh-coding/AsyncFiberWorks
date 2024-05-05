@@ -1,6 +1,8 @@
 ﻿using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using NUnit.Framework;
+using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorksTests
@@ -65,6 +67,70 @@ namespace AsyncFiberWorksTests
 
             await tcs.Task;
             Assert.AreEqual(120, counter);
+        }
+
+        [Test]
+        public async Task OneshotTimerTest()
+        {
+            var fiber = new ChainAsyncFiber();
+
+            int counter = 0;
+            var timer = fiber.Schedule(async () =>
+            {
+                await Task.Yield();
+                counter += 1;
+            }, 5);
+            Assert.AreEqual(0, counter);
+            await Task.Delay(20).ConfigureAwait(false);
+            Assert.AreEqual(1, counter);
+            timer.Dispose();
+        }
+
+        [Test]
+        public async Task OneshotTimerCancallationTest()
+        {
+            var fiber = new ChainAsyncFiber();
+
+            int counter = 0;
+            var timer = fiber.Schedule(async () =>
+            {
+                await Task.Yield();
+                counter += 1;
+            }, 50);
+            Assert.AreEqual(0, counter);
+            timer.Dispose();
+            await Task.Delay(100).ConfigureAwait(false);
+            Assert.AreEqual(0, counter);
+        }
+
+        [Test]
+        public async Task RepeatingTimer()
+        {
+            var fiber = new ChainAsyncFiber();
+
+            var sw = Stopwatch.StartNew();
+            int counter = 0;
+            var timer = fiber.ScheduleOnInterval(async () =>
+            {
+                await Task.Yield();
+                counter += 1;
+                Console.WriteLine($"cb{sw.Elapsed}");
+            }, 250, 500);
+            Console.WriteLine($"as{sw.Elapsed}");
+            Assert.AreEqual(0, counter);
+            await Task.Delay(500).ConfigureAwait(false);
+            Console.WriteLine($"as{sw.Elapsed}");
+            Assert.AreEqual(1, counter);
+            await Task.Delay(500).ConfigureAwait(false);
+            Console.WriteLine($"as{sw.Elapsed}");
+            Assert.AreEqual(2, counter);
+            await Task.Delay(500).ConfigureAwait(false);
+            Console.WriteLine($"as{sw.Elapsed}");
+            Assert.AreEqual(3, counter);
+            timer.Dispose();
+            await Task.Delay(500).ConfigureAwait(false);
+            Console.WriteLine($"as{sw.Elapsed}");
+            Assert.AreEqual(3, counter);
         }
     }
 }
