@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace AsyncFiberWorks.Channels
 {
@@ -82,6 +83,15 @@ namespace AsyncFiberWorks.Channels
             {
                 this.PrivateAdd(() => disposable.Dispose());
             }
+        }
+
+        /// <summary>
+        /// Append a cancellation handle. It will be cancelled in tandem.
+        /// </summary>
+        /// <param name="cancellation">A cancellation handle.</param>
+        public void Append(CancellationTokenSource cancellation)
+        {
+            this.PrivateAdd(() => cancellation.Cancel());
         }
 
         /// <summary>
