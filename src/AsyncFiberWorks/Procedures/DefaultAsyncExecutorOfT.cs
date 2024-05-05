@@ -15,7 +15,9 @@ namespace AsyncFiberWorks.Procedures
         /// <summary>
         /// Executes all actions.
         /// </summary>
+        /// <param name="arg"></param>
         /// <param name="actions"></param>
+        /// <returns></returns>
         public async Task Execute(T arg, IReadOnlyList<Func<T, Task>> actions)
         {
             foreach (var action in actions)

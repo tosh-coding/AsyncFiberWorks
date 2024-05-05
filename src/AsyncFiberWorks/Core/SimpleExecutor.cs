@@ -8,6 +8,10 @@ namespace AsyncFiberWorks.Core
     /// </summary>
     public class SimpleExecutor : IExecutor
     {
+        /// <summary>
+        /// Singleton instances.
+        /// SimpleExecutor has no members, so it can be shared.
+        /// </summary>
         public static readonly SimpleExecutor Instance = new SimpleExecutor();
 
         /// <summary>

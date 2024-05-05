@@ -62,7 +62,7 @@ namespace AsyncFiberWorks.Threading
         /// <summary>
         /// Enqueue an action.
         /// </summary>
-        /// <param name="action"></param>
+        /// <param name="callback"></param>
         public void Queue(WaitCallback callback)
         {
             Enqueue(() => callback(null));
