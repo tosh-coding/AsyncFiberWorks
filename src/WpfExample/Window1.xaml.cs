@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Threading;
 using AsyncFiberWorks.Channels;
+using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 
 namespace WpfExample
@@ -16,7 +18,8 @@ namespace WpfExample
         public Window1()
         {
             InitializeComponent();
-            fiber = new DispatcherFiber(Dispatcher);
+            var adapter = new DispatcherAdapter(Dispatcher, DispatcherPriority.Normal);
+            fiber = new PoolFiber(adapter, new DefaultExecutor());
 
             var subscriptionFiber = fiber.BeginSubscription();
 
