@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.Fibers
     /// Enqueue pending actions to the execution context.
     /// Subscription available for continued fiber use. All are cancelled when fiber is destroyed.
     /// </summary>
-    public interface IFiber : ISubscribableFiber, IDisposable, ISubscriptionRegistryViewing
+    public interface IFiber : ISubscribableFiber, IDisposable
     {
     }
 }

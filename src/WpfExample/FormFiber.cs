@@ -48,13 +48,6 @@ namespace WpfExample
         }
 
         /// <summary>
-        /// <see cref="ISubscriptionRegistryViewing.NumSubscriptions"/>
-        /// </summary>
-        public int NumSubscriptions
-        {
-            get { return _fiber.NumSubscriptions; }
-        }
-        /// <summary>
         /// Clears all subscriptions, scheduled.
         /// </summary>
         public void Dispose()

@@ -10,7 +10,7 @@ namespace AsyncFiberWorks.Fibers
     /// Consume them by periodically calling methods for execution.
     /// Periodically call a method for execution. They are executed on their calling thread.
     /// </summary>
-    public class StubFiber : IFiber
+    public class StubFiber : IFiber, ISubscriptionRegistryViewing
     {
         private readonly StubFiberSlim _stubFiberSlim;
         private readonly Subscriptions _subscriptions = new Subscriptions();
