@@ -13,15 +13,16 @@ namespace WpfExample
     public partial class Window1 : Window
     {
         private readonly WindowChannels channels = new WindowChannels();
-        private readonly IFiber fiber;
+        private readonly IAsyncExecutionContext fiber;
+        private readonly Subscriptions subscriptions = new Subscriptions();
 
         public Window1()
         {
             InitializeComponent();
             var adapter = new DispatcherAdapter(Dispatcher, DispatcherPriority.Normal);
-            fiber = new PoolFiber(adapter, new DefaultExecutor());
+            fiber = new PoolFiberSlim(adapter, new DefaultExecutor());
 
-            var subscriptionFiber = fiber.BeginSubscription();
+            var subscriptionFiber = subscriptions.BeginSubscription();
 
             var subscriber = new LastFilter<DateTime>(0, fiber, OnTimeUpdate);
             var subscriptionChannel = channels.TimeUpdate.Subscribe(fiber, subscriber.Receive);

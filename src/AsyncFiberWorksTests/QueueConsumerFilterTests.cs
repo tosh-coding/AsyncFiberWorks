@@ -15,10 +15,11 @@ namespace AsyncFiberWorksTests
         [Test]
         public void SingleConsumer()
         {
-            var one = new PoolFiber();
+            var subscriptions = new Subscriptions();
+            var one = new PoolFiberSlim();
             var oneConsumed = 0;
             var reset = new AutoResetEvent(false);
-            using (one)
+            using (subscriptions)
             {
                 var channel = new Channel<int>();
                 Action<int> onMsg = delegate
@@ -29,7 +30,7 @@ namespace AsyncFiberWorksTests
                         reset.Set();
                     }
                 };
-                var subscriptionFiber = one.BeginSubscription();
+                var subscriptionFiber = subscriptions.BeginSubscription();
                 var consumer = new QueueConsumerFilter<int>(one, onMsg);
                 var subscriptionChannel = channel.Subscribe(one, consumer.Receive);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
@@ -45,9 +46,10 @@ namespace AsyncFiberWorksTests
         public void SingleConsumerWithException()
         {
             var exec = new StubExecutor();
-            var one = new PoolFiber(new DefaultThreadPool(), exec);
+            var oneSubscriptions = new Subscriptions();
+            var one = new PoolFiberSlim(new DefaultThreadPool(), exec);
             var reset = new AutoResetEvent(false);
-            using (one)
+            using (oneSubscriptions)
             {
                 var channel = new Channel<int>();
                 Action<int> onMsg = delegate(int num)
@@ -58,7 +60,7 @@ namespace AsyncFiberWorksTests
                     }
                     reset.Set();
                 };
-                var subscriptionFiber = one.BeginSubscription();
+                var subscriptionFiber = oneSubscriptions.BeginSubscription();
                 var consumer = new QueueConsumerFilter<int>(one, onMsg);
                 var subscriptionChannel = channel.Subscribe(one, consumer.Receive);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
@@ -72,7 +74,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void Multiple()
         {
-            var queues = new List<IFiber>();
+            var queues = new List<IDisposable>();
             var receiveCount = 0;
             var reset = new AutoResetEvent(false);
             var channel = new Channel<int>();
@@ -93,9 +95,10 @@ namespace AsyncFiberWorksTests
                                                     }
                                                 }
                                             };
-                var fiber = new PoolFiber();
-                queues.Add(fiber);
-                var subscriptionFiber = fiber.BeginSubscription();
+                var subscriptions = new Subscriptions();
+                var fiber = new PoolFiberSlim();
+                queues.Add(subscriptions);
+                var subscriptionFiber = subscriptions.BeginSubscription();
 
                 var consumer = new QueueConsumerFilter<int>(fiber, onReceive);
                 var subscriptionChannel = channel.Subscribe(fiber, consumer.Receive);
@@ -106,7 +109,7 @@ namespace AsyncFiberWorksTests
                 channel.Publish(i);
             }
             Assert.IsTrue(reset.WaitOne(10000, false));
-            queues.ForEach(delegate(IFiber q) { q.Dispose(); });
+            queues.ForEach(delegate(IDisposable q) { q.Dispose(); });
         }
     }
 

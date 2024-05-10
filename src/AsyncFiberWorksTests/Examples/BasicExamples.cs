@@ -16,12 +16,13 @@ namespace AsyncFiberWorksTests.Examples
         public void PubSubWithPool()
         {
             //PoolFiber uses the .NET thread pool by default
-            using (var fiber = new PoolFiber())
+            using (var subscriptions = new Subscriptions())
             {
+                var fiber = new PoolFiberSlim();
                 var channel = new Channel<string>();
 
                 var reset = new AutoResetEvent(false);
-                var subscriptionFiber = fiber.BeginSubscription();
+                var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(fiber, delegate { reset.Set(); });
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish("hello");
@@ -151,12 +152,13 @@ namespace AsyncFiberWorksTests.Examples
         {
             // Thread for Assert.
             var testThread = new ThreadPoolAdaptor();
-            var testFiber = new PoolFiber(testThread, new DefaultExecutor());
+            var testFiber = new PoolFiberSlim(testThread, new DefaultExecutor());
 
-            using (var fiber = new PoolFiber())
+            using (var subscriptions = new Subscriptions())
             {
+                var fiber = new PoolFiberSlim();
                 var channel = new Channel<IRequest<string, string>>();
-                var subscriptionFiber = fiber.BeginSubscription();
+                var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(fiber, (req) => req.ReplyTo.Publish("bye"));
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
 
@@ -182,20 +184,21 @@ namespace AsyncFiberWorksTests.Examples
         [Test]
         public void ShouldIncreasePoolFiberSubscriberCountByOne()
         {
-            var fiber = new PoolFiber();
+            var subscriptions = new Subscriptions();
+            var fiber = new PoolFiberSlim();
             var channel = new Channel<int>();
 
-            Assert.AreEqual(0, fiber.NumSubscriptions);
+            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
-            var subscriptionFiber = fiber.BeginSubscription();
+            var subscriptionFiber = subscriptions.BeginSubscription();
             var subscriptionCHannel = channel.Subscribe(fiber, x => { });
             subscriptionFiber.AppendDisposable(subscriptionCHannel);
 
-            Assert.AreEqual(1, fiber.NumSubscriptions);
+            Assert.AreEqual(1, subscriptions.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
-            fiber.Dispose();
+            subscriptions.Dispose();
 
-            Assert.AreEqual(0, fiber.NumSubscriptions);
+            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
         }
 
@@ -243,21 +246,22 @@ namespace AsyncFiberWorksTests.Examples
         [Test]
         public void UnsubscriptionShouldRemoveSubscriber()
         {
-            var fiber = new PoolFiber();
+            var subscriptions = new Subscriptions();
+            var fiber = new PoolFiberSlim();
             var channel = new Channel<int>();
 
-            Assert.AreEqual(0, fiber.NumSubscriptions);
+            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
 
-            var subscriptionFiber = fiber.BeginSubscription();
+            var subscriptionFiber = subscriptions.BeginSubscription();
             var subscriptionChannel = channel.Subscribe(fiber, x => { });
             subscriptionFiber.AppendDisposable(subscriptionChannel);
 
-            Assert.AreEqual(1, fiber.NumSubscriptions);
+            Assert.AreEqual(1, subscriptions.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
             subscriptionFiber.Dispose();
 
-            Assert.AreEqual(0, fiber.NumSubscriptions);
+            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
         }
     }

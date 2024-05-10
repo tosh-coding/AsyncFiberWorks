@@ -14,8 +14,9 @@ namespace AsyncFiberWorksTests
         [Test]
         public void Snapshot()
         {
-            using (var fiberReply = new PoolFiber())
+            using (var fiberReplySubscriptions = new Subscriptions())
             {
+                var fiberReply = new PoolFiberSlim();
                 var updatesChannel = new Channel<int>();
                 var requestChannel = new Channel<IRequest<Channel<int>, IDisposable>>();
                 var lockerResponseValue = new object();
@@ -24,7 +25,7 @@ namespace AsyncFiberWorksTests
                 int currentValue = 0;
 
                 // Set up responder. 
-                var subscriptionFiber = fiberReply.BeginSubscription();
+                var subscriptionFiber = fiberReplySubscriptions.BeginSubscription();
                 var subscriptionChannel = requestChannel.Subscribe(fiberReply,
                     (request) =>
                     {
@@ -59,7 +60,7 @@ namespace AsyncFiberWorksTests
 
                 // Start requesting.
                 var requesterThread = new ThreadPoolAdaptor();
-                var fiberRequest = new PoolFiber(requesterThread, new DefaultExecutor());
+                var fiberRequest = new PoolFiberSlim(requesterThread, new DefaultExecutor());
                 var receivedValues = new List<int>();
                 var timeoutTimerCancellation = new Unsubscriber();
                 var receiveChannel = new Channel<int>();
