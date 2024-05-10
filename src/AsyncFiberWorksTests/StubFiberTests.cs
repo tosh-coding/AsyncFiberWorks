@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using AsyncFiberWorks.Channels;
+using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 
 namespace AsyncFiberWorksTests
@@ -13,7 +14,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void StubFiberPendingTasksShouldAllowEnqueueOfCommandsWhenExecutingAllPending()
         {
-            var sut = new StubFiber();
+            var sut = new StubFiberSlim();
 
             var fired1 = new object();
             var fired2 = new object();
@@ -39,13 +40,14 @@ namespace AsyncFiberWorksTests
         [Test]
         public void ScheduledTasksShouldBeExecutedOnceScheduleIntervalShouldBeExecutedEveryTimeExecuteScheduleAllIsCalled()
         {
-            var sut = new StubFiber();
+            var subscriptions = new Subscriptions();
+            var sut = new StubFiberSlim();
 
             var scheduleFired = 0;
             var scheduleOnIntervalFired = 0;
 
             var disposableTimer = sut.Schedule(() => scheduleFired++, 100);
-            var subscriptionFiber = sut.BeginSubscription();
+            var subscriptionFiber = subscriptions.BeginSubscription();
             var intervalSub = sut.ScheduleOnInterval(() => scheduleOnIntervalFired++, 100, 500);
             subscriptionFiber.AppendDisposable(intervalSub);
 
@@ -78,7 +80,7 @@ namespace AsyncFiberWorksTests
         {
             var msgs = new List<int>();
 
-            var sut = new StubFiber();
+            var sut = new StubFiberSlim();
             var channel = new Channel<int>();
             const int count = 4;
 
@@ -106,24 +108,25 @@ namespace AsyncFiberWorksTests
         [Test]
         public void DisposeShouldClearAllLists()
         {
-            var sut = new StubFiber();
+            var subscriptions = new Subscriptions();
+            var sut = new StubFiberSlim();
             var channel = new Channel<int>();
 
-            var subscriptionFiber1 = sut.BeginSubscription();
+            var subscriptionFiber1 = subscriptions.BeginSubscription();
             var disposableTimer = sut.Schedule(() => { }, 1000);
             subscriptionFiber1.AppendDisposable(disposableTimer);
             sut.ExecuteOnlyPendingNow();
             
-            var subscriptionFiber2 = sut.BeginSubscription();
+            var subscriptionFiber2 = subscriptions.BeginSubscription();
             var subscriptionChannel = channel.Subscribe(sut, x => { });
             subscriptionFiber2.AppendDisposable(subscriptionChannel);
             channel.Publish(2);
 
-            Assert.AreEqual(2, sut.NumSubscriptions);
+            Assert.AreEqual(2, subscriptions.NumSubscriptions);
 
-            sut.Dispose();
+            subscriptions.Dispose();
 
-            Assert.AreEqual(0, sut.NumSubscriptions);
+            Assert.AreEqual(0, subscriptions.NumSubscriptions);
         }
     }
 }

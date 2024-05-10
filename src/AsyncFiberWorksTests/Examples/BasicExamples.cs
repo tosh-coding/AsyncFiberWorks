@@ -226,20 +226,21 @@ namespace AsyncFiberWorksTests.Examples
         [Test]
         public void ShouldIncreaseStubFiberSubscriberCountByOne()
         {
-            var fiber = new StubFiber();
+            var subscriptions = new Subscriptions();
+            var fiber = new StubFiberSlim();
             var channel = new Channel<int>();
 
-            Assert.AreEqual(0, fiber.NumSubscriptions);
+            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
-            var subscriptionFiber = fiber.BeginSubscription();
+            var subscriptionFiber = subscriptions.BeginSubscription();
             var subscriptionChannel = channel.Subscribe(fiber, x => { });
             subscriptionFiber.AppendDisposable(subscriptionChannel);
 
-            Assert.AreEqual(1, fiber.NumSubscriptions);
+            Assert.AreEqual(1, subscriptions.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
-            fiber.Dispose();
+            subscriptions.Dispose();
 
-            Assert.AreEqual(0, fiber.NumSubscriptions);
+            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
         }
 
