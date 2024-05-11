@@ -149,42 +149,9 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task PauseAndTaskRun()
+        public async Task ThreadFiberTest()
         {
-            var fiber = new PoolFiber();
-            var counter = new IntClass();
-            counter.Value = 0;
-            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            // Pause.
-            fiber.Enqueue(async () =>
-            {
-                try
-                {
-                    // Some kind of asynchronous operation.
-                    _ = await SomeWebApiAccessAsync();
-                }
-                catch
-                {
-                }
-
-                // Do something in the original fiber. Useful only for special threads.
-                return () => counter.Value = 10;
-            });
-            fiber.Enqueue(() => counter.Value += 1);
-            fiber.Enqueue(() => tcs.SetResult(true));
-
-            await Task.Delay(10).ConfigureAwait(false);
-            Assert.AreEqual(0, counter.Value);
-
-            await tcs.Task.ConfigureAwait(false);
-            Assert.AreEqual(11, counter.Value);
-        }
-
-        [Test]
-        public async Task EnqueueTaskTest()
-        {
-            var fiber = new PoolFiber();
+            var fiber = new ThreadFiber();
             var counter = new IntClass();
             counter.Value = 0;
             var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);

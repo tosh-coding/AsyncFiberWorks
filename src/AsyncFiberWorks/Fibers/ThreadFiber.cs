@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Threading;
 
@@ -8,7 +9,7 @@ namespace AsyncFiberWorks.Fibers
     /// <summary>
     /// Fiber implementation backed by a dedicated thread.
     /// </summary>
-    public class ThreadFiber : IFiber, IDisposable
+    public class ThreadFiber : IFiber, IDisposable, IAsyncExecutionContext
     {
         private readonly IDedicatedConsumerThreadWork _queue;
         private readonly UserWorkerThread _workerThread;
@@ -91,6 +92,35 @@ namespace AsyncFiberWorks.Fibers
         public void Enqueue(Action action)
         {
             _queue.Enqueue(action);
+        }
+
+        /// <summary>
+        /// Enqueue a single task.
+        /// </summary>
+        /// <param name="func">Task generator. This is done after a pause in the fiber. The generated task is monitored and takes action to resume after completion.</param>
+        public void Enqueue(Func<Task<Action>> func)
+        {
+            this.Enqueue(() =>
+            {
+                var tcs = new TaskCompletionSource<Action>(TaskCreationOptions.RunContinuationsAsynchronously);
+                Task.Run(async () =>
+                {
+                    Action resumingAction = default;
+                    try
+                    {
+                        resumingAction = await func.Invoke();
+                    }
+                    finally
+                    {
+                        tcs.SetResult(resumingAction);
+                    }
+                });
+
+                // This is in a dedicated thread. Blocking OK.
+                tcs.Task.Wait();
+                var act = tcs.Task.Result;
+                act?.Invoke();
+            });
         }
     }
 }
