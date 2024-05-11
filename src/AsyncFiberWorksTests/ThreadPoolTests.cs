@@ -41,7 +41,7 @@ namespace AsyncFiberWorksTests
                 pool.Start();
                 EnqueueToThreadPool(pool, pool.ThreadList.Length);
                 pool.Stop();
-                await pool.Join();
+                await pool.JoinAsync();
             }
         }
 
@@ -88,7 +88,7 @@ namespace AsyncFiberWorksTests
                 pool.Stop();
             });
             var sw = Stopwatch.StartNew();
-            await pool.Join();
+            await pool.JoinAsync();
             var elapsedMs = sw.ElapsedMilliseconds;
             Assert.Greater(elapsedMs, 500);
         }

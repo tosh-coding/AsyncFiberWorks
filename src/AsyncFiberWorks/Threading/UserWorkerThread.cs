@@ -97,7 +97,7 @@ namespace AsyncFiberWorks.Threading
         /// <summary>
         /// Returns a task waiting for thread termination.
         /// </summary>
-        public Task Join()
+        public Task JoinAsync()
         {
             return _taskCompletionSource.Task;
         }

@@ -183,9 +183,9 @@ namespace AsyncFiberWorks.Threading
         ///<summary>
         /// Call join on the threads.
         ///</summary>
-        public Task Join()
+        public Task JoinAsync()
         {
-            return Task.WhenAll(_threadList.Select(x => x.Join()).ToArray());
+            return Task.WhenAll(_threadList.Select(x => x.JoinAsync()).ToArray());
         }
 
         /// <summary>
