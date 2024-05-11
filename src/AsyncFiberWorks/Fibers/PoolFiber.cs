@@ -156,9 +156,10 @@ namespace AsyncFiberWorks.Fibers
 
         /// <summary>
         /// Pauses the consumption of the task queue.
+        /// This is only called during an Execute in the fiber.
         /// </summary>
         /// <exception cref="InvalidOperationException">Pause was called twice.</exception>
-        public void Pause()
+        private void Pause()
         {
             lock (_lock)
             {
@@ -175,7 +176,7 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         /// <param name="action">The action to be taken immediately after the resume.</param>
         /// <exception cref="InvalidOperationException">Resume was called in the unpaused state.</exception>
-        public void Resume(Action action)
+        private void Resume(Action action)
         {
             lock (_lock)
             {

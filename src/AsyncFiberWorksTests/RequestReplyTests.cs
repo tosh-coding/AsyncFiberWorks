@@ -32,7 +32,11 @@ namespace AsyncFiberWorksTests
                 var requesterThread = new ThreadPoolAdaptor();
                 var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
 
-                requesterFiber.Pause();
+                var tcs = new TaskCompletionSource<Action>();
+                requesterFiber.Enqueue(async () =>
+                {
+                    return await tcs.Task;
+                });
 
                 var workFiber = new PoolFiber(new OneShotExecutor());
                 var timeoutTimer = workFiber.Schedule(() =>
@@ -45,7 +49,7 @@ namespace AsyncFiberWorksTests
                 {
                     timeoutTimer.Dispose();
                     disposableRequest.Dispose();
-                    requesterFiber.Resume(() =>
+                    tcs.SetResult(() =>
                     {
                         Assert.AreEqual(result, now);
                         requesterThread.Stop();

@@ -1,9 +1,8 @@
 ﻿using NUnit.Framework;
-using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncFiberWorks.Channels;
 
 namespace AsyncFiberWorksTests
 {
@@ -19,13 +18,22 @@ namespace AsyncFiberWorksTests
             Thread.Sleep(1);
             Assert.AreEqual(1, counter);
 
-            fiber.Pause();
+            var tcs = new TaskCompletionSource<int>();
+
+            // Queue consumption is paused just before the execution of the enqueued async method.
+            // Resume when the async method completes. 
+            fiber.Enqueue(async () =>
             {
-                fiber.Enqueue(() => counter += 1);
-                Thread.Sleep(1);
-                Assert.AreEqual(1, counter);
-            }
-            fiber.Resume(() => counter = 5);
+                await tcs.Task;
+                return () => counter = 5;
+            });
+
+            fiber.Enqueue(() => counter += 1);
+            Thread.Sleep(1);
+            Assert.AreEqual(1, counter);
+
+            // To resume.
+            tcs.SetResult(0);
 
             Thread.Sleep(1);
             Assert.AreEqual(6, counter);
@@ -58,18 +66,28 @@ namespace AsyncFiberWorksTests
             using (var nonstopFiber = new ThreadFiber())
             {
                 var pauseFiber = new PoolFiber();
-                
-                pauseFiber.Pause();
-                var reset = new AutoResetEvent(false);
-                int counter = 0;
-                nonstopFiber.Schedule(() =>
-                {
-                    counter = 10;
-                    pauseFiber.Resume(() => { });
-                    reset.Set();
-                }, 10);
-                counter += 1;
 
+                int counter = 0;
+                var reset = new AutoResetEvent(false);
+
+                // Pause.
+                pauseFiber.Enqueue(async () =>
+                {
+                    var tcs = new TaskCompletionSource<Action>();
+                    nonstopFiber.Schedule(() =>
+                    {
+                        counter = 10;
+                        // Resume.
+                        tcs.SetResult(() => { });
+                    }, 10);
+                    counter += 1;
+
+                    return await tcs.Task;
+                });
+                pauseFiber.Enqueue(() =>
+                {
+                    reset.Set();
+                });
                 reset.WaitOne(10000, false);
                 Assert.AreEqual(10, counter);
             }
@@ -84,7 +102,14 @@ namespace AsyncFiberWorksTests
             Thread.Sleep(1);
             Assert.AreEqual(1, counter);
 
-            fiber.Pause();
+            var tcs = new TaskCompletionSource<Action>();
+
+            // Pause.
+            fiber.Enqueue(async () =>
+            {
+                return await tcs.Task;
+            });
+
             {
                 // Call an async method while the fiber is paused.
                 var taskQuery = SomeWebApiAccessAsync();
@@ -98,7 +123,9 @@ namespace AsyncFiberWorksTests
 
                 _ = await taskQuery;
             }
-            fiber.Resume(() => counter = 5);
+
+            // Resume.
+            tcs.SetResult(() => counter = 5);
             // At this timing, the actions that were previously enqueued will be executed.
 
             Thread.Sleep(1);
@@ -119,36 +146,29 @@ namespace AsyncFiberWorksTests
             counter.Value = 0;
             var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            fiber.Enqueue(() => PauseAndTaskFuncInFiber(fiber, counter, tcs));
-            fiber.Enqueue(() => counter.Value += 1);
-            Thread.Sleep(1);
-            Assert.AreEqual(0, counter.Value);
-
-            // For the completion of the test.
-            await tcs.Task.ConfigureAwait(false);
-            Assert.AreEqual(11, counter.Value);
-        }
-
-        void PauseAndTaskFuncInFiber(PoolFiber fiber, IntClass counter, TaskCompletionSource<bool> tcs)
-        {
-            // Pause and start async method.
-            fiber.Pause();
-            Task.Run(async () =>
+            // Pause.
+            fiber.Enqueue(async () =>
             {
                 try
                 {
                     // Some kind of asynchronous operation.
                     _ = await SomeWebApiAccessAsync();
                 }
-                finally
+                catch
                 {
-                    // Calls the resume function at the end of an asynchronous method.
-                    fiber.Resume(() => counter.Value = 10);
                 }
-            });
 
-            // For the completion of the test.
+                // Do something in the original fiber. Useful only for special threads.
+                return () => counter.Value = 10;
+            });
+            fiber.Enqueue(() => counter.Value += 1);
             fiber.Enqueue(() => tcs.SetResult(true));
+
+            await Task.Delay(10).ConfigureAwait(false);
+            Assert.AreEqual(0, counter.Value);
+
+            await tcs.Task.ConfigureAwait(false);
+            Assert.AreEqual(11, counter.Value);
         }
 
         [Test]
