@@ -9,7 +9,7 @@ namespace AsyncFiberWorks.Fibers
     /// <summary>
     /// Fiber implementation backed by a dedicated thread.
     /// </summary>
-    public class ThreadFiber : IThreadFiber, ISubscriptionRegistryViewing
+    public class ThreadFiber : IThreadFiber
     {
         private readonly IDedicatedConsumerThreadWork _queue;
         private readonly UserWorkerThread _workerThread;
