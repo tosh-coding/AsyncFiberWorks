@@ -9,7 +9,7 @@ namespace AsyncFiberWorks.Fibers
     /// <summary>
     /// Fiber implementation backed by shared threads. Mainly thread pool.
     /// </summary>
-    public sealed class PoolFiber : IAsyncExecutionContext, IFiber
+    public sealed class PoolFiber : IFiber
     {
         private readonly object _lock = new object();
         private readonly IThreadPool _pool;

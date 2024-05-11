@@ -6,7 +6,7 @@ namespace AsyncFiberWorks.Fibers
     /// <summary>
     /// Enqueue pending actions to the execution context.
     /// </summary>
-    public interface IFiber : IExecutionContext
+    public interface IFiber : IExecutionContext, IAsyncExecutionContext
     {
     }
 }
