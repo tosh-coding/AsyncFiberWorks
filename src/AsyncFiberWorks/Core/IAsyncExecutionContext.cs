@@ -6,7 +6,7 @@ namespace AsyncFiberWorks.Core
     /// <summary>
     /// Sequential executor of actions.
     /// </summary>
-    public interface IAsyncExecutionContext : IExecutionContext
+    public interface IAsyncExecutionContext
     {
         /// <summary>
         /// Enqueue a single action. It is executed sequentially.

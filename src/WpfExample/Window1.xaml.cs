@@ -13,7 +13,7 @@ namespace WpfExample
     public partial class Window1 : Window
     {
         private readonly WindowChannels channels = new WindowChannels();
-        private readonly IAsyncExecutionContext fiber;
+        private readonly IFiber fiber;
         private readonly Subscriptions subscriptions = new Subscriptions();
 
         public Window1()

@@ -13,7 +13,7 @@ namespace WpfExample
         /// Creates an instance.
         /// </summary>
         /// <return></return>
-        public static IAsyncExecutionContext Create(ISynchronizeInvoke invoker, IExecutor executor)
+        public static IFiber Create(ISynchronizeInvoke invoker, IExecutor executor)
         {
             return new PoolFiber(new FormAdapter(invoker), executor);
         }
