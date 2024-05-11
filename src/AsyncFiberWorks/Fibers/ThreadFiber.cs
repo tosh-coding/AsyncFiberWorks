@@ -65,7 +65,7 @@ namespace AsyncFiberWorks.Fibers
         }
 
         /// <summary>
-        /// Clear all subscriptions and schedules. Then stop threads.
+        /// Stop the thread.
         /// </summary>
         public void Stop()
         {
@@ -77,7 +77,7 @@ namespace AsyncFiberWorks.Fibers
         }
 
         /// <summary>
-        /// Clear all subscriptions and schedules. Then stop threads.
+        /// Stop the thread.
         /// </summary>
         public void Dispose()
         {
