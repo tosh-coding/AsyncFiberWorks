@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Fibers
@@ -10,7 +11,7 @@ namespace AsyncFiberWorks.Fibers
     /// Consume them by periodically calling methods for execution.
     /// Periodically call a method for execution. They are executed on their calling thread.
     /// </summary>
-    public sealed class StubFiber : IFiber
+    public sealed class StubFiber : IFiber, IAsyncExecutionContext
     {
         private readonly object _lock = new object();
         private readonly ConcurrentQueue<Action> _pending = new ConcurrentQueue<Action>();
@@ -105,9 +106,10 @@ namespace AsyncFiberWorks.Fibers
 
         /// <summary>
         /// Pauses the consumption of the task queue.
+        /// This is only called during an Execute in the fiber.
         /// </summary>
         /// <exception cref="InvalidOperationException">Pause was called twice.</exception>
-        public void Pause()
+        private void Pause()
         {
             lock (_lock)
             {
@@ -124,7 +126,7 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         /// <param name="action">The action to be taken immediately after the resume.</param>
         /// <exception cref="InvalidOperationException">Resume was called in the unpaused state.</exception>
-        public void Resume(Action action)
+        private void Resume(Action action)
         {
             lock (_lock)
             {
@@ -150,6 +152,30 @@ namespace AsyncFiberWorks.Fibers
                     _paused = 0;
                 }
             }
+        }
+
+        /// <summary>
+        /// Enqueue a single task.
+        /// </summary>
+        /// <param name="func">Task generator. This is done after a pause in the fiber. The generated task is monitored and takes action to resume after completion.</param>
+        public void Enqueue(Func<Task<Action>> func)
+        {
+            this.Enqueue(() =>
+            {
+                this.Pause();
+                Task.Run(async () =>
+                {
+                    Action resumingAction = default;
+                    try
+                    {
+                        resumingAction = await func.Invoke();
+                    }
+                    finally
+                    {
+                        this.Resume(resumingAction);
+                    }
+                });
+            });
         }
     }
 }

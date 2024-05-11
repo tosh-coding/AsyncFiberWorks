@@ -48,13 +48,23 @@ namespace AsyncFiberWorksTests
             fiber.ExecuteAll();
             Assert.AreEqual(1, counter);
 
-            fiber.Pause();
+            var tcs = new TaskCompletionSource<Action>();
+
+            // Pause.
+            fiber.Enqueue(async () =>
+            {
+                return await tcs.Task;
+            });
+
             {
                 fiber.Enqueue(() => counter += 1);
                 fiber.ExecuteAll();
                 Assert.AreEqual(1, counter);
             }
-            fiber.Resume(() => counter = 5);
+
+            // Resume.
+            tcs.SetResult(() => counter = 5);
+            Thread.Sleep(10);
 
             fiber.ExecuteAll();
             Assert.AreEqual(6, counter);
