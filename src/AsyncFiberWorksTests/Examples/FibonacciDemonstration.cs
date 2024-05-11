@@ -2,6 +2,7 @@ using System;
 using NUnit.Framework;
 using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Fibers;
+using System.Threading;
 
 namespace AsyncFiberWorksTests.Examples
 {
@@ -41,7 +42,7 @@ namespace AsyncFiberWorksTests.Examples
         // When a specified limit is reached, it stops processing.
         class FibonacciCalculator
         {
-            private readonly ThreadFiber _threadFiber;
+            private readonly Action _onCompleted;
             private readonly string _name;
             private readonly ISubscriber<IntPair> _inboundChannel;
             private readonly IChannel<IntPair> _outboundChannel;
@@ -50,9 +51,10 @@ namespace AsyncFiberWorksTests.Examples
             public FibonacciCalculator(ThreadFiber fiber, string name, 
                 ISubscriber<IntPair> inboundChannel, 
                 IChannel<IntPair> outboundChannel,
-                int limit)
+                int limit,
+                Action onCompleted)
             {
-                _threadFiber = fiber;
+                _onCompleted = onCompleted;
                 _name = name;
                 _inboundChannel = inboundChannel;
                 _outboundChannel = outboundChannel;
@@ -78,7 +80,7 @@ namespace AsyncFiberWorksTests.Examples
                 if (next > _limit)
                 {
                     Console.WriteLine("Stopping " + _name);
-                    _threadFiber.Dispose();
+                    _onCompleted();
                     
                     return;
                 }
@@ -98,21 +100,26 @@ namespace AsyncFiberWorksTests.Examples
             // Two channels for communication.  Naming convention is inbound.
             var oddChannel = new Channel<IntPair>();
             var evenChannel = new Channel<IntPair>();
+            var sem = new SemaphoreSlim(0);
+            Action onCompleted = () =>
+            {
+                sem.Release(1);
+            };
 
             using (ThreadFiber oddFiber = new ThreadFiber(), evenFiber = new ThreadFiber())
             {
                 oddFiber.Start();
 
-                var oddCalculator = new FibonacciCalculator(oddFiber, "Odd", oddChannel, evenChannel, limit);
+                var oddCalculator = new FibonacciCalculator(oddFiber, "Odd", oddChannel, evenChannel, limit, onCompleted);
 
                 evenFiber.Start();
 
-                new FibonacciCalculator(evenFiber, "Even", evenChannel, oddChannel, limit);
+                new FibonacciCalculator(evenFiber, "Even", evenChannel, oddChannel, limit, onCompleted);
 
                 oddCalculator.Begin(new IntPair(0, 1));
 
-                oddFiber.Join();
-                evenFiber.Join();
+                sem.Wait();
+                sem.Wait();
             }
         }
     }

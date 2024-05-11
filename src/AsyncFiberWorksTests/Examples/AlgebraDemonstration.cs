@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Fibers;
+using System.Threading;
 
 namespace AsyncFiberWorksTests.Examples
 {
@@ -192,13 +193,13 @@ namespace AsyncFiberWorksTests.Examples
         // the same socket.
         private class SolvedQuadraticSink
         {
-            private readonly IFiber _fiber;
+            private readonly Action _onComplete;
             private readonly int _numberToOutput;
             private int _solutionsReceived;
 
-            public SolvedQuadraticSink(IFiber fiber, ISubscriber<SolvedQuadratic> solvedChannel, int numberToOutput)
+            public SolvedQuadraticSink(IFiber fiber, ISubscriber<SolvedQuadratic> solvedChannel, int numberToOutput, Action onComplete)
             {
-                _fiber = fiber;
+                _onComplete = onComplete;
                 _numberToOutput = numberToOutput;
 
                 var subscriptionFiber = fiber.BeginSubscription();
@@ -214,7 +215,7 @@ namespace AsyncFiberWorksTests.Examples
                 // in, we stop.
                 if (_solutionsReceived == _numberToOutput)
                 {
-                    _fiber.Dispose();
+                    _onComplete();
                 }
             }
         }
@@ -243,18 +244,24 @@ namespace AsyncFiberWorksTests.Examples
                 solvers.Add(new QuadraticSolver(fiber, quadraticChannels[i], solvedChannel));
             }
 
+            var sem = new SemaphoreSlim(0);
+            Action onCompleted = () =>
+            {
+                sem.Release(1);
+            };
 
             var source = new QuadraticSource(quadraticChannels, quadraticChannels.Length, DateTime.Now.Millisecond);
 
             // Finally a sink to output our results.
             sinkFiber.Start();
-            new SolvedQuadraticSink(sinkFiber, solvedChannel, quadraticChannels.Length);
+            new SolvedQuadraticSink(sinkFiber, solvedChannel, quadraticChannels.Length, onCompleted);
 
             // This starts streaming the equations.
             source.PublishQuadratics();
 
             // We pause here to allow all the problems to be solved.
-            sinkFiber.Join();
+            sem.Wait();
+            sinkFiber.Dispose();
 
             Console.WriteLine("Demonstration complete.");
         }

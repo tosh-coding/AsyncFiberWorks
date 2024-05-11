@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
 using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Threading;
@@ -84,14 +83,6 @@ namespace AsyncFiberWorks.Fibers
                 _workerThread.Stop();
                 _stopped = true;
             }
-        }
-
-        ///<summary>
-        /// Calls join on the thread.
-        ///</summary>
-        public Task Join()
-        {
-            return _workerThread.Join();
         }
 
         /// <summary>
