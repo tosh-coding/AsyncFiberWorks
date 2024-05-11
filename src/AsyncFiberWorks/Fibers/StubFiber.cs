@@ -18,6 +18,7 @@ namespace AsyncFiberWorks.Fibers
         private readonly IExecutor _executor;
 
         private int _paused = 0;
+        private Action _resumeAction = null;
 
         /// <summary>
         /// Create a stub fiber with the default executor.
@@ -56,11 +57,13 @@ namespace AsyncFiberWorks.Fibers
             {
                 lock (_lock)
                 {
-                    if (_paused != 0)
+                    if (_paused != 0 && _paused != 2)
                     {
                         break;
                     }
                 }
+
+                ExecuteResumeProcess();
 
                 if (!_pending.TryDequeue(out toExecute))
                 {
@@ -84,11 +87,13 @@ namespace AsyncFiberWorks.Fibers
             {
                 lock (_lock)
                 {
-                    if (_paused != 0)
+                    if (_paused != 0 && _paused != 2)
                     {
                         break;
                     }
                 }
+
+                ExecuteResumeProcess();
 
                 if (!_pending.TryDequeue(out toExecute))
                 {
@@ -141,9 +146,21 @@ namespace AsyncFiberWorks.Fibers
                 _paused = 2;
             }
 
+            _resumeAction = action;
+        }
+
+        private void ExecuteResumeProcess()
+        {
+            if (_paused != 2)
+            {
+                return;
+            }
+
+            var action = _resumeAction;
+            _resumeAction = null;
             try
             {
-                action();
+                action?.Invoke();
             }
             finally
             {
