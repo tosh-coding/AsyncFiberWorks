@@ -42,9 +42,11 @@ namespace AsyncFiberWorksTests
             }
 
             var fibers = new ThreadFiber[channelCount];
+            var subscriptionsList = new Subscriptions[channelCount];
             for (var i = 0; i < fibers.Length; i++)
             {
                 fibers[i] = creator();
+                subscriptionsList[i] = new Subscriptions();
                 var prior = i - 1;
                 var isLast = i + 1 == fibers.Length;
                 var target = !isLast ? channels[i] : null;
@@ -70,7 +72,8 @@ namespace AsyncFiberWorksTests
                                          };
 
                     var fiber = fibers[i];
-                    var subscriptionFiber = fiber.BeginSubscription();
+                    var subscriptions = subscriptionsList[i];
+                    var subscriptionFiber = subscriptions.BeginSubscription();
                     var subscriptionChannel = channels[prior].Subscribe(fiber, cb);
                     subscriptionFiber.AppendDisposable(subscriptionChannel);
                 }
@@ -88,6 +91,11 @@ namespace AsyncFiberWorksTests
                 var s = new Msg(true);
                 channels[0].Publish(s);
                 Thread.Sleep(10);
+            }
+
+            foreach (var subscriptions in subscriptionsList)
+            {
+                subscriptions.Dispose();
             }
 
             foreach (var fiber in fibers)

@@ -3,6 +3,7 @@ using NUnit.Framework;
 using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Fibers;
 using System.Threading;
+using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorksTests.Examples
 {
@@ -52,13 +53,14 @@ namespace AsyncFiberWorksTests.Examples
                 ISubscriber<IntPair> inboundChannel, 
                 IChannel<IntPair> outboundChannel,
                 int limit,
-                Action onCompleted)
+                Action onCompleted,
+                Subscriptions subscriptions)
             {
                 _onCompleted = onCompleted;
                 _name = name;
                 _inboundChannel = inboundChannel;
                 _outboundChannel = outboundChannel;
-                var subscriptionFiber = fiber.BeginSubscription();
+                var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriptionChannel = _inboundChannel.Subscribe(fiber, CalculateNext);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 _limit = limit;
@@ -107,10 +109,11 @@ namespace AsyncFiberWorksTests.Examples
             };
 
             using (ThreadFiber oddFiber = new ThreadFiber(), evenFiber = new ThreadFiber())
+            using (Subscriptions oddSubscriptions = new Subscriptions(), evenSubscriptions = new Subscriptions())
             {
-                var oddCalculator = new FibonacciCalculator(oddFiber, "Odd", oddChannel, evenChannel, limit, onCompleted);
+                var oddCalculator = new FibonacciCalculator(oddFiber, "Odd", oddChannel, evenChannel, limit, onCompleted, oddSubscriptions);
 
-                new FibonacciCalculator(evenFiber, "Even", evenChannel, oddChannel, limit, onCompleted);
+                new FibonacciCalculator(evenFiber, "Even", evenChannel, oddChannel, limit, onCompleted, evenSubscriptions);
 
                 oddCalculator.Begin(new IntPair(0, 1));
 

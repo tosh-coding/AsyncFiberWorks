@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Windows;
-using AsyncFiberWorks.Channels;
+using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 
 namespace WpfExample
@@ -8,14 +8,16 @@ namespace WpfExample
     public class UpdateController
     {
         private readonly IFiber fiber;
+        private readonly Subscriptions subscriptions;
         private IDisposable timer;
         private readonly WindowChannels channels;
 
         public UpdateController(WindowChannels winChannels)
         {
             channels = winChannels;
+            subscriptions = new Subscriptions();
             var threadFiber = new ThreadFiber();
-            var subscriptionFiber = threadFiber.BeginSubscription();
+            var subscriptionFiber = subscriptions.BeginSubscription();
             var subscriptionChannel = channels.StartChannel.Subscribe(threadFiber, OnStart);
             subscriptionFiber.AppendDisposable(subscriptionChannel);
             fiber = threadFiber;
@@ -30,7 +32,7 @@ namespace WpfExample
             }
             else
             {
-                var subscriptionFiber = fiber.BeginSubscription();
+                var subscriptionFiber = subscriptions.BeginSubscription();
                 var timerDisposable = fiber.ScheduleOnInterval(OnTimer, 1000, 1000);
                 subscriptionFiber.AppendDisposable(timerDisposable);
                 timer = subscriptionFiber;

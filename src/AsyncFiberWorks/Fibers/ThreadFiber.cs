@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Threading;
 
@@ -13,7 +12,6 @@ namespace AsyncFiberWorks.Fibers
     {
         private readonly IDedicatedConsumerThreadWork _queue;
         private readonly UserWorkerThread _workerThread;
-        private readonly Subscriptions _subscriptions = new Subscriptions();
         private bool _stopped = false;
 
         /// <summary>
@@ -73,7 +71,6 @@ namespace AsyncFiberWorks.Fibers
         {
             if (!_stopped)
             {
-                _subscriptions.Dispose();
                 _workerThread.Stop();
                 _stopped = true;
             }
@@ -85,23 +82,6 @@ namespace AsyncFiberWorks.Fibers
         public void Dispose()
         {
             Stop();
-        }
-
-        /// <summary>
-        /// <see cref="ISubscriptionRegistry.BeginSubscription"/>
-        /// </summary>
-        /// <returns></returns>
-        public Unsubscriber BeginSubscription()
-        {
-            return _subscriptions.BeginSubscription();
-        }
-
-        /// <summary>
-        /// <see cref="ISubscriptionRegistryViewing.NumSubscriptions"/>
-        /// </summary>
-        public int NumSubscriptions
-        {
-            get { return _subscriptions.NumSubscriptions; }
         }
 
         /// <summary>

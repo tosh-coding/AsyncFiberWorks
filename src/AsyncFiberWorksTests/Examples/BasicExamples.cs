@@ -35,11 +35,12 @@ namespace AsyncFiberWorksTests.Examples
         public void PubSubWithDedicatedThread()
         {
             using (var fiber = new ThreadFiber())
+            using (var subscriptions = new Subscriptions())
             {
                 var channel = new Channel<string>();
 
                 var reset = new AutoResetEvent(false);
-                var subscriptionFiber = fiber.BeginSubscription();
+                var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(fiber, delegate { reset.Set(); });
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish("hello");
@@ -52,6 +53,7 @@ namespace AsyncFiberWorksTests.Examples
         public void PubSubWithDedicatedThreadWithFilter()
         {
             using (var fiber = new ThreadFiber())
+            using (var subscriptions = new Subscriptions())
             {
                 var channel = new Channel<int>();
 
@@ -64,7 +66,7 @@ namespace AsyncFiberWorksTests.Examples
                         reset.Set();
                     }
                 };
-                var subscriptionFiber = fiber.BeginSubscription();
+                var subscriptionFiber = subscriptions.BeginSubscription();
                 var filters = new List<Filter<int>>();
                 filters.Add(x => x % 2 == 0);
                 var filter = new MessageFilter<int>(filters, fiber, onMsg);
@@ -83,6 +85,7 @@ namespace AsyncFiberWorksTests.Examples
         public void Batching()
         {
             using (var fiber = new ThreadFiber())
+            using (var subscriptions = new Subscriptions())
             {
                 var counter = new Channel<int>();
                 var reset = new ManualResetEvent(false);
@@ -96,7 +99,7 @@ namespace AsyncFiberWorksTests.Examples
                                                 }
                                             };
 
-                var subscriptionFiber = fiber.BeginSubscription();
+                var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriber = new BatchFilter<int>(1, fiber, cb);
                 var subscriptionChannel = counter.Subscribe(fiber, subscriber.Receive);
                 subscriptionFiber.AppendDisposable(subscriber, subscriptionChannel);
@@ -114,6 +117,7 @@ namespace AsyncFiberWorksTests.Examples
         public void BatchingWithKey()
         {
             using (var fiber = new ThreadFiber())
+            using (var subscriptions = new Subscriptions())
             {
                 var counter = new Channel<int>();
                 var reset = new ManualResetEvent(false);
@@ -126,7 +130,7 @@ namespace AsyncFiberWorksTests.Examples
                 };
 
                 var disposables = new List<IDisposable>();
-                var subscriptionFiber = fiber.BeginSubscription();
+                var subscriptionFiber = subscriptions.BeginSubscription();
                 Converter<int, String> keyResolver = x => x.ToString();
                 var subscriber = new KeyedBatchFilter<string, int>(keyResolver, 0, fiber, cb);
                 disposables.Add(subscriber);
@@ -202,19 +206,21 @@ namespace AsyncFiberWorksTests.Examples
         public void ShouldIncreaseThreadFiberSubscriberCountByOne()
         {
             var fiber = new ThreadFiber();
+            var subscriptions = new Subscriptions();
             var channel = new Channel<int>();
 
-            Assert.AreEqual(0, fiber.NumSubscriptions);
+            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
-            var subscriptionFiber = fiber.BeginSubscription();
+            var subscriptionFiber = subscriptions.BeginSubscription();
             var subscriptionChannel = channel.Subscribe(fiber, x => { });
             subscriptionFiber.AppendDisposable(subscriptionChannel);
 
-            Assert.AreEqual(1, fiber.NumSubscriptions);
+            Assert.AreEqual(1, subscriptions.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
+            subscriptions.Dispose();
             fiber.Dispose();
 
-            Assert.AreEqual(0, fiber.NumSubscriptions);
+            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
         }
 
