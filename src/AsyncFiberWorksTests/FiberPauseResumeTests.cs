@@ -13,7 +13,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void PauseAndResumePoolFiber()
         {
-            var fiber = new PoolFiberSlim();
+            var fiber = new PoolFiber();
             int counter = 0;
             fiber.Enqueue(() => counter += 1);
             Thread.Sleep(1);
@@ -34,7 +34,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void PauseAndResumeStubFiber()
         {
-            var fiber = new StubFiberSlim();
+            var fiber = new StubFiber();
             int counter = 0;
             fiber.Enqueue(() => counter += 1);
             fiber.ExecuteAll();
@@ -57,7 +57,7 @@ namespace AsyncFiberWorksTests
         {
             using (var nonstopFiber = new ThreadFiber())
             {
-                var pauseFiber = new PoolFiberSlim();
+                var pauseFiber = new PoolFiber();
                 
                 pauseFiber.Pause();
                 var reset = new AutoResetEvent(false);
@@ -78,7 +78,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task PauseAndAsyncMethod()
         {
-            var fiber = new PoolFiberSlim();
+            var fiber = new PoolFiber();
             int counter = 0;
             fiber.Enqueue(() => counter += 1);
             Thread.Sleep(1);
@@ -114,7 +114,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task PauseAndTaskRun()
         {
-            var fiber = new PoolFiberSlim();
+            var fiber = new PoolFiber();
             var counter = new IntClass();
             counter.Value = 0;
             var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -129,7 +129,7 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(11, counter.Value);
         }
 
-        void PauseAndTaskFuncInFiber(PoolFiberSlim fiber, IntClass counter, TaskCompletionSource<bool> tcs)
+        void PauseAndTaskFuncInFiber(PoolFiber fiber, IntClass counter, TaskCompletionSource<bool> tcs)
         {
             // Pause and start async method.
             fiber.Pause();
@@ -154,7 +154,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task EnqueueTaskTest()
         {
-            var fiber = new PoolFiberSlim();
+            var fiber = new PoolFiber();
             var counter = new IntClass();
             counter.Value = 0;
             var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);

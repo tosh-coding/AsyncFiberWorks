@@ -9,7 +9,7 @@ namespace AsyncFiberWorks.Fibers
     /// <summary>
     /// Fiber implementation backed by shared threads. Mainly thread pool.
     /// </summary>
-    public sealed class PoolFiberSlim : IAsyncExecutionContext, IFiber
+    public sealed class PoolFiber : IAsyncExecutionContext, IFiber
     {
         private readonly object _lock = new object();
         private readonly IThreadPool _pool;
@@ -28,7 +28,7 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         /// <param name="pool"></param>
         /// <param name="executor"></param>
-        public PoolFiberSlim(IThreadPool pool, IExecutor executor)
+        public PoolFiber(IThreadPool pool, IExecutor executor)
         {
             _pool = pool;
             _executor = executor;
@@ -37,7 +37,7 @@ namespace AsyncFiberWorks.Fibers
         /// <summary>
         /// Create a pool fiber with the default thread pool.
         /// </summary>
-        public PoolFiberSlim(IExecutor executor) 
+        public PoolFiber(IExecutor executor) 
             : this(DefaultThreadPool.Instance, executor)
         {
         }
@@ -45,7 +45,7 @@ namespace AsyncFiberWorks.Fibers
         /// <summary>
         /// Create a pool fiber with the default thread pool and default executor.
         /// </summary>
-        public PoolFiberSlim() 
+        public PoolFiber() 
             : this(DefaultThreadPool.Instance, new DefaultExecutor())
         {
         }

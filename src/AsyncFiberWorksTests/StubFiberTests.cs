@@ -14,7 +14,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void StubFiberPendingTasksShouldAllowEnqueueOfCommandsWhenExecutingAllPending()
         {
-            var sut = new StubFiberSlim();
+            var sut = new StubFiber();
 
             var fired1 = new object();
             var fired2 = new object();
@@ -41,7 +41,7 @@ namespace AsyncFiberWorksTests
         public void ScheduledTasksShouldBeExecutedOnceScheduleIntervalShouldBeExecutedEveryTimeExecuteScheduleAllIsCalled()
         {
             var subscriptions = new Subscriptions();
-            var sut = new StubFiberSlim();
+            var sut = new StubFiber();
 
             var scheduleFired = 0;
             var scheduleOnIntervalFired = 0;
@@ -80,7 +80,7 @@ namespace AsyncFiberWorksTests
         {
             var msgs = new List<int>();
 
-            var sut = new StubFiberSlim();
+            var sut = new StubFiber();
             var channel = new Channel<int>();
             const int count = 4;
 
@@ -109,7 +109,7 @@ namespace AsyncFiberWorksTests
         public void DisposeShouldClearAllLists()
         {
             var subscriptions = new Subscriptions();
-            var sut = new StubFiberSlim();
+            var sut = new StubFiber();
             var channel = new Channel<int>();
 
             var subscriptionFiber1 = subscriptions.BeginSubscription();

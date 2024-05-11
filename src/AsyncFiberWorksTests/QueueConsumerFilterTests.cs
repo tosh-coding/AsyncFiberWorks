@@ -16,7 +16,7 @@ namespace AsyncFiberWorksTests
         public void SingleConsumer()
         {
             var subscriptions = new Subscriptions();
-            var one = new PoolFiberSlim();
+            var one = new PoolFiber();
             var oneConsumed = 0;
             var reset = new AutoResetEvent(false);
             using (subscriptions)
@@ -47,7 +47,7 @@ namespace AsyncFiberWorksTests
         {
             var exec = new StubExecutor();
             var oneSubscriptions = new Subscriptions();
-            var one = new PoolFiberSlim(new DefaultThreadPool(), exec);
+            var one = new PoolFiber(new DefaultThreadPool(), exec);
             var reset = new AutoResetEvent(false);
             using (oneSubscriptions)
             {
@@ -96,7 +96,7 @@ namespace AsyncFiberWorksTests
                                                 }
                                             };
                 var subscriptions = new Subscriptions();
-                var fiber = new PoolFiberSlim();
+                var fiber = new PoolFiber();
                 queues.Add(subscriptions);
                 var subscriptionFiber = subscriptions.BeginSubscription();
 

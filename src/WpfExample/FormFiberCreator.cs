@@ -15,7 +15,7 @@ namespace WpfExample
         /// <return></return>
         public static IAsyncExecutionContext Create(ISynchronizeInvoke invoker, IExecutor executor)
         {
-            return new PoolFiberSlim(new FormAdapter(invoker), executor);
+            return new PoolFiber(new FormAdapter(invoker), executor);
         }
     }
 }

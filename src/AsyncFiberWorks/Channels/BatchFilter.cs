@@ -27,7 +27,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="intervalInMs">Batch processing interval. Milliseconds.</param>
         /// <param name="receive">Message receiving handler.</param>
         public BatchFilter(long intervalInMs, Action<IList<T>> receive)
-            : this(intervalInMs, new PoolFiberSlim(), receive)
+            : this(intervalInMs, new PoolFiber(), receive)
         {
         }
 

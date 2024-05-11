@@ -18,7 +18,7 @@ namespace AsyncFiberWorksTests.Examples
             //PoolFiber uses the .NET thread pool by default
             using (var subscriptions = new Subscriptions())
             {
-                var fiber = new PoolFiberSlim();
+                var fiber = new PoolFiber();
                 var channel = new Channel<string>();
 
                 var reset = new AutoResetEvent(false);
@@ -152,11 +152,11 @@ namespace AsyncFiberWorksTests.Examples
         {
             // Thread for Assert.
             var testThread = new ThreadPoolAdaptor();
-            var testFiber = new PoolFiberSlim(testThread, new DefaultExecutor());
+            var testFiber = new PoolFiber(testThread, new DefaultExecutor());
 
             using (var subscriptions = new Subscriptions())
             {
-                var fiber = new PoolFiberSlim();
+                var fiber = new PoolFiber();
                 var channel = new Channel<IRequest<string, string>>();
                 var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(fiber, (req) => req.ReplyTo.Publish("bye"));
@@ -185,7 +185,7 @@ namespace AsyncFiberWorksTests.Examples
         public void ShouldIncreasePoolFiberSubscriberCountByOne()
         {
             var subscriptions = new Subscriptions();
-            var fiber = new PoolFiberSlim();
+            var fiber = new PoolFiber();
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, subscriptions.NumSubscriptions);
@@ -228,7 +228,7 @@ namespace AsyncFiberWorksTests.Examples
         public void ShouldIncreaseStubFiberSubscriberCountByOne()
         {
             var subscriptions = new Subscriptions();
-            var fiber = new StubFiberSlim();
+            var fiber = new StubFiber();
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, subscriptions.NumSubscriptions);
@@ -249,7 +249,7 @@ namespace AsyncFiberWorksTests.Examples
         public void UnsubscriptionShouldRemoveSubscriber()
         {
             var subscriptions = new Subscriptions();
-            var fiber = new PoolFiberSlim();
+            var fiber = new PoolFiber();
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, subscriptions.NumSubscriptions);

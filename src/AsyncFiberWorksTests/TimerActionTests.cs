@@ -12,7 +12,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void CallbackFromTimer()
         {
-            var stubFiber = new StubFiberSlim();
+            var stubFiber = new StubFiber();
             long counter = 0;
             Action action = () => { counter++; };
             var timer = OneshotTimerAction.StartNew(() => stubFiber.Enqueue(action), 2);
@@ -27,7 +27,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void CallbackFromIntervalTimerWithCancel()
         {
-            var stubFiber = new StubFiberSlim();
+            var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
             var timer = IntervalTimerAction.StartNew(() => stubFiber.Enqueue(actionOnTimer), 2, 100);
@@ -45,7 +45,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void CallbackFromTimerWithCancel()
         {
-            var stubFiber = new StubFiberSlim();
+            var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
             var timer = OneshotTimerAction.StartNew(() => stubFiber.Enqueue(actionOnTimer), 2);

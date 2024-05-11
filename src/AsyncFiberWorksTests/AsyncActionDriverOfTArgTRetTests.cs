@@ -18,7 +18,7 @@ namespace AsyncFiberWorksTests
 
             long counter = 0;
 
-            var fiber1 = new PoolFiberSlim();
+            var fiber1 = new PoolFiber();
             Func<int, Task<bool>> receiverFunc1 = async (int msg) =>
             {
                 await fiber1.SwitchTo();
@@ -28,7 +28,7 @@ namespace AsyncFiberWorksTests
                 return default;
             };
 
-            var fiber2 = new PoolFiberSlim();
+            var fiber2 = new PoolFiber();
             Func<int, Task<bool>> receiverFunc2 = async (int msg) =>
             {
                 await fiber2.SwitchTo();
@@ -52,7 +52,7 @@ namespace AsyncFiberWorksTests
 
             long counter = 0;
 
-            var fiber1 = new PoolFiberSlim();
+            var fiber1 = new PoolFiber();
             Func<int, Task<bool>> receiverFunc1 = async (int msg) =>
             {
                 await fiber1.SwitchTo();
@@ -62,7 +62,7 @@ namespace AsyncFiberWorksTests
                 return default;
             };
 
-            var fiber2 = new PoolFiberSlim();
+            var fiber2 = new PoolFiber();
             Func<int, Task<bool>> receiverFunc2 = async (int msg) =>
             {
                 await fiber2.SwitchTo();

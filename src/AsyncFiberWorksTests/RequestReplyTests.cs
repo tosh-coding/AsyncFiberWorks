@@ -22,7 +22,7 @@ namespace AsyncFiberWorksTests
 
             // Responder.
             {
-                var fiber = new PoolFiberSlim();
+                var fiber = new PoolFiber();
                 Action<IRequest<string, DateTime>> onRequest = (req) => req.ReplyTo.Publish(now);
                 var subscriber = timeCheck.Subscribe(fiber, onRequest);
             }
@@ -30,11 +30,11 @@ namespace AsyncFiberWorksTests
             // Requester.
             {
                 var requesterThread = new ThreadPoolAdaptor();
-                var requesterFiber = new PoolFiberSlim(requesterThread, new DefaultExecutor());
+                var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
 
                 requesterFiber.Pause();
 
-                var workFiber = new PoolFiberSlim(new OneShotExecutor());
+                var workFiber = new PoolFiber(new OneShotExecutor());
                 var timeoutTimer = workFiber.Schedule(() =>
                 {
                     requesterThread.Queue((_) => Assert.Fail());
@@ -65,7 +65,7 @@ namespace AsyncFiberWorksTests
 
             // Responder.
             {
-                var fiber = new PoolFiberSlim();
+                var fiber = new PoolFiber();
                 Action<IRequest<string, int>> onRequest =
                     delegate (IRequest<string, int> req)
                     {
@@ -78,7 +78,7 @@ namespace AsyncFiberWorksTests
             // Requester.
             {
                 var requesterThread = new ThreadPoolAdaptor();
-                var workFiber = new PoolFiberSlim(requesterThread, new DefaultExecutor());
+                var workFiber = new PoolFiber(requesterThread, new DefaultExecutor());
                 Action actionAssertFail = () => requesterThread.Queue((_) => Assert.Fail());
 
                 var timeoutTimer = workFiber.Schedule(() =>
@@ -132,7 +132,7 @@ namespace AsyncFiberWorksTests
 
             // Responder.
             {
-                var responder = new PoolFiberSlim();
+                var responder = new PoolFiber();
                 Action<IRequest<string, int>> onRequest =
                     delegate (IRequest<string, int> req)
                     {
@@ -152,7 +152,7 @@ namespace AsyncFiberWorksTests
             // Requester.
             {
                 var mainThread = new ThreadPoolAdaptor();
-                var mainFiber = new PoolFiberSlim(mainThread, new DefaultExecutor());
+                var mainFiber = new PoolFiber(mainThread, new DefaultExecutor());
 
                 var requests = new List<string>();
                 requests.AddRange(dic.Keys);
@@ -207,7 +207,7 @@ namespace AsyncFiberWorksTests
 
         private static Task<int> WaitReply(Channel<IRequest<int, int>> countChannel, int requestData, int timeoutInMs)
         {
-            var workFiber = new PoolFiberSlim();
+            var workFiber = new PoolFiber();
             var disposables = new Unsubscriber();
             var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
             var timeoutTimer = workFiber.Schedule(() =>
@@ -236,7 +236,7 @@ namespace AsyncFiberWorksTests
 
             // Responder.
             {
-                var responder = new PoolFiberSlim();
+                var responder = new PoolFiber();
                 Action<IRequest<int, int>> onRequest =
                     (IRequest<int, int> req) =>
                     {

@@ -170,13 +170,13 @@ namespace AsyncFiberWorksTests
     class Node<T>
     {
         public readonly int NodeId;
-        public readonly PoolFiberSlim Fiber;
+        public readonly PoolFiber Fiber;
         public readonly List<T> ReceivedMessages = new List<T>();
 
         public Node(int nodeId)
         {
             this.NodeId = nodeId;
-            this.Fiber = new PoolFiberSlim();
+            this.Fiber = new PoolFiber();
         }
     }
 

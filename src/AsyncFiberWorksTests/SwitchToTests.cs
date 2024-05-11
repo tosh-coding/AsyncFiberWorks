@@ -67,19 +67,19 @@ namespace AsyncFiberWorksTests
         {
             await Task.Yield();
 
-            var mainFiber = new PoolFiberSlim(mainThread, new DefaultExecutor());
+            var mainFiber = new PoolFiber(mainThread, new DefaultExecutor());
 
             var defaultThreadPool = new DefaultThreadPool();
             var userThreadPoolA = UserThreadPool.StartNew();
             var userThreadPoolB = UserThreadPool.StartNew();
 
             var threadFiber = new ThreadFiber();
-            var dotnetPoolFiber1 = new PoolFiberSlim(defaultThreadPool, new DefaultExecutor());
-            var dotnetPoolFiber2 = new PoolFiberSlim();
-            var userPoolFiberA1 = new PoolFiberSlim(userThreadPoolA, new DefaultExecutor());
-            var userPoolFiberA2 = new PoolFiberSlim(userThreadPoolA, new DefaultExecutor());
-            var userPoolFiberB1 = new PoolFiberSlim(userThreadPoolB, new DefaultExecutor());
-            var userPoolFiberB2 = new PoolFiberSlim(userThreadPoolB, new DefaultExecutor());
+            var dotnetPoolFiber1 = new PoolFiber(defaultThreadPool, new DefaultExecutor());
+            var dotnetPoolFiber2 = new PoolFiber();
+            var userPoolFiberA1 = new PoolFiber(userThreadPoolA, new DefaultExecutor());
+            var userPoolFiberA2 = new PoolFiber(userThreadPoolA, new DefaultExecutor());
+            var userPoolFiberB1 = new PoolFiber(userThreadPoolB, new DefaultExecutor());
+            var userPoolFiberB2 = new PoolFiber(userThreadPoolB, new DefaultExecutor());
 
             var idListOfStub = new HashSet<int>();
             var idListOfThread = new HashSet<int>();

@@ -10,7 +10,7 @@ namespace AsyncFiberWorks.Fibers
     /// Consume them by periodically calling methods for execution.
     /// Periodically call a method for execution. They are executed on their calling thread.
     /// </summary>
-    public sealed class StubFiberSlim : IFiber
+    public sealed class StubFiber : IFiber
     {
         private readonly object _lock = new object();
         private readonly ConcurrentQueue<Action> _pending = new ConcurrentQueue<Action>();
@@ -21,7 +21,7 @@ namespace AsyncFiberWorks.Fibers
         /// <summary>
         /// Create a stub fiber with the default executor.
         /// </summary>
-        public StubFiberSlim()
+        public StubFiber()
             : this(new DefaultExecutor())
         {
         }
@@ -30,7 +30,7 @@ namespace AsyncFiberWorks.Fibers
         /// Create a stub fiber with the specified executor.
         /// </summary>
         /// <param name="executor"></param>
-        public StubFiberSlim(IExecutor executor)
+        public StubFiber(IExecutor executor)
         {
             _executor = executor;
         }

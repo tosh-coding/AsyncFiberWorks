@@ -19,7 +19,7 @@ namespace AsyncFiberWorksTests
         {
             var timeList = new List<TimeSpan>();
             int counter = 0;
-            var fiber = new PoolFiberSlim();
+            var fiber = new PoolFiber();
             var tcs = new TaskCompletionSource<int>();
             var sw = Stopwatch.StartNew();
             Action action = () =>

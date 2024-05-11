@@ -31,7 +31,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="intervalInMs">Batch processing interval. Milliseconds.</param>
         /// <param name="receive">Message receiving handler.</param>
         public KeyedBatchFilter(Converter<T, K> keyResolver, long intervalInMs, Action<IDictionary<K, T>> receive)
-            : this(keyResolver, intervalInMs, new PoolFiberSlim(), receive)
+            : this(keyResolver, intervalInMs, new PoolFiber(), receive)
         {
         }
 
