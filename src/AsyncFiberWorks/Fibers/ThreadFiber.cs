@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.Fibers
     /// <summary>
     /// Fiber implementation backed by a dedicated thread.
     /// </summary>
-    public class ThreadFiber : IFiber, IDisposable, IExecutionContext
+    public class ThreadFiber : IFiber, IDisposable
     {
         private readonly IDedicatedConsumerThreadWork _queue;
         private readonly UserWorkerThread _workerThread;

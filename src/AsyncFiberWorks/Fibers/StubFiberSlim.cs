@@ -10,7 +10,7 @@ namespace AsyncFiberWorks.Fibers
     /// Consume them by periodically calling methods for execution.
     /// Periodically call a method for execution. They are executed on their calling thread.
     /// </summary>
-    public sealed class StubFiberSlim : IExecutionContext
+    public sealed class StubFiberSlim : IFiber
     {
         private readonly object _lock = new object();
         private readonly ConcurrentQueue<Action> _pending = new ConcurrentQueue<Action>();
