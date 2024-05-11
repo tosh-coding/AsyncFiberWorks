@@ -108,11 +108,7 @@ namespace AsyncFiberWorksTests.Examples
 
             using (ThreadFiber oddFiber = new ThreadFiber(), evenFiber = new ThreadFiber())
             {
-                oddFiber.Start();
-
                 var oddCalculator = new FibonacciCalculator(oddFiber, "Odd", oddChannel, evenChannel, limit, onCompleted);
-
-                evenFiber.Start();
 
                 new FibonacciCalculator(evenFiber, "Even", evenChannel, oddChannel, limit, onCompleted);
 

@@ -74,7 +74,6 @@ namespace AsyncFiberWorksTests
             var userThreadPoolB = UserThreadPool.StartNew();
 
             var threadFiber = new ThreadFiber();
-            threadFiber.Start();
             var dotnetPoolFiber1 = new PoolFiberSlim(defaultThreadPool, new DefaultExecutor());
             var dotnetPoolFiber2 = new PoolFiberSlim();
             var userPoolFiberA1 = new PoolFiberSlim(userThreadPoolA, new DefaultExecutor());

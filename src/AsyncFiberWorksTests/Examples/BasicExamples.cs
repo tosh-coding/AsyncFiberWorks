@@ -36,7 +36,6 @@ namespace AsyncFiberWorksTests.Examples
         {
             using (var fiber = new ThreadFiber())
             {
-                fiber.Start();
                 var channel = new Channel<string>();
 
                 var reset = new AutoResetEvent(false);
@@ -54,7 +53,6 @@ namespace AsyncFiberWorksTests.Examples
         {
             using (var fiber = new ThreadFiber())
             {
-                fiber.Start();
                 var channel = new Channel<int>();
 
                 var reset = new AutoResetEvent(false);
@@ -86,7 +84,6 @@ namespace AsyncFiberWorksTests.Examples
         {
             using (var fiber = new ThreadFiber())
             {
-                fiber.Start();
                 var counter = new Channel<int>();
                 var reset = new ManualResetEvent(false);
                 var total = 0;
@@ -118,7 +115,6 @@ namespace AsyncFiberWorksTests.Examples
         {
             using (var fiber = new ThreadFiber())
             {
-                fiber.Start();
                 var counter = new Channel<int>();
                 var reset = new ManualResetEvent(false);
                 Action<IDictionary<String, int>> cb = delegate(IDictionary<String, int> batch)
@@ -206,7 +202,6 @@ namespace AsyncFiberWorksTests.Examples
         public void ShouldIncreaseThreadFiberSubscriberCountByOne()
         {
             var fiber = new ThreadFiber();
-            fiber.Start();
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, fiber.NumSubscriptions);

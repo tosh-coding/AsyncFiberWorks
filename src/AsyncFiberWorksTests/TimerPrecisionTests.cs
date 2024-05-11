@@ -116,7 +116,6 @@ namespace AsyncFiberWorksTests
             {
                 var disposable = new Unsubscriber();
                 var threadFiber = new ThreadFiber();
-                threadFiber.Start();
                 threadFiber.Enqueue(() =>
                 {
                     var cancellation = new CancellationTokenSource();

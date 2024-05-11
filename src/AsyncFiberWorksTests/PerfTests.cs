@@ -54,7 +54,6 @@ namespace AsyncFiberWorksTests
             var executor = new BoundedQueue(new PerfExecutor()) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
             using (var fiber = new ThreadFiber(executor))
             {
-                fiber.Start();
                 var channel = new Channel<MsgStruct>();
                 const int max = 5000000;
                 var reset = new AutoResetEvent(false);
@@ -84,7 +83,6 @@ namespace AsyncFiberWorksTests
             var executor = new BusyWaitQueue(new PerfExecutor(), 100000, 30000);
             using (var fiber = new ThreadFiber(executor))
             {
-                fiber.Start();
                 var channel = new Channel<MsgStruct>();
                 const int max = 5000000;
                 var reset = new AutoResetEvent(false);
@@ -115,7 +113,6 @@ namespace AsyncFiberWorksTests
             var executor = new BoundedQueue(new PerfExecutor()) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
             using (var fiber = new ThreadFiber(executor))
             {
-                fiber.Start();
                 var channel = new Channel<int>();
                 const int max = 5000000;
                 var reset = new AutoResetEvent(false);
@@ -146,7 +143,6 @@ namespace AsyncFiberWorksTests
             var executor = new BoundedQueue(new PerfExecutor()) { MaxDepth = 100000, MaxEnqueueWaitTimeInMs = 1000 };
             using (var fiber = new ThreadFiber(executor))
             {
-                fiber.Start();
                 var channel = new Channel<object>();
                 const int max = 5000000;
                 var reset = new AutoResetEvent(false);

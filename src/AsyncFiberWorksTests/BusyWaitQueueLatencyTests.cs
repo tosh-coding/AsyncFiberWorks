@@ -45,7 +45,6 @@ namespace AsyncFiberWorksTests
             for (var i = 0; i < fibers.Length; i++)
             {
                 fibers[i] = creator();
-                fibers[i].Start();
                 var prior = i - 1;
                 var isLast = i + 1 == fibers.Length;
                 var target = !isLast ? channels[i] : null;

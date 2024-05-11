@@ -53,6 +53,7 @@ namespace AsyncFiberWorks.Fibers
         {
             _queue = queue;
             _workerThread = new UserWorkerThread(queue, threadName, isBackground, priority);
+            _workerThread.Start();
         }
 
         /// <summary>
@@ -62,13 +63,6 @@ namespace AsyncFiberWorks.Fibers
         public ThreadFiber(UserWorkerThread consumerThread)
         {
             _workerThread = consumerThread;
-        }
-
-        /// <summary>
-        /// Start the thread.
-        /// </summary>
-        public void Start()
-        {
             _workerThread.Start();
         }
 

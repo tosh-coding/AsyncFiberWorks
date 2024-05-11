@@ -18,7 +18,6 @@ namespace WpfExample
             var subscriptionFiber = threadFiber.BeginSubscription();
             var subscriptionChannel = channels.StartChannel.Subscribe(threadFiber, OnStart);
             subscriptionFiber.AppendDisposable(subscriptionChannel);
-            threadFiber.Start();
             fiber = threadFiber;
         }
 

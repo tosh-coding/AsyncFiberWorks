@@ -238,8 +238,6 @@ namespace AsyncFiberWorksTests.Examples
             for (var i = 0; i < quadraticChannels.Length; i++)
             {
                 var fiber = new ThreadFiber("solver " + (i + 1));
-                fiber.Start();
-
                 quadraticChannels[i] = new Channel<Quadratic>();
                 solvers.Add(new QuadraticSolver(fiber, quadraticChannels[i], solvedChannel));
             }
@@ -253,7 +251,6 @@ namespace AsyncFiberWorksTests.Examples
             var source = new QuadraticSource(quadraticChannels, quadraticChannels.Length, DateTime.Now.Millisecond);
 
             // Finally a sink to output our results.
-            sinkFiber.Start();
             new SolvedQuadraticSink(sinkFiber, solvedChannel, quadraticChannels.Length, onCompleted);
 
             // This starts streaming the equations.

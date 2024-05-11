@@ -57,7 +57,6 @@ namespace AsyncFiberWorksTests
         {
             using (var nonstopFiber = new ThreadFiber())
             {
-                nonstopFiber.Start();
                 var pauseFiber = new PoolFiberSlim();
                 
                 pauseFiber.Pause();
