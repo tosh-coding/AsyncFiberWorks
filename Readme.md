@@ -46,6 +46,16 @@ namespace Sample
             // Switch the context to a .NET ThreadPool worker thread.
             await Task.Yield();
 
+            // When an async lambda expression is enqueued,
+            // the fiber waits until it is completed.
+            mainFiber.Enqueue(async () =>
+            {
+                await Task.Delay(1000);
+
+                // This is performed in the original fiber before resuming.
+                return () => { counter += 5; };
+            });
+
             // Stop the Run method on the main thread.
             mainThreadAdaptor.Stop();
         }
@@ -153,11 +163,6 @@ Fiber is a mechanism for sequential processing.  Actions added to a fiber are ex
   * _[PoolFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/PoolFiber.cs)_ - The most commonly used fiber.  Internally, the [.NET thread pool is used](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Core/DefaultThreadPool.cs#L21) by default, and a user thread pool is also available.
   * _[ThreadFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/ThreadFiber.cs)_ - This fiber generates and uses a dedicated thread internally.
   * _[StubFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/StubFiber.cs)_ - Fiber without consumer thread. Buffered actions are not performed automatically and must be pumped manually.
-
-### Pause fiber ###
-PoolFiber and StubFiber are supports pausing and resuming task consumption. This is useful when you want to stop consuming subsequent tasks until some asynchronous processing completes. It can be regarded as a synchronous process on that fiber.  See [unit test](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/FiberPauseResumeTests.cs).
-
-ThreadFiber does not support pause. It is specifically intended for performance-critical uses, and pausing is not suitable for that purpose.  Use PoolFiber instead.
 
 ## ThreadPools ##
  * _[DefaultThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/DefaultThreadPool.cs)_ - Default implementation that uses the .NET thread pool.
