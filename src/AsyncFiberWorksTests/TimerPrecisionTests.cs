@@ -250,6 +250,317 @@ namespace AsyncFiberWorksTests
             await BenchmarkTimeSetEvent();
             PerfSettings.timeEndPeriod(1);
         }
+
+        [Test]
+        [TestCase(1000)]
+        [TestCase(500)]
+        [TestCase(100)]
+        public async Task WaitableTimerAndWaitOneWithTimeBeginPeriod(int sleepUs)
+        {
+            PerfSettings.timeBeginPeriod(1);
+            await BenchmarkWaitableTimerAndWaitOne(sleepUs);
+            PerfSettings.timeEndPeriod(1);
+        }
+
+        [Test]
+        [TestCase(10000u, 1000)]
+        [TestCase(10000u, 500)]
+        [TestCase(10000u, 100)]
+        //[TestCase(5000u, 1000)]
+        //[TestCase(5000u, 500)]
+        //[TestCase(5000u, 100)]
+        //[TestCase(1000u, 1000)]
+        //[TestCase(1000u, 100)]
+        public async Task WaitableTimerAndWaitOneWithNtSetTimerResolution(uint targetResolution100ns, int sleepUs)
+        {
+            PerfSettings.timeBeginPeriod(1);
+            uint currentResolution = 0;
+            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            await BenchmarkWaitableTimerAndWaitOne(sleepUs);
+            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            PerfSettings.timeEndPeriod(1);
+        }
+
+        async Task BenchmarkWaitableTimerAndWaitOne(int sleepUs)
+        {
+            await BenchmarkTimerAccuracy((fiber, action) =>
+            {
+                var disposable = new Unsubscriber();
+                var threadFiber = new ThreadFiber();
+                threadFiber.Enqueue(() =>
+                {
+                    var cancellation = new CancellationTokenSource();
+                    disposable.Append(cancellation);
+
+                    var timerWaitHandle = new Perf.WaitableTimer();
+                    while (true)
+                    {
+                        if (cancellation.IsCancellationRequested)
+                        {
+                            threadFiber.Stop();
+                            break;
+                        }
+                        else
+                        {
+                            timerWaitHandle.Set(sleepUs * -10L);
+                            timerWaitHandle.WaitOne();
+
+                            fiber.Enqueue(action);
+                        }
+                    }
+                    timerWaitHandle.Dispose();
+                });
+                return disposable;
+            });
+        }
+
+        [Test]
+        [TestCase(1000)]
+        [TestCase(500)]
+        [TestCase(100)]
+        public async Task WaitableTimerHighResolutionAndWaitOneWithTimeBeginPeriod(int sleepUs)
+        {
+            PerfSettings.timeBeginPeriod(1);
+            await BenchmarkWaitableTimerHighResolutionAndWaitOne(sleepUs);
+            PerfSettings.timeEndPeriod(1);
+        }
+
+        [Test]
+        [TestCase(10000u, 1000)]
+        [TestCase(10000u, 500)]
+        [TestCase(10000u, 100)]
+        //[TestCase(5000u, 1000)]
+        //[TestCase(5000u, 500)]
+        //[TestCase(5000u, 100)]
+        //[TestCase(1000u, 1000)]
+        //[TestCase(1000u, 100)]
+        public async Task WaitableTimerHighResolutionAndWaitOneWithNtSetTimerResolution(uint targetResolution100ns, int sleepUs)
+        {
+            PerfSettings.timeBeginPeriod(1);
+            uint currentResolution = 0;
+            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            await BenchmarkWaitableTimerHighResolutionAndWaitOne(sleepUs);
+            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            PerfSettings.timeEndPeriod(1);
+        }
+
+        async Task BenchmarkWaitableTimerHighResolutionAndWaitOne(int sleepUs)
+        {
+            await BenchmarkTimerAccuracy((fiber, action) =>
+            {
+                var disposable = new Unsubscriber();
+                var threadFiber = new ThreadFiber();
+                threadFiber.Enqueue(() =>
+                {
+                    var cancellation = new CancellationTokenSource();
+                    disposable.Append(cancellation);
+
+                    var timerWaitHandle = new Perf.WaitableTimerEx(highResolution: true);
+                    while (true)
+                    {
+                        if (cancellation.IsCancellationRequested)
+                        {
+                            threadFiber.Stop();
+                            break;
+                        }
+                        else
+                        {
+                            timerWaitHandle.Set(sleepUs * -10L);
+                            timerWaitHandle.WaitOne();
+
+                            fiber.Enqueue(action);
+                        }
+                    }
+                    timerWaitHandle.Dispose();
+                });
+                return disposable;
+            });
+        }
+
+        [Test]
+        public async Task ThreadPoolRegisterWaitForSingleObjectTimeoutWithTimeBeginPeriod()
+        {
+            PerfSettings.timeBeginPeriod(1);
+            await BenchmarkThreadPoolRegisterWaitForSingleObjectTimeout();
+            PerfSettings.timeEndPeriod(1);
+        }
+
+        [Test]
+        [TestCase(10000u)]
+        [TestCase(5000u)]
+        [TestCase(1000u)]
+        public async Task ThreadPoolRegisterWaitForSingleObjectTimeoutWithNtSetTimerResolution(uint targetResolution100ns)
+        {
+            PerfSettings.timeBeginPeriod(1);
+            uint currentResolution = 0;
+            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            await BenchmarkThreadPoolRegisterWaitForSingleObjectTimeout();
+            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            PerfSettings.timeEndPeriod(1);
+        }
+
+        async Task BenchmarkThreadPoolRegisterWaitForSingleObjectTimeout()
+        {
+            await BenchmarkTimerAccuracy((fiber, action) =>
+            {
+                var disposable = new Unsubscriber();
+                var cancellation = new CancellationTokenSource();
+                disposable.Append(cancellation);
+                var handleList = new RegisteredWaitHandle[1];
+
+                // Non-operating dummy event.
+                var manualResetEvent = new ManualResetEventSlim(false, 0);
+
+                // Timeout at 1 ms, repeat.
+                int timeoutMs = 1;
+                bool executeOnlyOnce = false;
+
+                var tmpHandle = ThreadPool.RegisterWaitForSingleObject(manualResetEvent.WaitHandle, (state, timeout) =>
+                {
+                    if (cancellation.IsCancellationRequested)
+                    {
+                        var handle = handleList[0];
+                        handle.Unregister(manualResetEvent.WaitHandle);
+                        manualResetEvent.Dispose();
+                    }
+                    else
+                    {
+                        fiber.Enqueue(action);
+                    }
+                }, null, timeoutMs, executeOnlyOnce);
+                handleList[0] = tmpHandle;
+                return disposable;
+            });
+        }
+
+        [Test]
+        [TestCase(1000)]
+        [TestCase(500)]
+        [TestCase(100)]
+        public async Task WaitableTimerAndThreadPoolRegisterWaitForSingleObjectWithTimeBeginPeriod(int sleepUs)
+        {
+            PerfSettings.timeBeginPeriod(1);
+            await BenchmarkWaitableTimerAndThreadPoolRegisterWaitForSingleObject(sleepUs);
+            PerfSettings.timeEndPeriod(1);
+        }
+
+        [Test]
+        [TestCase(10000u, 1000)]
+        [TestCase(10000u, 500)]
+        [TestCase(10000u, 100)]
+        //[TestCase(5000u, 1000)]
+        //[TestCase(5000u, 500)]
+        //[TestCase(5000u, 100)]
+        //[TestCase(1000u, 1000)]
+        //[TestCase(1000u, 100)]
+        public async Task WaitableTimerAndThreadPoolRegisterWaitForSingleObjectWithNtSetTimerResolution(uint targetResolution100ns, int sleepUs)
+        {
+            PerfSettings.timeBeginPeriod(1);
+            uint currentResolution = 0;
+            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            await BenchmarkWaitableTimerAndThreadPoolRegisterWaitForSingleObject(sleepUs);
+            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            PerfSettings.timeEndPeriod(1);
+        }
+
+        async Task BenchmarkWaitableTimerAndThreadPoolRegisterWaitForSingleObject(int sleepUs)
+        {
+            await BenchmarkTimerAccuracy((fiber, action) =>
+            {
+                var disposable = new Unsubscriber();
+                var cancellation = new CancellationTokenSource();
+                disposable.Append(cancellation);
+                Action[] actionList = new Action[1];
+                var handleList = new RegisteredWaitHandle[1];
+
+                var waitableTimer = new Perf.WaitableTimer(manualReset: false);
+                int timeoutMs = Timeout.Infinite;
+                bool executeOnlyOnce = false;
+
+                waitableTimer.Set(sleepUs * -10L);
+                var tmpHandle = ThreadPool.RegisterWaitForSingleObject(waitableTimer, (state, timeout) =>
+                {
+                    if (cancellation.IsCancellationRequested)
+                    {
+                        var handle = handleList[0];
+                        handle.Unregister(waitableTimer);
+                        waitableTimer.Dispose();
+                    }
+                    else
+                    {
+                        fiber.Enqueue(action);
+                        waitableTimer.Set(sleepUs * -10L);
+                    }
+                }, null, timeoutMs, executeOnlyOnce);
+                handleList[0] = tmpHandle;
+                return disposable;
+            });
+        }
+
+        [Test]
+        [TestCase(1000)]
+        [TestCase(500)]
+        [TestCase(100)]
+        public async Task WaitableTimerHighResolutionAndThreadPoolRegisterWaitForSingleObjectWithTimeBeginPeriod(int sleepUs)
+        {
+            PerfSettings.timeBeginPeriod(1);
+            await BenchmarkWaitableTimerHighResolutionAndThreadPoolRegisterWaitForSingleObject(sleepUs);
+            PerfSettings.timeEndPeriod(1);
+        }
+
+        [Test]
+        [TestCase(10000u, 1000)]
+        [TestCase(10000u, 500)]
+        [TestCase(10000u, 100)]
+        //[TestCase(5000u, 1000)]
+        //[TestCase(5000u, 500)]
+        //[TestCase(5000u, 100)]
+        //[TestCase(1000u, 1000)]
+        //[TestCase(1000u, 500)]
+        //[TestCase(1000u, 100)]
+        public async Task WaitableTimerHighResolutionAndThreadPoolRegisterWaitForSingleObjectWithNtSetTimerResolution(uint targetResolution100ns, int sleepUs)
+        {
+            PerfSettings.timeBeginPeriod(1);
+            uint currentResolution = 0;
+            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            await BenchmarkWaitableTimerHighResolutionAndThreadPoolRegisterWaitForSingleObject(sleepUs);
+            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            PerfSettings.timeEndPeriod(1);
+        }
+
+        async Task BenchmarkWaitableTimerHighResolutionAndThreadPoolRegisterWaitForSingleObject(int sleepUs)
+        {
+            await BenchmarkTimerAccuracy((fiber, action) =>
+            {
+                var disposable = new Unsubscriber();
+                var cancellation = new CancellationTokenSource();
+                disposable.Append(cancellation);
+                Action[] actionList = new Action[1];
+                var handleList = new RegisteredWaitHandle[1];
+
+                var waitableTimer = new Perf.WaitableTimerEx(manualReset: false, highResolution: true);
+                int timeoutMs = Timeout.Infinite;
+                bool executeOnlyOnce = false;
+
+                waitableTimer.Set(sleepUs * -10L);
+                var tmpHandle = ThreadPool.RegisterWaitForSingleObject(waitableTimer, (state, timeout) =>
+                {
+                    if (cancellation.IsCancellationRequested)
+                    {
+                        var handle = handleList[0];
+                        handle.Unregister(waitableTimer);
+                        waitableTimer.Dispose();
+                    }
+                    else
+                    {
+                        fiber.Enqueue(action);
+                        waitableTimer.Set(sleepUs * -10L);
+                    }
+                }, null, timeoutMs, executeOnlyOnce);
+                handleList[0] = tmpHandle;
+                return disposable;
+            });
+        }
 #endif
     }
 }
