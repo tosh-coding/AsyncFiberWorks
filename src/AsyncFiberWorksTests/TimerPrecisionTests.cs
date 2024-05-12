@@ -344,6 +344,27 @@ namespace AsyncFiberWorksTests
             PerfSettings.timeEndPeriod(1);
         }
 
+        [Test]
+        [TestCase(1000)]
+        [TestCase(500)]
+        [TestCase(100)]
+        public async Task WaitableTimerAndWaitOneSingle(int sleepUs)
+        {
+            await BenchmarkWaitableTimerAndWaitOne(sleepUs);
+        }
+
+        [Test]
+        [TestCase(100u)]
+        [TestCase(15u)]
+        [TestCase(10u)]
+        [TestCase(5u)]
+        public async Task WaitableTimerHighResolutionAndWaitOne500usWithTimeBeginPeriod(uint timePeriod)
+        {
+            PerfSettings.timeBeginPeriod(timePeriod);
+            await BenchmarkWaitableTimerHighResolutionAndWaitOne(500);
+            PerfSettings.timeEndPeriod(timePeriod);
+        }
+
         async Task BenchmarkWaitableTimerHighResolutionAndWaitOne(int sleepUs)
         {
             await BenchmarkTimerAccuracy((fiber, action) =>
