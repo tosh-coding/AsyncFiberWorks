@@ -6,7 +6,7 @@ namespace AsyncFiberWorks.Core
     /// <summary>
     /// Methods for scheduling actions that will be executed in the future.
     /// </summary>
-    public static class SchedulerExtensions
+    public static class TimerExtensions
     {
         /// <summary>
         /// Schedules an action to be executed once.
@@ -58,9 +58,13 @@ namespace AsyncFiberWorks.Core
         /// <param name="func">Task generator.</param>
         /// <param name="firstInMs"></param>
         /// <returns>A handle to cancel the timer.</returns>
-        public static IDisposable Schedule(this IAsyncFiber fiber, Func<Task> func, long firstInMs)
+        public static IDisposable Schedule(this IAsyncFiber fiber, Func<Task> func, long firstInMs, IOneshotTimerFactory timerFactory = null)
         {
-            return OneshotTimerAction.StartNew(() => fiber.Enqueue(func), firstInMs);
+            if (timerFactory == null)
+            {
+                timerFactory = new ThreadingTimerFactory();
+            }
+            return timerFactory.Schedule(() => fiber.Enqueue(func), firstInMs);
         }
 
         /// <summary>
@@ -71,19 +75,20 @@ namespace AsyncFiberWorks.Core
         /// <param name="firstInMs"></param>
         /// <param name="regularInMs"></param>
         /// <returns>A handle to cancel the timer.</returns>
-        public static IDisposable ScheduleOnInterval(this IAsyncFiber fiber, Func<Task> func, long firstInMs, long regularInMs)
+        public static IDisposable ScheduleOnInterval(this IAsyncFiber fiber, Func<Task> func, long firstInMs, long regularInMs, IIntervalTimerFactory timerFactory = null)
         {
+            if (timerFactory == null)
+            {
+                timerFactory = new ThreadingTimerFactory();
+            }
+
             if (regularInMs <= 0)
             {
-                return fiber.Schedule(func, firstInMs);
+                return timerFactory.Schedule(() => fiber.Enqueue(func), firstInMs);
             }
             else
             {
-                var executor = new NonReentrantAsyncExecutorSingle();
-                return IntervalTimerAction.StartNew(() => fiber.Enqueue(async () =>
-                {
-                    await executor.Execute(func).ConfigureAwait(false);
-                }), firstInMs, regularInMs);
+                return timerFactory.ScheduleOnInterval(() => fiber.Enqueue(func), firstInMs, regularInMs);
             }
         }
     }

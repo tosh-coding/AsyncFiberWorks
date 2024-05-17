@@ -51,7 +51,14 @@ namespace AsyncFiberWorks.Core
             }
             else
             {
-                return IntervalTimerAction.StartNew(action, firstIntervalMs, intervalMs);
+                if (_executor != null)
+                {
+                    return IntervalTimerAction.StartNew(() => _executor.Execute(action), firstIntervalMs, intervalMs);
+                }
+                else
+                {
+                    return IntervalTimerAction.StartNew(action, firstIntervalMs, intervalMs);
+                }
             }
         }
     }
