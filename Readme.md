@@ -157,6 +157,15 @@ while (...)
 - Create `AsyncActionDriver` and use it with a repeating timer, which works well with tick-based game loop implementations.
 - Create `AsyncActionDriver<T>` and use it for event distribution.
 
+### How to pause contexts ###
+
+| Execution context type | Method |
+|:-|:-|
+| Threads | `Thread.Sleep()` |
+| Fiber on dedicated thread | `Thread.Sleep()` |
+| Fiber on shared threads | `fiber.Enqueue(Func<Task<Action>>) & await Task.Delay()` |
+| Asynchronous control flow | `await Task.Deley()` |
+
 ## Fibers ##
 Fiber is a mechanism for sequential processing.  Actions added to a fiber are executed sequentially.
 
