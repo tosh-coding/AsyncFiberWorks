@@ -3,19 +3,20 @@ using System.Threading;
 using NUnit.Framework;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
+using AsyncFiberWorksTests.Perf;
 
 namespace AsyncFiberWorksTests
 {
     [TestFixture]
     public class TimerActionTests
     {
-        [Test]
-        public void CallbackFromTimer()
+        [Test, TestCaseSource("TimerFactories")]
+        public void CallbackFromTimer(IOneshotTimerFactory timerFactory)
         {
             var stubFiber = new StubFiber();
             long counter = 0;
             Action action = () => { counter++; };
-            var timer = OneshotTimerAction.StartNew(() => stubFiber.Enqueue(action), 2);
+            var timer = timerFactory.Schedule(() => stubFiber.Enqueue(action), 2);
 
             Thread.Sleep(20);
             stubFiber.ExecuteOnlyPendingNow();
@@ -24,13 +25,13 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(1, counter);
         }
 
-        [Test]
-        public void CallbackFromIntervalTimerWithCancel()
+        [Test, TestCaseSource("TimerFactories")]
+        public void CallbackFromIntervalTimerWithCancel(IIntervalTimerFactory timerFactory)
         {
             var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
-            var timer = IntervalTimerAction.StartNew(() => stubFiber.Enqueue(actionOnTimer), 2, 100);
+            var timer = timerFactory.ScheduleOnInterval(() => stubFiber.Enqueue(actionOnTimer), 2, 100);
 
             Thread.Sleep(20);
             stubFiber.ExecuteOnlyPendingNow();
@@ -42,18 +43,26 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(2, counterOnTimer);
         }
 
-        [Test]
-        public void CallbackFromTimerWithCancel()
+        [Test, TestCaseSource("TimerFactories")]
+        public void CallbackFromTimerWithCancel(IOneshotTimerFactory timerFactory)
         {
             var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
-            var timer = OneshotTimerAction.StartNew(() => stubFiber.Enqueue(actionOnTimer), 2);
+            var timer = timerFactory.Schedule(() => stubFiber.Enqueue(actionOnTimer), 2);
 
             timer.Dispose();
             Thread.Sleep(20);
             stubFiber.ExecuteOnlyPendingNow();
             Assert.AreEqual(0, counterOnTimer);
         }
+
+        static object[] TimerFactories =
+        {
+            new object[] { new ThreadingTimerFactory() },
+#if NETFRAMEWORK || WINDOWS
+            new object[] { new WaitableTimerExFactory() },
+#endif
+        };
     }
 }
