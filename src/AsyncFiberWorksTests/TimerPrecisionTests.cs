@@ -441,7 +441,7 @@ namespace AsyncFiberWorksTests
                     if (cancellation.IsCancellationRequested)
                     {
                         var handle = handleList[0];
-                        handle.Unregister(manualResetEvent.WaitHandle);
+                        handle.Unregister(null);
                         manualResetEvent.Dispose();
                     }
                     else
@@ -504,7 +504,7 @@ namespace AsyncFiberWorksTests
                     if (cancellation.IsCancellationRequested)
                     {
                         var handle = handleList[0];
-                        handle.Unregister(waitableTimer);
+                        handle.Unregister(null);
                         waitableTimer.Dispose();
                     }
                     else
@@ -569,7 +569,7 @@ namespace AsyncFiberWorksTests
                     if (cancellation.IsCancellationRequested)
                     {
                         var handle = handleList[0];
-                        handle.Unregister(waitableTimer);
+                        handle.Unregister(null);
                         waitableTimer.Dispose();
                     }
                     else
