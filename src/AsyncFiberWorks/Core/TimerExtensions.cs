@@ -57,6 +57,7 @@ namespace AsyncFiberWorks.Core
         /// <param name="fiber"></param>
         /// <param name="func">Task generator.</param>
         /// <param name="firstInMs"></param>
+        /// <param name="timerFactory"></param>
         /// <returns>A handle to cancel the timer.</returns>
         public static IDisposable Schedule(this IAsyncFiber fiber, Func<Task> func, long firstInMs, IOneshotTimerFactory timerFactory = null)
         {
@@ -74,6 +75,7 @@ namespace AsyncFiberWorks.Core
         /// <param name="func">Task generator.</param>
         /// <param name="firstInMs"></param>
         /// <param name="regularInMs"></param>
+        /// <param name="timerFactory"></param>
         /// <returns>A handle to cancel the timer.</returns>
         public static IDisposable ScheduleOnInterval(this IAsyncFiber fiber, Func<Task> func, long firstInMs, long regularInMs, IIntervalTimerFactory timerFactory = null)
         {
