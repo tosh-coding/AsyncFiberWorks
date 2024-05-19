@@ -9,7 +9,7 @@ namespace AsyncFiberWorksTests.Perf
     /// <summary>
     /// Timer using WaitableTimerEx in Windows.
     /// </summary>
-    public class WaitableTimerExFactory : IOneshotTimerFactory, IIntervalTimerFactory
+    public class WaitableTimerExFactory : ITimerFactory
     {
         /// <summary>
         /// Start a timer.

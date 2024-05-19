@@ -5,7 +5,7 @@ namespace AsyncFiberWorks.Core
     /// <summary>
     /// Generator of repeating timers.
     /// </summary>
-    public interface IIntervalTimerFactory : IOneshotTimerFactory
+    public interface IIntervalTimerFactory
     {
         /// <summary>
         /// Start a repeating timer.

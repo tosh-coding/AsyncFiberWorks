@@ -36,19 +36,16 @@ namespace AsyncFiberWorks.Core
         /// <returns>A handle to cancel the timer.</returns>
         public static IDisposable ScheduleOnInterval(this IExecutionContext fiber, Action action, long firstInMs, long regularInMs, IIntervalTimerFactory timerFactory = null)
         {
+            if (regularInMs <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(regularInMs));
+            }
+
             if (timerFactory == null)
             {
                 timerFactory = new ThreadingTimerFactory();
             }
-
-            if (regularInMs <= 0)
-            {
-                return timerFactory.Schedule(() => fiber.Enqueue(action), firstInMs);
-            }
-            else
-            {
-                return timerFactory.ScheduleOnInterval(() => fiber.Enqueue(action), firstInMs, regularInMs);
-            }
+            return timerFactory.ScheduleOnInterval(() => fiber.Enqueue(action), firstInMs, regularInMs);
         }
 
         /// <summary>
@@ -79,19 +76,16 @@ namespace AsyncFiberWorks.Core
         /// <returns>A handle to cancel the timer.</returns>
         public static IDisposable ScheduleOnInterval(this IAsyncFiber fiber, Func<Task> func, long firstInMs, long regularInMs, IIntervalTimerFactory timerFactory = null)
         {
+            if (regularInMs <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(regularInMs));
+            }
+
             if (timerFactory == null)
             {
                 timerFactory = new ThreadingTimerFactory();
             }
-
-            if (regularInMs <= 0)
-            {
-                return timerFactory.Schedule(() => fiber.Enqueue(func), firstInMs);
-            }
-            else
-            {
-                return timerFactory.ScheduleOnInterval(() => fiber.Enqueue(func), firstInMs, regularInMs);
-            }
+            return timerFactory.ScheduleOnInterval(() => fiber.Enqueue(func), firstInMs, regularInMs);
         }
     }
 }

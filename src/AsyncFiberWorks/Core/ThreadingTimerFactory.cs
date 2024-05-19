@@ -5,7 +5,7 @@ namespace AsyncFiberWorks.Core
     /// <summary>
     /// Wrapper class for System.Threading.Timer.
     /// </summary>
-    public class ThreadingTimerFactory : IOneshotTimerFactory, IIntervalTimerFactory
+    public class ThreadingTimerFactory : ITimerFactory
     {
         readonly IExecutor _executor;
 
