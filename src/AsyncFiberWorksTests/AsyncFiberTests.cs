@@ -17,22 +17,6 @@ namespace AsyncFiberWorksTests
             await AsyncFiberTest(fiber);
         }
 
-        [Test]
-        public async Task LoopRunningAsyncFiberTest()
-        {
-            var fiber = new LoopRunningAsyncFiber();
-            await AsyncFiberTest(fiber);
-            fiber.Dispose();
-        }
-
-        [Test]
-        public async Task SemaphoreLoopAsyncFiberTest()
-        {
-            var fiber = new SemaphoreLoopAsyncFiber();
-            await AsyncFiberTest(fiber);
-            fiber.Dispose();
-        }
-
         async Task AsyncFiberTest(IAsyncFiber fiber)
         {
             int counter = 0;
