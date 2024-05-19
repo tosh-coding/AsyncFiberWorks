@@ -4,6 +4,8 @@ using NUnit.Framework;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using AsyncFiberWorksTests.Perf;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace AsyncFiberWorksTests
 {
@@ -55,6 +57,24 @@ namespace AsyncFiberWorksTests
             Thread.Sleep(20);
             stubFiber.ExecuteOnlyPendingNow();
             Assert.AreEqual(0, counterOnTimer);
+        }
+
+        [Test, TestCaseSource("TimerFactories")]
+        public async Task OneshotTimerDelayTest(IOneshotTimerFactory timerFactory)
+        {
+            var delayFactory = new OneshotTimerDelayFactory(timerFactory);
+
+            await delayFactory.Delay(10);
+            await delayFactory.Delay(10);
+            await delayFactory.Delay(10);
+
+            var sw = Stopwatch.StartNew();
+            await delayFactory.Delay(100);
+            var elapsed = sw.Elapsed;
+
+            int diff = 16;
+            Assert.IsTrue(elapsed.TotalMilliseconds > (100 - diff));
+            Assert.IsTrue(elapsed.TotalMilliseconds < (100 + diff));
         }
 
         static object[] TimerFactories =
