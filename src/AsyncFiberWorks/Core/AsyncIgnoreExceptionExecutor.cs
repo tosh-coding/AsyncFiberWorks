@@ -1,5 +1,4 @@
-﻿using AsyncFiberWorks.Procedures;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Core
@@ -7,7 +6,7 @@ namespace AsyncFiberWorks.Core
     /// <summary>
     /// An executor who ignores exceptions.
     /// </summary>
-    public class AsyncIgnoreExceptionExecutorSingle : IAsyncExecutorSingle
+    public class AsyncIgnoreExceptionExecutor : IAsyncExecutor
     {
         private Action<Exception> _catchAction;
 
@@ -15,7 +14,7 @@ namespace AsyncFiberWorks.Core
         /// Create an executor.
         /// </summary>
         /// <param name="catchAction">This is the process called when an exception is caught at executing.</param>
-        public AsyncIgnoreExceptionExecutorSingle(Action<Exception> catchAction)
+        public AsyncIgnoreExceptionExecutor(Action<Exception> catchAction)
         {
             _catchAction = catchAction;
         }
@@ -30,7 +29,7 @@ namespace AsyncFiberWorks.Core
         {
             try
             {
-                await func();
+                await func().ConfigureAwait(false);
             }
             catch (Exception ex)
             {

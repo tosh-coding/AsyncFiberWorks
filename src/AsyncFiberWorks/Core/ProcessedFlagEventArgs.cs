@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AsyncFiberWorks.Procedures
+namespace AsyncFiberWorks.Core
 {
     /// <summary>
     /// Arguments and results of processing.

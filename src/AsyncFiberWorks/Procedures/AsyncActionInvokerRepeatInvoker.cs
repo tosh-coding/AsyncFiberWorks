@@ -10,18 +10,18 @@ namespace AsyncFiberWorks.Procedures
     /// </summary>
     public class AsyncActionInvokerRepeatInvoker : IDisposable
     {
-        private readonly IAsyncExecutorSingle _executor;
+        private readonly IAsyncExecutor _executor;
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="executor"></param>
-        public AsyncActionInvokerRepeatInvoker(IAsyncExecutorSingle executor = null)
+        public AsyncActionInvokerRepeatInvoker(IAsyncExecutor executor = null)
         {
             if (executor == null)
             {
-                executor = AsyncSimpleExecutorSingle.Instance;
+                executor = AsyncSimpleExecutor.Instance;
             }
             _executor = executor;
         }

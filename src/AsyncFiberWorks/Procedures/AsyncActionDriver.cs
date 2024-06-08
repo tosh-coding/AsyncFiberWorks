@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Procedures
 {
@@ -9,22 +10,29 @@ namespace AsyncFiberWorks.Procedures
     public class AsyncActionDriver : IAsyncActionDriver
     {
         private readonly AsyncActionList _actions = new AsyncActionList();
-        private readonly IAsyncExecutor _executor;
+        private readonly IAsyncExecutorBatch _executorBatch;
+        private readonly IAsyncExecutor _executorSingle;
 
         /// <summary>
-        /// Create a driver.
+        /// Create a driver with custom executors.
         /// </summary>
-        /// <param name="executor"></param>
-        public AsyncActionDriver(IAsyncExecutor executor)
+        /// <param name="executorBatch"></param>
+        /// <param name="executorSingle"></param>
+        public AsyncActionDriver(IAsyncExecutorBatch executorBatch, IAsyncExecutor executorSingle = null)
         {
-            _executor = executor;
+            if (executorBatch == null)
+            {
+                throw new ArgumentNullException(nameof(executorBatch));
+            }
+            _executorBatch = executorBatch;
+            _executorSingle = executorSingle;
         }
 
         /// <summary>
         /// Create a driver.
         /// </summary>
         public AsyncActionDriver()
-            : this(new DefaultAsyncExecutor())
+            : this(AsyncSimpleExecutorBatch.Instance, null)
         {
         }
 
@@ -43,7 +51,7 @@ namespace AsyncFiberWorks.Procedures
         /// </summary>
         public async Task Invoke()
         {
-            await _actions.Invoke(_executor);
+            await _actions.Invoke(_executorBatch, _executorSingle).ConfigureAwait(false);
         }
 
         ///<summary>

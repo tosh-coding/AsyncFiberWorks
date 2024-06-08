@@ -26,7 +26,7 @@ namespace AsyncFiberWorks.Procedures
         {
             _subscription = subscribable.Subscribe(async () =>
             {
-                await SetFlagAndWaitClearing();
+                await SetFlagAndWaitClearing().ConfigureAwait(false);
             });
         }
 
@@ -60,7 +60,7 @@ namespace AsyncFiberWorks.Procedures
                 _notifierSet.Release(1);
             }
 
-            await _notifierClear.WaitAsync();
+            await _notifierClear.WaitAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace AsyncFiberWorks.Procedures
                 }
             }
 
-            await _notifierSet.WaitAsync(token);
+            await _notifierSet.WaitAsync(token).ConfigureAwait(false);
 
             lock (_lockObj)
             {

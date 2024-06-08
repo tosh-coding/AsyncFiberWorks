@@ -1,30 +1,15 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.Procedures
+namespace AsyncFiberWorks.Core
 {
     /// <summary>
-    /// Default executor.
+    /// An executor that can be toggled to run or skip.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class DefaultAsyncExecutor<T> : IAsyncExecutor<T>
+    public class AsyncMaskableExecutor<T> : IAsyncExecutor<T>
     {
         private bool _running = true;
-
-        /// <summary>
-        /// Executes all actions.
-        /// </summary>
-        /// <param name="arg"></param>
-        /// <param name="actions"></param>
-        /// <returns></returns>
-        public async Task Execute(T arg, IReadOnlyList<Func<T, Task>> actions)
-        {
-            foreach (var action in actions)
-            {
-                await Execute(arg, action);
-            }
-        }
 
         /// <summary>
         /// Executes a single action. 
@@ -35,7 +20,7 @@ namespace AsyncFiberWorks.Procedures
         {
             if (_running)
             {
-                await action.Invoke(arg);
+                await action.Invoke(arg).ConfigureAwait(false);
             }
         }
 

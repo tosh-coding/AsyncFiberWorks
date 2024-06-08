@@ -1,12 +1,12 @@
 using System;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.Procedures
+namespace AsyncFiberWorks.Core
 {
     /// <summary>
     /// Executes a task.
     /// </summary>
-    public interface IAsyncExecutorSingle
+    public interface IAsyncExecutor
     {
         /// <summary>
         /// Executes a task.

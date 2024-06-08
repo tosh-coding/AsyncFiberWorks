@@ -1,5 +1,4 @@
 ﻿using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Procedures;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,13 +13,13 @@ namespace AsyncFiberWorks.Fibers
         readonly object _lockObj = new object();
         readonly Queue<Func<Task>> _queue = new Queue<Func<Task>>();
         bool _running = false;
-        IAsyncExecutorSingle _executor;
+        IAsyncExecutor _executor;
 
         /// <summary>
         /// Create a fiber.
         /// </summary>
         /// <param name="executor"></param>
-        public ChainAsyncFiber(IAsyncExecutorSingle executor)
+        public ChainAsyncFiber(IAsyncExecutor executor)
         {
             _executor = executor;
         }
@@ -29,7 +28,7 @@ namespace AsyncFiberWorks.Fibers
         /// Create a fiber.
         /// </summary>
         public ChainAsyncFiber()
-            : this(new DefaultAsyncExecutorSingle())
+            : this(AsyncSimpleExecutor.Instance)
         {
         }
 

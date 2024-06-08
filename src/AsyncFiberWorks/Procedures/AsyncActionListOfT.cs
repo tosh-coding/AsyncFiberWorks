@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AsyncFiberWorks.Channels;
+using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Procedures
 {
@@ -43,9 +44,10 @@ namespace AsyncFiberWorks.Procedures
         /// Invoke all actions.
         /// </summary>
         /// <param name="arg">An argument.</param>
-        /// <param name="executor"></param>
+        /// <param name="executorBatch"></param>
+        /// <param name="executorSingle"></param>
         /// <returns>A task that waits for actions to be performed.</returns>
-        public async Task Invoke(T arg, IAsyncExecutor<T> executor)
+        public async Task Invoke(T arg, IAsyncExecutorBatch<T> executorBatch, IAsyncExecutor<T> executorSingle)
         {
             lock (_lock)
             {
@@ -59,7 +61,7 @@ namespace AsyncFiberWorks.Procedures
             }
             try
             {
-                await executor.Execute(arg, _copied).ConfigureAwait(false);
+                await executorBatch.Execute(arg, _copied, executorSingle).ConfigureAwait(false);
             }
             finally
             {

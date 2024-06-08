@@ -11,8 +11,8 @@ namespace AsyncFiberWorks.Core
         /// <summary>
         /// Executes all actions.
         /// </summary>
-        /// <param name="toExecute"></param>
-        /// <param name="executorSingle"></param>
-        void Execute(IReadOnlyList<Action> toExecute, IExecutor executorSingle);
+        /// <param name="actions">A list of actions.</param>
+        /// <param name="executorSingle">The executor for each operation.</param>
+        void Execute(IReadOnlyList<Action> actions, IExecutor executorSingle);
     }
 }

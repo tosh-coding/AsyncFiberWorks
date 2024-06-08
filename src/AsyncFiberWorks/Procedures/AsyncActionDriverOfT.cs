@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Procedures
 {
@@ -10,22 +11,29 @@ namespace AsyncFiberWorks.Procedures
     public class AsyncActionDriver<T> : IAsyncActionDriver<T>
     {
         private readonly AsyncActionList<T> _actions = new AsyncActionList<T>();
-        private readonly IAsyncExecutor<T> _executor;
+        private readonly IAsyncExecutorBatch<T> _executorBatch;
+        private readonly IAsyncExecutor<T> _executorSingle;
 
         /// <summary>
-        /// Create a driver.
+        /// Create a driver with custom executors.
         /// </summary>
-        /// <param name="executor"></param>
-        public AsyncActionDriver(IAsyncExecutor<T> executor)
+        /// <param name="executorBatch"></param>
+        /// <param name="executorSingle"></param>
+        public AsyncActionDriver(IAsyncExecutorBatch<T> executorBatch, IAsyncExecutor<T> executorSingle = null)
         {
-            _executor = executor;
+            if (executorBatch == null)
+            {
+                throw new ArgumentNullException(nameof(executorBatch));
+            }
+            _executorBatch = executorBatch;
+            _executorSingle = executorSingle;
         }
 
         /// <summary>
         /// Create a driver.
         /// </summary>
         public AsyncActionDriver()
-            : this(new DefaultAsyncExecutor<T>())
+            : this(AsyncSimpleExecutorBatch<T>.Instance, null)
         {
         }
 
@@ -45,7 +53,7 @@ namespace AsyncFiberWorks.Procedures
         /// <param name="arg">An argument.</param>
         public async Task Invoke(T arg)
         {
-            await _actions.Invoke(arg, _executor);
+            await _actions.Invoke(arg, _executorBatch, _executorSingle).ConfigureAwait(false);
         }
 
         ///<summary>

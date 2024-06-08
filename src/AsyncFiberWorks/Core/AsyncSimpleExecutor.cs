@@ -1,5 +1,4 @@
-﻿using AsyncFiberWorks.Procedures;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Core
@@ -7,13 +6,13 @@ namespace AsyncFiberWorks.Core
     /// <summary>
     /// Just simply execute.
     /// </summary>
-    public class AsyncSimpleExecutorSingle : IAsyncExecutorSingle
+    public class AsyncSimpleExecutor : IAsyncExecutor
     {
         /// <summary>
         /// Singleton instances.
-        /// AsyncSimpleExecutorSingle has no members, so it can be shared.
+        /// This class has no members, so it can be shared.
         /// </summary>
-        public static readonly AsyncSimpleExecutorSingle Instance = new AsyncSimpleExecutorSingle();
+        public static readonly AsyncSimpleExecutor Instance = new AsyncSimpleExecutor();
 
         /// <summary>
         /// Executes a task.
@@ -22,7 +21,7 @@ namespace AsyncFiberWorks.Core
         /// <returns></returns>
         public async Task Execute(Func<Task> func)
         {
-            await func();
+            await func().ConfigureAwait(false);
         }
     }
 }

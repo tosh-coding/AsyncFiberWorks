@@ -1,4 +1,5 @@
-﻿using AsyncFiberWorks.Procedures;
+﻿using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Procedures;
 using NUnit.Framework;
 using System;
 using System.Threading;

@@ -1,12 +1,12 @@
 using System;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.Procedures
+namespace AsyncFiberWorks.Core
 {
     /// <summary>
-    /// Default executor.
+    /// An executor that can be toggled to run or skip.
     /// </summary>
-    public class DefaultAsyncExecutorSingle : IAsyncExecutorSingle
+    public class AsyncMaskableExecutor : IAsyncExecutor
     {
         private bool _running = true;
 
