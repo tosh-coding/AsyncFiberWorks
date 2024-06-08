@@ -44,10 +44,12 @@ namespace AsyncFiberWorksTests
                 counter += 100;
                 await Task.Yield();
             });
+#pragma warning disable 1998
             fiber.Enqueue(async () =>
             {
                 tcs.SetResult(0);
             });
+#pragma warning restore 1998
 
             await tcs.Task;
             Assert.AreEqual(120, counter);

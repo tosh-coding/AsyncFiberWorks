@@ -97,24 +97,24 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task WaitingOfAsyncRegisterOfTArgTRet()
+        public async Task WaitingOfProcessedFlagEventArgs()
         {
-            var driver = new AsyncActionDriver<int, bool>(new DefaultAsyncExecutorOfTArgTRet<int>());
+            var driver = new AsyncActionDriver<ProcessedFlagEventArgs<int>>(new AsyncProcessedFlagExecutor<int>());
             int resultCounter = 0;
             var lockObj = new object();
 
             var cts = new CancellationTokenSource();
             Func<int, Task> func = async (threshold) =>
             {
-                var reg = new AsyncRegister<int, bool>(driver);
+                var reg = new AsyncRegister<ProcessedFlagEventArgs<int>>(driver);
                 try
                 {
                     while (true)
                     {
-                        var value = await reg.WaitSetting(cts.Token);
-                        if (value < threshold)
+                        var e = await reg.WaitSetting(cts.Token);
+                        if (e.Arg < threshold)
                         {
-                            reg.SetReturnValue(false);
+                            e.Processed = false;
                         }
                         else
                         {
@@ -122,7 +122,7 @@ namespace AsyncFiberWorksTests
                             {
                                 resultCounter += threshold;
                             }
-                            reg.SetReturnValue(true);
+                            e.Processed = true;
                         }
                     }
                 }
@@ -137,9 +137,11 @@ namespace AsyncFiberWorksTests
             var task3 = func(3);
             var task4 = func(1);
 
+            var eventArgs = new ProcessedFlagEventArgs<int>();
             for (int i = 0; i < 10; i++)
             {
-                await driver.Invoke(i + 1);
+                eventArgs.Arg = i + 1;
+                await driver.Invoke(eventArgs);
             }
 
             cts.Cancel();

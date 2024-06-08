@@ -8,26 +8,26 @@ namespace AsyncFiberWorks.Procedures
     /// <summary>
     /// Call the actions in the reverse order in which they were registered.
     /// Wait for the calls to complete one at a time before proceeding.
-    /// If the return value is false, move on to the next action. If true, execution ends at that point.
+    /// If unprocessed, proceeds to the next action. If already processed, execution ends at that point.
     /// </summary>
-    /// <typeparam name="TArg"></typeparam>
-    public class ReverseOrderAsyncExecutorOfTArgTRet<TArg> : IAsyncExecutor<TArg, bool>
+    /// <typeparam name="T"></typeparam>
+    public class AsyncProcessedFlagReverseOrderExecutor<T> : IAsyncExecutor<ProcessedFlagEventArgs<T>>
     {
         /// <summary>
         /// Call the actions in the reverse order in which they were registered.
-        /// If any action returns true, execution stops at that point.
+        /// If any action is processed, execution stops at that point.
         /// </summary>
-        /// <param name="arg">An argument.</param>
+        /// <param name="eventArgs">An argument.</param>
         /// <param name="actions">A list of actions.</param>
         /// <returns>A task that waits for actions to be performed.</returns>
-        public async Task Execute(TArg arg, IReadOnlyList<Func<TArg, Task<bool>>> actions)
+        public async Task Execute(ProcessedFlagEventArgs<T> eventArgs, IReadOnlyList<Func<ProcessedFlagEventArgs<T>, Task>> actions)
         {
             if (actions != null)
             {
-                foreach (var a in actions.Reverse())
+                foreach (var action in actions.Reverse())
                 {
-                    bool ack = await a(arg).ConfigureAwait(false);
-                    if (ack)
+                    await action(eventArgs).ConfigureAwait(false);
+                    if (eventArgs.Processed)
                     {
                         break;
                     }
