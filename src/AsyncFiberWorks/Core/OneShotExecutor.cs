@@ -10,21 +10,6 @@ namespace AsyncFiberWorks.Core
     {
         private bool _fired = false;
 
-        /// <summary>
-        /// Execute only first one.
-        /// </summary>
-        /// <param name="toExecute"></param>
-        public void Execute(IReadOnlyList<Action> toExecute)
-        {
-            if (_fired) return;
-            foreach (var action in toExecute)
-            {
-                _fired = true;
-                Execute(action);
-                break;
-            }
-        }
-
         ///<summary>
         /// Executes a single action. 
         ///</summary>

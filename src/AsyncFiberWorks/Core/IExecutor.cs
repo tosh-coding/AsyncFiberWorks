@@ -1,17 +1,16 @@
 using System;
-using System.Collections.Generic;
 
 namespace AsyncFiberWorks.Core
 {
     /// <summary>
-    /// Executes pending action(s).
+    /// Executes pending action.
     /// </summary>
-    public interface IExecutor : IExecutorSingle
+    public interface IExecutor
     {
-        /// <summary>
-        /// Executes all actions.
-        /// </summary>
-        /// <param name="toExecute"></param>
-        void Execute(IReadOnlyList<Action> toExecute);
+        ///<summary>
+        /// Executes a single action.
+        ///</summary>
+        ///<param name="action"></param>
+        void Execute(Action action);
     }
 }

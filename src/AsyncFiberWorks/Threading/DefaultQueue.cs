@@ -11,7 +11,8 @@ namespace AsyncFiberWorks.Threading
     public class DefaultQueue : IDedicatedConsumerThreadWork
     {
         private readonly object _lock = new object();
-        private readonly IExecutor _executor;
+        private readonly IExecutorBatch _executorBatch;
+        private readonly IExecutor _executorSingle;
 
         private bool _running = true;
 
@@ -21,17 +22,19 @@ namespace AsyncFiberWorks.Threading
         ///<summary>
         /// Default queue with custom executor
         ///</summary>
-        ///<param name="executor"></param>
-        public DefaultQueue(IExecutor executor)
+        ///<param name="executorBatch"></param>
+        ///<param name="executorSingle"></param>
+        public DefaultQueue(IExecutorBatch executorBatch, IExecutor executorSingle)
         {
-            _executor = executor;
+            _executorBatch = executorBatch;
+            _executorSingle = executorSingle;
         }
 
         ///<summary>
-        /// Default queue with default executor
+        /// Default queue with a simple executor
         ///</summary>
         public DefaultQueue()
-            : this(new DefaultExecutor())
+            : this(SimpleExecutorBatch.Instance, SimpleExecutor.Instance)
         {
         }
 
@@ -102,7 +105,7 @@ namespace AsyncFiberWorks.Threading
             {
                 return false;
             }
-            _executor.Execute(toExecute);
+            _executorBatch.Execute(toExecute, _executorSingle);
             return true;
         }
     }

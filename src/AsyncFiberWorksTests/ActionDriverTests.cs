@@ -94,7 +94,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void InvokingWithDefaultExecutorSingle()
         {
-            var executor = new DefaultExecutorSingle();
+            var executor = new MaskableExecutor();
             var driver = new ActionDriver(executor);
 
             long counter = 0;

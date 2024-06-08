@@ -3,9 +3,9 @@ using System;
 namespace AsyncFiberWorks.Core
 {
     /// <summary>
-    /// Default executor.
+    /// An executor that can be toggled to run or skip.
     /// </summary>
-    public class DefaultExecutorSingle : IExecutorSingle
+    public class MaskableExecutor : IExecutor
     {
         private bool _running = true;
 

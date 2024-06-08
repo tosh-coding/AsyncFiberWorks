@@ -9,13 +9,13 @@ namespace AsyncFiberWorks.Procedures
     public class ActionDriver : IActionDriver
     {
         private readonly ActionList _actions = new ActionList();
-        private readonly IExecutorSingle _executor;
+        private readonly IExecutor _executor;
 
         /// <summary>
         /// Create a driver.
         /// </summary>
         /// <param name="executor"></param>
-        public ActionDriver(IExecutorSingle executor = default)
+        public ActionDriver(IExecutor executor = default)
         {
             _executor = executor;
         }

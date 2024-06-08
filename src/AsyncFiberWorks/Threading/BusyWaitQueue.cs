@@ -12,7 +12,8 @@ namespace AsyncFiberWorks.Threading
     public class BusyWaitQueue : IDedicatedConsumerThreadWork
     {
         private readonly object _lock = new object();
-        private readonly IExecutor _executor;
+        private readonly IExecutorBatch _executorBatch;
+        private readonly IExecutor _executorSingle;
         private readonly int _spinsBeforeTimeCheck;
         private readonly int _msBeforeBlockingWait;
 
@@ -24,21 +25,23 @@ namespace AsyncFiberWorks.Threading
         ///<summary>
         /// BusyWaitQueue with custom executor.
         ///</summary>
-        ///<param name="executor"></param>
         ///<param name="spinsBeforeTimeCheck"></param>
         ///<param name="msBeforeBlockingWait"></param>
-        public BusyWaitQueue(IExecutor executor, int spinsBeforeTimeCheck, int msBeforeBlockingWait)
+        ///<param name="executorBatch"></param>
+        ///<param name="executorSingle"></param>
+        public BusyWaitQueue(int spinsBeforeTimeCheck, int msBeforeBlockingWait, IExecutorBatch executorBatch, IExecutor executorSingle)
         {
-            _executor = executor;
+            _executorBatch = executorBatch;
+            _executorSingle = executorSingle;
             _spinsBeforeTimeCheck = spinsBeforeTimeCheck;
             _msBeforeBlockingWait = msBeforeBlockingWait;
         }
 
         ///<summary>
-        /// BusyWaitQueue with default executor.
+        /// BusyWaitQueue with a simple executor.
         ///</summary>
         public BusyWaitQueue(int spinsBeforeTimeCheck, int msBeforeBlockingWait)
-            : this(new DefaultExecutor(), spinsBeforeTimeCheck, msBeforeBlockingWait)
+            : this(spinsBeforeTimeCheck, msBeforeBlockingWait, SimpleExecutorBatch.Instance, SimpleExecutor.Instance)
         {
         }
 
@@ -144,7 +147,7 @@ namespace AsyncFiberWorks.Threading
             {
                 return false;
             }
-            _executor.Execute(toExecute);
+            _executorBatch.Execute(toExecute, _executorSingle);
             return true;
         }
     }

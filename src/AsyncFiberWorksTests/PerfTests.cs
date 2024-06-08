@@ -9,23 +9,18 @@ using AsyncFiberWorks.Threading;
 
 namespace AsyncFiberWorksTests
 {
-    public class PerfExecutor : IExecutor
+    public class PerfExecutor : IExecutorBatch
     {
-        public void Execute(IReadOnlyList<Action> toExecute)
+        public void Execute(IReadOnlyList<Action> toExecute, IExecutor executorSingle)
         {
             foreach (var action in toExecute)
             {
-                action();
+                executorSingle.Execute(action);
             }
             if (toExecute.Count < 10000)
             {
                 Thread.Sleep(1);
             }
-        }
-
-        public void Execute(Action toExecute)
-        {
-            toExecute();
         }
     }
 
@@ -51,7 +46,7 @@ namespace AsyncFiberWorksTests
       
         private static void RunBoundedQueue()
         {
-            var executor = new BoundedQueue(new PerfExecutor()) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
+            var executor = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
             using (var fiber = new ThreadFiber(executor))
             using (var subscriptions = new Subscriptions())
             {
@@ -81,7 +76,7 @@ namespace AsyncFiberWorksTests
 
         private static void RunBusyWaitQueue()
         {
-            var executor = new BusyWaitQueue(new PerfExecutor(), 100000, 30000);
+            var executor = new BusyWaitQueue(100000, 30000, new PerfExecutor(), SimpleExecutor.Instance);
             using (var fiber = new ThreadFiber(executor))
             using (var subscriptions = new Subscriptions())
             {
@@ -112,7 +107,7 @@ namespace AsyncFiberWorksTests
         [Test, Explicit]
         public void PointToPointPerfTestWithInt()
         {
-            var executor = new BoundedQueue(new PerfExecutor()) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
+            var executor = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
             using (var fiber = new ThreadFiber(executor))
             using (var subscriptions = new Subscriptions())
             {
@@ -143,7 +138,7 @@ namespace AsyncFiberWorksTests
         [Test, Explicit]
         public void PointToPointPerfTestWithObject()
         {
-            var executor = new BoundedQueue(new PerfExecutor()) { MaxDepth = 100000, MaxEnqueueWaitTimeInMs = 1000 };
+            var executor = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 100000, MaxEnqueueWaitTimeInMs = 1000 };
             using (var fiber = new ThreadFiber(executor))
             using (var subscriptions = new Subscriptions())
             {

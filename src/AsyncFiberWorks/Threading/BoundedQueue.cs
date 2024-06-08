@@ -11,7 +11,8 @@ namespace AsyncFiberWorks.Threading
     public class BoundedQueue : IDedicatedConsumerThreadWork
     {
         private readonly object _lock = new object();
-        private readonly IExecutor _executor;
+        private readonly IExecutorBatch _executorBatch;
+        private readonly IExecutor _executorSingle;
 
         private bool _running = true;
 
@@ -21,18 +22,20 @@ namespace AsyncFiberWorks.Threading
         ///<summary>
         /// Creates a bounded queue with a custom executor.
         ///</summary>
-        ///<param name="executor"></param>
-        public BoundedQueue(IExecutor executor)
+        ///<param name="executorBatch"></param>
+        ///<param name="executorSingle"></param>
+        public BoundedQueue(IExecutorBatch executorBatch, IExecutor executorSingle)
         {
             MaxDepth = -1;
-            _executor = executor;
+            _executorBatch = executorBatch;
+            _executorSingle = executorSingle;
         }
 
         ///<summary>
-        /// Creates a bounded queue with the default executor.
+        /// Creates a bounded queue with a simple executor.
         ///</summary>
         public BoundedQueue()
-            : this(new DefaultExecutor())
+            : this(SimpleExecutorBatch.Instance, SimpleExecutor.Instance)
         {
         }
 
@@ -143,7 +146,7 @@ namespace AsyncFiberWorks.Threading
             {
                 return false;
             }
-            _executor.Execute(toExecute);
+            _executorBatch.Execute(toExecute, _executorSingle);
             return true;
         }
     }

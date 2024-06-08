@@ -46,7 +46,6 @@ namespace AsyncFiberWorks.Fibers
         /// Create a pool fiber with the specified thread pool and a simple executor.
         /// </summary>
         /// <param name="pool"></param>
-        /// <param name="executor"></param>
         public PoolFiber(IThreadPool pool)
             : this(pool, SimpleExecutor.Instance)
         {
