@@ -152,7 +152,7 @@ namespace AsyncFiberWorksTests.Examples
         {
             // Thread for Assert.
             var testThread = new ThreadPoolAdaptor();
-            var testFiber = new PoolFiber(testThread, new DefaultExecutor());
+            var testFiber = new PoolFiber(testThread);
 
             using (var subscriptions = new Subscriptions())
             {

@@ -31,7 +31,7 @@ namespace Sample
             await Task.Yield();
 
             // Create a pool fiber backed the main thread.
-            var mainFiber = new PoolFiber(mainThreadAdaptor, new DefaultExecutor());
+            var mainFiber = new PoolFiber(mainThreadAdaptor);
 
             // Enqueue actions to the main thread via fiber.
             int counter = 0;
@@ -70,7 +70,7 @@ async Task SampleAsync()
 {
     // Create a user thread pool and its fiber.
     var userThreadPool = UserThreadPool.StartNew(2);
-    var fiber = new PoolFiber(userThreadPool, new DefaultExecutor());
+    var fiber = new PoolFiber(userThreadPool);
 
     // Enqueue actions to a user thread pool via fiber.
     int counter = 0;

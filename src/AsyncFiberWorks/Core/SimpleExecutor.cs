@@ -14,6 +14,8 @@ namespace AsyncFiberWorks.Core
         /// </summary>
         public static readonly SimpleExecutor Instance = new SimpleExecutor();
 
+        private SimpleExecutor() { }
+
         /// <summary>
         /// Executes all actions.
         /// </summary>

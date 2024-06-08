@@ -165,9 +165,9 @@ namespace AsyncFiberWorksTests
             using (var pool = UserThreadPool.Create(4))
             {
                 pool.Start();
-                var fiber1 = new PoolFiber(pool, new DefaultExecutor());
-                var fiber2 = new PoolFiber(pool, new DefaultExecutor());
-                var fiber3 = new PoolFiber(pool, new DefaultExecutor());
+                var fiber1 = new PoolFiber(pool);
+                var fiber2 = new PoolFiber(pool);
+                var fiber3 = new PoolFiber(pool);
                 using (var fiberSubscriptions1 = new Subscriptions())
                 using (var fiberSubscriptions2 = new Subscriptions())
                 using (var fiberSubscriptions3 = new Subscriptions())

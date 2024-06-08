@@ -20,7 +20,7 @@ namespace WpfExample
         {
             InitializeComponent();
             var adapter = new DispatcherAdapter(Dispatcher, DispatcherPriority.Normal);
-            fiber = new PoolFiber(adapter, new DefaultExecutor());
+            fiber = new PoolFiber(adapter);
 
             var subscriptionFiber = subscriptions.BeginSubscription();
 

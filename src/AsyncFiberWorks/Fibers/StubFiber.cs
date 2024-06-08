@@ -21,10 +21,10 @@ namespace AsyncFiberWorks.Fibers
         private Action _resumeAction = null;
 
         /// <summary>
-        /// Create a stub fiber with the default executor.
+        /// Create a stub fiber with a simple executor.
         /// </summary>
         public StubFiber()
-            : this(new DefaultExecutor())
+            : this(SimpleExecutor.Instance)
         {
         }
 

@@ -43,10 +43,20 @@ namespace AsyncFiberWorks.Fibers
         }
 
         /// <summary>
-        /// Create a pool fiber with the default thread pool and default executor.
+        /// Create a pool fiber with the specified thread pool and a simple executor.
         /// </summary>
-        public PoolFiber() 
-            : this(DefaultThreadPool.Instance, new DefaultExecutor())
+        /// <param name="pool"></param>
+        /// <param name="executor"></param>
+        public PoolFiber(IThreadPool pool)
+            : this(pool, SimpleExecutor.Instance)
+        {
+        }
+
+        /// <summary>
+        /// Create a pool fiber with the default thread pool and a simple executor.
+        /// </summary>
+        public PoolFiber()
+            : this(DefaultThreadPool.Instance, SimpleExecutor.Instance)
         {
         }
 

@@ -30,7 +30,7 @@ namespace AsyncFiberWorksTests
             // Requester.
             {
                 var requesterThread = new ThreadPoolAdaptor();
-                var requesterFiber = new PoolFiber(requesterThread, new DefaultExecutor());
+                var requesterFiber = new PoolFiber(requesterThread);
 
                 var tcs = new TaskCompletionSource<Action>();
                 requesterFiber.Enqueue(async () =>
@@ -82,7 +82,7 @@ namespace AsyncFiberWorksTests
             // Requester.
             {
                 var requesterThread = new ThreadPoolAdaptor();
-                var workFiber = new PoolFiber(requesterThread, new DefaultExecutor());
+                var workFiber = new PoolFiber(requesterThread);
                 Action actionAssertFail = () => requesterThread.Queue((_) => Assert.Fail());
 
                 var timeoutTimer = workFiber.Schedule(() =>
@@ -156,7 +156,7 @@ namespace AsyncFiberWorksTests
             // Requester.
             {
                 var mainThread = new ThreadPoolAdaptor();
-                var mainFiber = new PoolFiber(mainThread, new DefaultExecutor());
+                var mainFiber = new PoolFiber(mainThread);
 
                 var requests = new List<string>();
                 requests.AddRange(dic.Keys);
