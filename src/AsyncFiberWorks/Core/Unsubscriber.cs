@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.Core
 {
     /// <summary>
     /// Disposables.

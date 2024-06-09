@@ -1,5 +1,4 @@
 ﻿#if NETFRAMEWORK || WINDOWS
-using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 using System;
 using System.Threading;

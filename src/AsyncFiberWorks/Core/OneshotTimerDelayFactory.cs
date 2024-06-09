@@ -1,5 +1,4 @@
-﻿using AsyncFiberWorks.Channels;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Core
 {

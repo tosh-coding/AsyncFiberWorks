@@ -1,6 +1,4 @@
-﻿using AsyncFiberWorks.Channels;
-
-namespace AsyncFiberWorks.Core
+﻿namespace AsyncFiberWorks.Core
 {
     ///<summary>
     /// Allows for the registration and deregistration of subscriptions

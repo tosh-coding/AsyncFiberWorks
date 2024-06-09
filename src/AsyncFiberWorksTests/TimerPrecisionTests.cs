@@ -1,5 +1,4 @@
-﻿using AsyncFiberWorks.Channels;
-using AsyncFiberWorks.Core;
+﻿using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using NUnit.Framework;
 using System;

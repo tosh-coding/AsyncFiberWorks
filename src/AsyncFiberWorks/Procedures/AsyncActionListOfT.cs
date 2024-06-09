@@ -1,8 +1,7 @@
+using AsyncFiberWorks.Core;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AsyncFiberWorks.Channels;
-using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Procedures
 {

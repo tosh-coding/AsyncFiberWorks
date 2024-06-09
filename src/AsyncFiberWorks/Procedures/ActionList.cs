@@ -1,5 +1,5 @@
+using AsyncFiberWorks.Core;
 using System;
-using AsyncFiberWorks.Channels;
 
 namespace AsyncFiberWorks.Procedures
 {
