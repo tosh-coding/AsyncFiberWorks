@@ -1,3 +1,4 @@
+using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 using System;
 
@@ -29,14 +30,23 @@ namespace AsyncFiberWorks.Procedures
         {
             if (_executor != null)
             {
-                return _actions.AddHandler(() =>
+                var maskableFilter = new MaskableExecutor();
+                var disposable = _actions.AddHandler(() => maskableFilter.Execute(() => _executor.Execute(action)));
+                return new Unsubscriber(() =>
                 {
-                    _executor.Execute(action);
+                    maskableFilter.IsEnabled = false;
+                    disposable.Dispose();
                 });
             }
             else
             {
-                return _actions.AddHandler(action);
+                var maskableFilter = new MaskableExecutor();
+                var disposable = _actions.AddHandler(() => maskableFilter.Execute(action));
+                return new Unsubscriber(() =>
+                {
+                    maskableFilter.IsEnabled = false;
+                    disposable.Dispose();
+                });
             }
         }
 

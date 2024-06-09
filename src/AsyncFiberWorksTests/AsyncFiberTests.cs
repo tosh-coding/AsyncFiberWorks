@@ -44,12 +44,11 @@ namespace AsyncFiberWorksTests
                 counter += 100;
                 await Task.Yield();
             });
-#pragma warning disable 1998
-            fiber.Enqueue(async () =>
+            fiber.Enqueue(() =>
             {
                 tcs.SetResult(0);
+                return Task.CompletedTask;
             });
-#pragma warning restore 1998
 
             await tcs.Task;
             Assert.AreEqual(120, counter);
@@ -117,6 +116,30 @@ namespace AsyncFiberWorksTests
             await Task.Delay(500).ConfigureAwait(false);
             Console.WriteLine($"as{sw.Elapsed}");
             Assert.AreEqual(3, counter);
+        }
+
+        [Test]
+        public async Task EnqueueAsyncTest()
+        {
+            var fiber = new ChainAsyncFiber();
+            int counter = 0;
+            var sw = Stopwatch.StartNew();
+            var t1 = fiber.EnqueueAsync(async () =>
+            {
+                counter = 1;
+                await Task.Delay(300).ConfigureAwait(false);
+            });
+            await Task.Delay(10).ConfigureAwait(false);
+            fiber.Enqueue(() =>
+            {
+                counter = 2;
+                return Task.CompletedTask;
+            });
+            Assert.AreEqual(1, counter);
+            await t1;
+            Assert.GreaterOrEqual(sw.Elapsed, TimeSpan.FromMilliseconds(300));
+            await Task.Delay(10).ConfigureAwait(false);
+            Assert.AreEqual(2, counter);
         }
     }
 }

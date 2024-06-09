@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Procedures
@@ -43,7 +44,13 @@ namespace AsyncFiberWorks.Procedures
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(Func<Task> action)
         {
-            return _actions.AddHandler(action);
+            var maskableFilter = new AsyncMaskableExecutor();
+            var disposable = _actions.AddHandler(() => maskableFilter.Execute(action));
+            return new Unsubscriber(() =>
+            {
+                maskableFilter.IsEnabled = false;
+                disposable.Dispose();
+            });
         }
 
         /// <summary>
