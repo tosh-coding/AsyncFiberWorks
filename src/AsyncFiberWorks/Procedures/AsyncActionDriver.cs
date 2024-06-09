@@ -44,13 +44,26 @@ namespace AsyncFiberWorks.Procedures
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(Func<Task> action)
         {
-            var maskableFilter = new AsyncMaskableExecutor();
-            var disposable = _actions.AddHandler(() => maskableFilter.Execute(action));
-            return new Unsubscriber(() =>
+            if (_executorSingle != null)
             {
-                maskableFilter.IsEnabled = false;
-                disposable.Dispose();
-            });
+                var maskableFilter = new AsyncMaskableExecutor();
+                var disposable = _actions.AddHandler(() => maskableFilter.Execute(() => _executorSingle.Execute(action)));
+                return new Unsubscriber(() =>
+                {
+                    maskableFilter.IsEnabled = false;
+                    disposable.Dispose();
+                });
+            }
+            else
+            {
+                var maskableFilter = new AsyncMaskableExecutor();
+                var disposable = _actions.AddHandler(() => maskableFilter.Execute(action));
+                return new Unsubscriber(() =>
+                {
+                    maskableFilter.IsEnabled = false;
+                    disposable.Dispose();
+                });
+            }
         }
 
         /// <summary>
@@ -58,7 +71,7 @@ namespace AsyncFiberWorks.Procedures
         /// </summary>
         public async Task Invoke()
         {
-            await _actions.Invoke(_executorBatch, _executorSingle).ConfigureAwait(false);
+            await _actions.Invoke(_executorBatch).ConfigureAwait(false);
         }
 
         ///<summary>

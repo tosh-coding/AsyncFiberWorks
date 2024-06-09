@@ -11,11 +11,11 @@ namespace AsyncFiberWorksTests
 {
     public class PerfExecutor : IExecutorBatch
     {
-        public void Execute(IReadOnlyList<Action> toExecute, IExecutor executorSingle)
+        public void Execute(IReadOnlyList<Action> toExecute)
         {
             foreach (var action in toExecute)
             {
-                executorSingle.Execute(action);
+                action();
             }
             if (toExecute.Count < 10000)
             {

@@ -19,11 +19,11 @@ namespace AsyncFiberWorks.Threading
         private List<Action> _actions = new List<Action>();
         private List<Action> _toPass = new List<Action>();
 
-        ///<summary>
+        /// <summary>
         /// Default queue with custom executor
-        ///</summary>
-        ///<param name="executorBatch"></param>
-        ///<param name="executorSingle"></param>
+        /// </summary>
+        /// <param name="executorBatch"></param>
+        /// <param name="executorSingle">The executor for each operation.</param>
         public DefaultQueue(IExecutorBatch executorBatch, IExecutor executorSingle)
         {
             _executorBatch = executorBatch;
@@ -44,10 +44,21 @@ namespace AsyncFiberWorks.Threading
         /// <param name="action"></param>
         public void Enqueue(Action action)
         {
-            lock (_lock)
+            if (_executorSingle != null)
             {
-                _actions.Add(action);
-                Monitor.PulseAll(_lock);
+                lock (_lock)
+                {
+                    _actions.Add(() => _executorSingle.Execute(action));
+                    Monitor.PulseAll(_lock);
+                }
+            }
+            else
+            {
+                lock (_lock)
+                {
+                    _actions.Add(action);
+                    Monitor.PulseAll(_lock);
+                }
             }
         }
 
@@ -105,7 +116,7 @@ namespace AsyncFiberWorks.Threading
             {
                 return false;
             }
-            _executorBatch.Execute(toExecute, _executorSingle);
+            _executorBatch.Execute(toExecute);
             return true;
         }
     }

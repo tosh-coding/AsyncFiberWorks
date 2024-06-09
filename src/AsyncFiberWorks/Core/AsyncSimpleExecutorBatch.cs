@@ -19,22 +19,11 @@ namespace AsyncFiberWorks.Core
         /// Executes all actions.
         /// </summary>
         /// <param name="actions"></param>
-        /// <param name="executorSingle"></param>
-        public async Task Execute(IReadOnlyList<Func<Task>> actions, IAsyncExecutor executorSingle = null)
+        public async Task Execute(IReadOnlyList<Func<Task>> actions)
         {
-            if (executorSingle == null)
+            foreach (var action in actions)
             {
-                foreach (var action in actions)
-                {
-                    await action.Invoke().ConfigureAwait(false);
-                }
-            }
-            else
-            {
-                foreach (var action in actions)
-                {
-                    await executorSingle.Execute(action).ConfigureAwait(false);
-                }
+                await action.Invoke().ConfigureAwait(false);
             }
         }
     }

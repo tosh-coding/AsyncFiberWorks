@@ -19,11 +19,11 @@ namespace AsyncFiberWorks.Threading
         private List<Action> _actions = new List<Action>();
         private List<Action> _toPass = new List<Action>();
 
-        ///<summary>
+        /// <summary>
         /// Creates a bounded queue with a custom executor.
-        ///</summary>
-        ///<param name="executorBatch"></param>
-        ///<param name="executorSingle"></param>
+        /// </summary>
+        /// <param name="executorBatch"></param>
+        /// <param name="executorSingle">The executor for each operation.</param>
         public BoundedQueue(IExecutorBatch executorBatch, IExecutor executorSingle)
         {
             MaxDepth = -1;
@@ -55,12 +55,26 @@ namespace AsyncFiberWorks.Threading
         /// <param name="action"></param>
         public void Enqueue(Action action)
         {
-            lock (_lock)
+            if (_executorSingle != null)
             {
-                if (SpaceAvailable(1))
+                lock (_lock)
                 {
-                    _actions.Add(action);
-                    Monitor.PulseAll(_lock);
+                    if (SpaceAvailable(1))
+                    {
+                        _actions.Add(() => _executorSingle.Execute(action));
+                        Monitor.PulseAll(_lock);
+                    }
+                }
+            }
+            else
+            {
+                lock (_lock)
+                {
+                    if (SpaceAvailable(1))
+                    {
+                        _actions.Add(action);
+                        Monitor.PulseAll(_lock);
+                    }
                 }
             }
         }
@@ -146,7 +160,7 @@ namespace AsyncFiberWorks.Threading
             {
                 return false;
             }
-            _executorBatch.Execute(toExecute, _executorSingle);
+            _executorBatch.Execute(toExecute);
             return true;
         }
     }
