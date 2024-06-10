@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.Fibers
     /// <summary>
     /// A consumer queue that executes queued tasks in sequence.
     /// </summary>
-    public class ChainAsyncFiber : IAsyncFiber
+    public class AsyncFiber : IAsyncFiber
     {
         readonly object _lockObj = new object();
         readonly Queue<Func<Task>> _queue = new Queue<Func<Task>>();
@@ -19,7 +19,7 @@ namespace AsyncFiberWorks.Fibers
         /// Create a fiber.
         /// </summary>
         /// <param name="executor"></param>
-        public ChainAsyncFiber(IAsyncExecutor executor)
+        public AsyncFiber(IAsyncExecutor executor)
         {
             _executor = executor;
         }
@@ -27,7 +27,7 @@ namespace AsyncFiberWorks.Fibers
         /// <summary>
         /// Create a fiber.
         /// </summary>
-        public ChainAsyncFiber()
+        public AsyncFiber()
             : this(AsyncSimpleExecutor.Instance)
         {
         }

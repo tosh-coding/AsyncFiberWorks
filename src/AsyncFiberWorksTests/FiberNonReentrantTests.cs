@@ -12,7 +12,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task AsyncNonReentrantTest()
         {
-            var originalFiber = new ChainAsyncFiber();
+            var originalFiber = new AsyncFiber();
             var fiber = new AsyncNonReentrantFiberFilter(originalFiber);
             int counter = 0;
 

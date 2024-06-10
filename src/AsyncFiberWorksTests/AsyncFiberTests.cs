@@ -11,14 +11,9 @@ namespace AsyncFiberWorksTests
     public class AsyncFiberTests
     {
         [Test]
-        public async Task ChainAsyncFiberTest()
+        public async Task EnqueueTest()
         {
-            var fiber = new ChainAsyncFiber();
-            await AsyncFiberTest(fiber);
-        }
-
-        async Task AsyncFiberTest(IAsyncFiber fiber)
-        {
+            var fiber = new AsyncFiber();
             int counter = 0;
             var tcs = new TaskCompletionSource<int>();
 
@@ -57,7 +52,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task OneshotTimerTest()
         {
-            var fiber = new ChainAsyncFiber();
+            var fiber = new AsyncFiber();
 
             int counter = 0;
             var timer = fiber.Schedule(async () =>
@@ -74,7 +69,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task OneshotTimerCancallationTest()
         {
-            var fiber = new ChainAsyncFiber();
+            var fiber = new AsyncFiber();
 
             int counter = 0;
             var timer = fiber.Schedule(async () =>
@@ -91,7 +86,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task RepeatingTimer()
         {
-            var fiber = new ChainAsyncFiber();
+            var fiber = new AsyncFiber();
 
             var sw = Stopwatch.StartNew();
             int counter = 0;
@@ -121,7 +116,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task EnqueueAsyncTest()
         {
-            var fiber = new ChainAsyncFiber();
+            var fiber = new AsyncFiber();
             int counter = 0;
             var sw = Stopwatch.StartNew();
             var t1 = fiber.EnqueueAsync(async () =>
