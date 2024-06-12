@@ -163,7 +163,7 @@ while (...)
 |:-|:-|
 | Threads | `Thread.Sleep()` |
 | Fiber on dedicated thread | `Thread.Sleep()` |
-| Fiber on shared threads | `fiber.Enqueue(Func<Task<Action>>) & await Task.Delay()` |
+| Fiber on shared threads | `fiber.Enqueue(Action<FiberExecutionEventArgs>) & FiberExecutionEventArgs.Pause()/Resume(Action)` |
 | Asynchronous control flow | `await Task.Deley()` |
 
 ## Fibers ##

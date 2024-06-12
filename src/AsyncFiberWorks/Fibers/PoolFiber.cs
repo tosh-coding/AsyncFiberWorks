@@ -14,6 +14,7 @@ namespace AsyncFiberWorks.Fibers
         private readonly object _lock = new object();
         private readonly IThreadPool _pool;
         private readonly IExecutor _executor;
+        private readonly FiberExecutionEventArgs _eventArgs;
 
         private Queue<Action> _queue = new Queue<Action>();
         private Queue<Action> _toPass = new Queue<Action>();
@@ -32,6 +33,7 @@ namespace AsyncFiberWorks.Fibers
         {
             _pool = pool;
             _executor = executor;
+            _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume);
         }
 
         /// <summary>
@@ -203,27 +205,12 @@ namespace AsyncFiberWorks.Fibers
         }
 
         /// <summary>
-        /// Enqueue a single task.
+        /// Enqueue a single action. It is executed sequentially.
         /// </summary>
-        /// <param name="func">Task generator. This is done after a pause in the fiber. The generated task is monitored and takes action to resume after completion.</param>
-        public void Enqueue(Func<Task<Action>> func)
+        /// <param name="action">Action to be executed.</param>
+        public void Enqueue(Action<FiberExecutionEventArgs> action)
         {
-            this.Enqueue(() =>
-            {
-                this.Pause();
-                Task.Run(async () =>
-                {
-                    Action resumingAction = default;
-                    try
-                    {
-                        resumingAction = await func.Invoke();
-                    }
-                    finally
-                    {
-                        this.Resume(resumingAction);
-                    }
-                });
-            });
+            this.Enqueue(() => action(_eventArgs));
         }
     }
 }

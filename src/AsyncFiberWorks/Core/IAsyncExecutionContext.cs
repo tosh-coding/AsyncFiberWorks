@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Core
         /// <summary>
         /// Enqueue a single action. It is executed sequentially.
         /// </summary>
-        /// <param name="func">Task generator. This is done after a pause in the fiber. The generated task is monitored and takes action to resume after completion.</param>
-        void Enqueue(Func<Task<Action>> func);
+        /// <param name="action">Action to be executed.</param>
+        void Enqueue(Action<FiberExecutionEventArgs> action);
     }
 }

@@ -33,7 +33,10 @@ namespace AsyncFiberWorks.Channels
         {
             return this._channel.AddHandler((msg) =>
             {
-                executionContext.Enqueue(() => receive.Invoke(msg));
+                executionContext.Enqueue((e) =>
+                {
+                    e.PauseWhileRunning(async () => await receive.Invoke(msg));
+                });
             });
         }
 

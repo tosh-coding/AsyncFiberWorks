@@ -11,9 +11,15 @@ namespace AsyncFiberWorks.Fibers
     /// </summary>
     public class ThreadFiber : IFiber, IDisposable
     {
+        private readonly object _lock = new object();
         private readonly IDedicatedConsumerThreadWork _queue;
         private readonly UserWorkerThread _workerThread;
+        private readonly FiberExecutionEventArgs _eventArgs;
         private bool _stopped = false;
+        private bool _paused;
+        private bool _resuming;
+        private AutoResetEvent _autoReset = null;
+        private Action _resumeAction = null;
 
         /// <summary>
         /// Create a thread fiber with the default queue.
@@ -51,6 +57,7 @@ namespace AsyncFiberWorks.Fibers
         public ThreadFiber(IDedicatedConsumerThreadWork queue, string threadName, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
             _queue = queue;
+            _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume);
             _workerThread = new UserWorkerThread(queue, threadName, isBackground, priority);
             _workerThread.Start();
         }
@@ -61,6 +68,7 @@ namespace AsyncFiberWorks.Fibers
         /// <param name="consumerThread">A consumer thread.</param>
         public ThreadFiber(UserWorkerThread consumerThread)
         {
+            _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume);
             _workerThread = consumerThread;
             _workerThread.Start();
         }
@@ -86,6 +94,50 @@ namespace AsyncFiberWorks.Fibers
         }
 
         /// <summary>
+        /// Pauses the consumption of the task queue.
+        /// This is only called during an Execute in the fiber.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Pause was called twice.</exception>
+        private void Pause()
+        {
+            lock (_lock)
+            {
+                if (_paused)
+                {
+                    throw new InvalidOperationException("Pause was called twice.");
+                }
+                _paused = true;
+                if (_autoReset == null)
+                {
+                    _autoReset = new AutoResetEvent(false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Resumes consumption of a paused task queue.
+        /// </summary>
+        /// <param name="action">The action to be taken immediately after the resume.</param>
+        /// <exception cref="InvalidOperationException">Resume was called in the unpaused state.</exception>
+        private void Resume(Action action)
+        {
+            lock (_lock)
+            {
+                if (!_paused)
+                {
+                    throw new InvalidOperationException("Resume was called in the unpaused state.");
+                }
+                if (_resuming)
+                {
+                    throw new InvalidOperationException("Resume was called twice.");
+                }
+                _resuming = true;
+                _resumeAction = action;
+                _autoReset.Set();
+            }
+        }
+
+        /// <summary>
         /// Enqueue a single action.
         /// </summary>
         /// <param name="action"></param>
@@ -95,31 +147,36 @@ namespace AsyncFiberWorks.Fibers
         }
 
         /// <summary>
-        /// Enqueue a single task.
+        /// Enqueue a single action. It is executed sequentially.
         /// </summary>
-        /// <param name="func">Task generator. This is done after a pause in the fiber. The generated task is monitored and takes action to resume after completion.</param>
-        public void Enqueue(Func<Task<Action>> func)
+        /// <param name="action">Action to be executed.</param>
+        public void Enqueue(Action<FiberExecutionEventArgs> action)
         {
             this.Enqueue(() =>
             {
-                var tcs = new TaskCompletionSource<Action>(TaskCreationOptions.RunContinuationsAsynchronously);
-                Task.Run(async () =>
+                action(_eventArgs);
+                bool tmpPaused;
+                lock (_lock)
                 {
-                    Action resumingAction = default;
+                    tmpPaused = _paused;
+                }
+                if (tmpPaused)
+                {
+                    _autoReset.WaitOne();
                     try
                     {
-                        resumingAction = await func.Invoke();
+                        _resumeAction();
                     }
                     finally
                     {
-                        tcs.SetResult(resumingAction);
+                        lock (_lock)
+                        {
+                            _paused = false;
+                            _resuming = false;
+                            _resumeAction = null;
+                        }
                     }
-                });
-
-                // This is in a dedicated thread. Blocking OK.
-                tcs.Task.Wait();
-                var act = tcs.Task.Result;
-                act?.Invoke();
+                }
             });
         }
     }
