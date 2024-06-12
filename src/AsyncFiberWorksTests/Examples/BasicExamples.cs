@@ -23,7 +23,7 @@ namespace AsyncFiberWorksTests.Examples
 
                 var reset = new AutoResetEvent(false);
                 var subscriptionFiber = subscriptions.BeginSubscription();
-                var subscriptionChannel = channel.Subscribe(fiber, delegate { reset.Set(); });
+                var subscriptionChannel = channel.Subscribe(fiber, (msg) => reset.Set());
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish("hello");
 
@@ -41,7 +41,7 @@ namespace AsyncFiberWorksTests.Examples
 
                 var reset = new AutoResetEvent(false);
                 var subscriptionFiber = subscriptions.BeginSubscription();
-                var subscriptionChannel = channel.Subscribe(fiber, delegate { reset.Set(); });
+                var subscriptionChannel = channel.Subscribe(fiber, (msg) => reset.Set());
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 channel.Publish("hello");
 

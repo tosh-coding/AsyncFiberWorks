@@ -142,14 +142,17 @@ namespace AsyncFiberWorksTests
 
             foreach (var node in nodeList)
             {
-                channel.Subscribe(node.Fiber, async (msg) =>
+                channel.Subscribe(node.Fiber, (e, msg) =>
                 {
-                    if (msg > 0)
+                    e.PauseWhileRunning(async () =>
                     {
-                        await Task.Delay(msg).ConfigureAwait(false);
-                    }
-                    node.ReceivedMessages.Add(msg);
-                    return () => { };
+                        if (msg > 0)
+                        {
+                            await Task.Delay(msg).ConfigureAwait(false);
+                        }
+                        node.ReceivedMessages.Add(msg);
+                        return () => { };
+                    });
                 });
             }
 

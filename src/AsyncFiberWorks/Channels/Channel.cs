@@ -29,15 +29,10 @@ namespace AsyncFiberWorks.Channels
         /// <param name="executionContext">The execution context of the message receive handler.</param>
         /// <param name="receive">Subscriber.</param>
         /// <returns>Unsubscriber.</returns>
-        public IDisposable Subscribe(IAsyncExecutionContext executionContext, Func<T, Task<Action>> receive)
+        public IDisposable Subscribe(IAsyncExecutionContext executionContext, Action<FiberExecutionEventArgs, T> receive)
         {
-            return this._channel.AddHandler((msg) =>
-            {
-                executionContext.Enqueue((e) =>
-                {
-                    e.PauseWhileRunning(async () => await receive.Invoke(msg));
-                });
-            });
+            return this._channel.AddHandler(
+                (msg) => executionContext.Enqueue((e) => receive(e, msg)));
         }
 
         /// <summary>
