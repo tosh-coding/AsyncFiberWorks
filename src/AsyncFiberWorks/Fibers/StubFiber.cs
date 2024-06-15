@@ -52,9 +52,8 @@ namespace AsyncFiberWorks.Fibers
         /// <summary>
         /// Execute until there are no more pending actions.
         /// </summary>
-        public int ExecuteAll()
+        public void ExecuteAll()
         {
-            int count = 0;
             Action toExecute;
             while (true)
             {
@@ -73,18 +72,15 @@ namespace AsyncFiberWorks.Fibers
                     break;
                 }
                 _executor.Execute(toExecute);
-                count += 1;
             }
-            return count;
         }
 
         /// <summary>
         /// Execute only what is pending now.
         /// </summary>
-        public int ExecuteOnlyPendingNow()
+        public void ExecuteOnlyPendingNow()
         {
             int count = _pending.Count;
-            int ret = count;
             Action toExecute;
             while (true)
             {
@@ -109,7 +105,6 @@ namespace AsyncFiberWorks.Fibers
                     break;
                 }
             }
-            return ret;
         }
 
         /// <summary>
