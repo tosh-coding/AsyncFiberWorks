@@ -63,17 +63,6 @@ namespace AsyncFiberWorks.Fibers
         }
 
         /// <summary>
-        /// Creates a thread fiber.
-        /// </summary>
-        /// <param name="consumerThread">A consumer thread.</param>
-        public ThreadFiber(UserWorkerThread consumerThread)
-        {
-            _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume);
-            _workerThread = consumerThread;
-            _workerThread.Start();
-        }
-
-        /// <summary>
         /// Stop the thread.
         /// </summary>
         public void Stop()
