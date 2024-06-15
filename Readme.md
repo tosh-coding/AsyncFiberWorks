@@ -48,7 +48,7 @@ namespace Sample
 
             // When an async lambda expression is enqueued,
             // the fiber waits until it is completed.
-            mainFiber.Enqueue(async () =>
+            mainFiber.EnqueueTask(async () =>
             {
                 await Task.Delay(1000);
 
