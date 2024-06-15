@@ -7,6 +7,7 @@ namespace AsyncFiberWorks.Fibers
 {
     /// <summary>
     /// Fiber implementation backed by shared threads. Mainly thread pool.
+    /// This fiber consumes tasks via a two-state queue of fiber and thread pools.
     /// </summary>
     public sealed class PoolFiber : IFiber
     {

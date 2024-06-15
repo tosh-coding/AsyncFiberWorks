@@ -7,6 +7,7 @@ namespace AsyncFiberWorks.Fibers
 {
     /// <summary>
     /// Fiber implementation backed by a dedicated thread.
+    /// This fiber consumes tasks via a single-stage queue.
     /// </summary>
     public class ThreadFiber : IFiber, IDisposable
     {
