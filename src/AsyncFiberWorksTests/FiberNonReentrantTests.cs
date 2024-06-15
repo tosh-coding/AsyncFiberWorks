@@ -13,10 +13,10 @@ namespace AsyncFiberWorksTests
         public async Task AsyncNonReentrantTest()
         {
             var originalFiber = new AsyncFiber();
-            var fiber = new AsyncNonReentrantFiberFilter(originalFiber);
+            var fiber = new AsyncNonReentrantFiberScheduler(originalFiber);
             int counter = 0;
 
-            fiber.Enqueue(async () =>
+            fiber.Schedule(async () =>
             {
                 await Task.Delay(500).ConfigureAwait(false);
                 counter += 1000;
@@ -25,7 +25,7 @@ namespace AsyncFiberWorksTests
             for (int i = 0; i < 3; i++)
             {
                 await Task.Delay(200).ConfigureAwait(false);
-                fiber.Enqueue(() =>
+                fiber.Schedule(() =>
                 {
                     counter += 200;
                     return Task.CompletedTask;
@@ -47,10 +47,10 @@ namespace AsyncFiberWorksTests
         public void NonReentrantTest()
         {
             var originalFiber = new PoolFiber();
-            var fiber = new NonReentrantFiberFilter(originalFiber);
+            var fiber = new NonReentrantFiberScheduler(originalFiber);
             int counter = 0;
 
-            fiber.Enqueue(() =>
+            fiber.Schedule(() =>
             {
                 Thread.Sleep(500);
                 counter += 1000;
@@ -59,7 +59,7 @@ namespace AsyncFiberWorksTests
             for (int i = 0; i < 3; i++)
             {
                 Thread.Sleep(200);
-                fiber.Enqueue(() =>
+                fiber.Schedule(() =>
                 {
                     counter += 200;
                 });

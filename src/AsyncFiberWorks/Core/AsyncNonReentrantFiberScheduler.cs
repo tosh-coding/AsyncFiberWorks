@@ -8,17 +8,17 @@ namespace AsyncFiberWorks.Core
     /// The same instance of this class will not be executed concurrently.
     /// The one executed later is skipped.
     /// </summary>
-    public class AsyncNonReentrantFiberFilter
+    public class AsyncNonReentrantFiberScheduler
     {
         private readonly object _lockObj = new object();
-        private readonly IFiber _fiber;
+        private readonly IAsyncExecutionContext _fiber;
         private bool _executing = false;
 
         /// <summary>
-        /// Create a filter.
+        /// Create a scheduler.
         /// </summary>
         /// <param name="fiber"></param>
-        public AsyncNonReentrantFiberFilter(IFiber fiber)
+        public AsyncNonReentrantFiberScheduler(IAsyncExecutionContext fiber)
         {
             _fiber = fiber;
         }
@@ -27,7 +27,7 @@ namespace AsyncFiberWorks.Core
         /// Enqueue a task.
         /// </summary>
         /// <param name="func">A function that returns a task.</param>
-        public void Enqueue(Func<Task> func)
+        public void Schedule(Func<Task> func)
         {
             lock (_lockObj)
             {
