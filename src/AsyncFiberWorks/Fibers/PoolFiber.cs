@@ -20,6 +20,7 @@ namespace AsyncFiberWorks.Fibers
         private Queue<Action> _toPass = new Queue<Action>();
 
         private bool _flushPending;
+        private bool _enabledPause;
         private bool _paused;
         private bool _flushPaused;
         private bool _resuming;
@@ -178,6 +179,10 @@ namespace AsyncFiberWorks.Fibers
                 {
                     throw new InvalidOperationException("Pause was called twice.");
                 }
+                if (!_enabledPause)
+                {
+                    throw new InvalidOperationException("Pause is only possible within the execution context.");
+                }
                 _paused = true;
             }
         }
@@ -210,7 +215,18 @@ namespace AsyncFiberWorks.Fibers
         /// <param name="action">Action to be executed.</param>
         public void Enqueue(Action<FiberExecutionEventArgs> action)
         {
-            this.Enqueue(() => action(_eventArgs));
+            this.Enqueue(() =>
+            {
+                lock (_lock)
+                {
+                    _enabledPause = true;
+                }
+                action(_eventArgs);
+                lock (_lock)
+                {
+                    _enabledPause = false;
+                }
+            });
         }
     }
 }

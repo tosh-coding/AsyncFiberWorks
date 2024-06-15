@@ -15,6 +15,7 @@ namespace AsyncFiberWorks.Fibers
         private readonly IDedicatedConsumerThreadWork _queue;
         private readonly UserWorkerThread _workerThread;
         private readonly FiberExecutionEventArgs _eventArgs;
+        private bool _enabledPause;
         private bool _stopped = false;
         private bool _paused;
         private bool _resuming;
@@ -67,10 +68,20 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         public void Stop()
         {
-            if (!_stopped)
+            bool tmpPaused;
+            lock (_lock)
             {
-                _workerThread.Stop();
+                if (_stopped)
+                {
+                    return;
+                }
                 _stopped = true;
+                tmpPaused = _paused;
+            }
+            _workerThread.Stop();
+            if (!tmpPaused)
+            {
+                _autoReset?.Dispose();
             }
         }
 
@@ -94,6 +105,10 @@ namespace AsyncFiberWorks.Fibers
                 if (_paused)
                 {
                     throw new InvalidOperationException("Pause was called twice.");
+                }
+                if (!_enabledPause)
+                {
+                    throw new InvalidOperationException("Pause is only possible within the execution context.");
                 }
                 _paused = true;
                 if (_autoReset == null)
@@ -143,27 +158,32 @@ namespace AsyncFiberWorks.Fibers
         {
             this.Enqueue(() =>
             {
+                lock (_lock)
+                {
+                    _enabledPause = true;
+                }
                 action(_eventArgs);
                 bool tmpPaused;
                 lock (_lock)
                 {
                     tmpPaused = _paused;
+                    _enabledPause = false;
                 }
                 if (tmpPaused)
                 {
                     _autoReset.WaitOne();
-                    try
+                    _resumeAction();
+                    bool tmpStopped;
+                    lock (_lock)
                     {
-                        _resumeAction();
+                        _paused = false;
+                        _resuming = false;
+                        _resumeAction = null;
+                        tmpStopped = _stopped;
                     }
-                    finally
+                    if (tmpStopped)
                     {
-                        lock (_lock)
-                        {
-                            _paused = false;
-                            _resuming = false;
-                            _resumeAction = null;
-                        }
+                        _autoReset?.Dispose();
                     }
                 }
             });
