@@ -34,7 +34,11 @@ namespace AsyncFiberWorksTests
 
                 var tcs = new TaskCompletionSource<Action>();
                 requesterFiber.Enqueue(
-                    (e) => e.PauseWhileRunning(async () => await tcs.Task));
+                    (e) => e.PauseWhileRunning(async () =>
+                    {
+                        var act = await tcs.Task;
+                        await e.EnqueueToOriginThreadAsync(act);
+                    }));
 
                 var workFiber = new PoolFiber(new OneShotExecutor());
                 var timeoutTimer = workFiber.Schedule(() =>

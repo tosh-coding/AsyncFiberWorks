@@ -34,7 +34,7 @@ namespace AsyncFiberWorks.Fibers
         {
             _pool = pool;
             _executor = executor;
-            _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume);
+            _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume, _pool);
         }
 
         /// <summary>
@@ -139,16 +139,12 @@ namespace AsyncFiberWorks.Fibers
             }
         }
 
-        private void ResumeAction(Action action)
+        private void ResumeAction()
         {
             lock (_lock)
             {
                 if (_flushPaused || (!_flushPending))
                 {
-                    if (action != null)
-                    {
-                        _executor.Execute(action);
-                    }
                     _paused = false;
                     _flushPaused = false;
                     _resuming = false;
@@ -161,7 +157,7 @@ namespace AsyncFiberWorks.Fibers
                 else
                 {
                     // Wait flushPaused.
-                    _pool.Queue((_) => ResumeAction(action));
+                    _pool.Queue((_) => ResumeAction());
                 }
             }
         }
@@ -190,9 +186,8 @@ namespace AsyncFiberWorks.Fibers
         /// <summary>
         /// Resumes consumption of a paused task queue.
         /// </summary>
-        /// <param name="action">The action to be taken immediately after the resume.</param>
         /// <exception cref="InvalidOperationException">Resume was called in the unpaused state.</exception>
-        private void Resume(Action action)
+        private void Resume()
         {
             lock (_lock)
             {
@@ -205,7 +200,7 @@ namespace AsyncFiberWorks.Fibers
                     throw new InvalidOperationException("Resume was called twice.");
                 }
                 _resuming = true;
-                _pool.Queue((_) => ResumeAction(action));
+                _pool.Queue((_) => ResumeAction());
             }
         }
 

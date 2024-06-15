@@ -151,7 +151,6 @@ namespace AsyncFiberWorksTests
                             await Task.Delay(msg).ConfigureAwait(false);
                         }
                         node.ReceivedMessages.Add(msg);
-                        return () => { };
                     });
                 });
             }

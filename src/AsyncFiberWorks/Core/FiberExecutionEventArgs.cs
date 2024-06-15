@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AsyncFiberWorks.Threading;
+using System;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Core
@@ -9,17 +10,20 @@ namespace AsyncFiberWorks.Core
     public class FiberExecutionEventArgs : EventArgs
     {
         private Action _pause;
-        private Action<Action> _resume;
+        private Action _resume;
+        private IThreadPool _threadPool;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="pause"></param>
         /// <param name="resume"></param>
-        public FiberExecutionEventArgs(Action pause, Action<Action> resume)
+        /// <param name="threadPool">The threads on the back side of the fiber.</param>
+        public FiberExecutionEventArgs(Action pause, Action resume, IThreadPool threadPool)
         {
             _pause = pause;
             _resume = resume;
+            _threadPool = threadPool;
         }
 
         /// <summary>
@@ -32,31 +36,54 @@ namespace AsyncFiberWorks.Core
         }
 
         /// <summary>
+        /// Enqueue to the threads on the back side of the fiber.
+        /// </summary>
+        /// <param name="action">Enqueued action.</param>
+        public void EnqueueToOriginThread(Action action)
+        {
+            _threadPool.Queue((state) => action());
+        }
+
+        /// <summary>
+        /// Enqueue to the threads on the back side of the fiber.
+        /// </summary>
+        /// <param name="action">Enqueued action.</param>
+        /// <returns>A task that waits for enqueued actions to complete.</returns>
+        public Task EnqueueToOriginThreadAsync(Action action)
+        {
+            var tcs = new TaskCompletionSource<byte>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _threadPool.Queue((_) =>
+            {
+                action();
+                tcs.TrySetResult(0);
+            });
+            return tcs.Task;
+        }
+
+        /// <summary>
         /// Resumes consumption of a paused task queue.
         /// </summary>
-        /// <param name="action">The action to be taken immediately after the resume.</param>
-        public void Resume(Action action)
+        public void Resume()
         {
-            _resume(action);
+            _resume();
         }
 
         /// <summary>
         /// Pause the fiber while the task is running.
         /// </summary>
         /// <param name="runningTask"></param>
-        public void PauseWhileRunning(Func<Task<Action>> runningTask)
+        public void PauseWhileRunning(Func<Task> runningTask)
         {
             this.Pause();
             Task.Run(async () =>
             {
-                Action resumingAction = default;
                 try
                 {
-                    resumingAction = await runningTask.Invoke();
+                    await runningTask.Invoke().ConfigureAwait(false);
                 }
                 finally
                 {
-                    this.Resume(resumingAction);
+                    this.Resume();
                 }
             });
         }

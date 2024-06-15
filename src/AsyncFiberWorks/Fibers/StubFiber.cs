@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Threading;
 
 namespace AsyncFiberWorks.Fibers
 {
@@ -16,10 +17,10 @@ namespace AsyncFiberWorks.Fibers
         private readonly ConcurrentQueue<Action> _pending = new ConcurrentQueue<Action>();
         private readonly IExecutor _executor;
         private readonly FiberExecutionEventArgs _eventArgs;
+        private readonly ThreadPoolAdaptor _queueUsedDuringPause;
 
         private bool _enabledPause;
         private int _paused = 0;
-        private Action _resumeAction = null;
 
         /// <summary>
         /// Create a stub fiber with a simple executor.
@@ -36,7 +37,8 @@ namespace AsyncFiberWorks.Fibers
         public StubFiber(IExecutor executor)
         {
             _executor = executor;
-            _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume);
+            _queueUsedDuringPause = new ThreadPoolAdaptor(new DefaultQueue());
+            _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume, _queueUsedDuringPause);
         }
 
         /// <summary>
@@ -53,20 +55,23 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         public void ExecuteAll()
         {
-            Action toExecute;
+            bool isPaused = ExecuteResumeProcess();
+            if (isPaused)
+            {
+                return;
+            }
+
             while (true)
             {
                 lock (_lock)
                 {
-                    if (_paused != 0 && _paused != 2)
+                    if (_paused != 0)
                     {
                         break;
                     }
                 }
 
-                ExecuteResumeProcess();
-
-                if (!_pending.TryDequeue(out toExecute))
+                if (!_pending.TryDequeue(out var toExecute))
                 {
                     break;
                 }
@@ -79,21 +84,24 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         public void ExecuteOnlyPendingNow()
         {
+            bool isPaused = ExecuteResumeProcess();
+            if (isPaused)
+            {
+                return;
+            }
+
             int count = _pending.Count;
-            Action toExecute;
             while (true)
             {
                 lock (_lock)
                 {
-                    if (_paused != 0 && _paused != 2)
+                    if (_paused != 0)
                     {
                         break;
                     }
                 }
 
-                ExecuteResumeProcess();
-
-                if (!_pending.TryDequeue(out toExecute))
+                if (!_pending.TryDequeue(out var toExecute))
                 {
                     break;
                 }
@@ -130,9 +138,8 @@ namespace AsyncFiberWorks.Fibers
         /// <summary>
         /// Resumes consumption of a paused task queue.
         /// </summary>
-        /// <param name="action">The action to be taken immediately after the resume.</param>
         /// <exception cref="InvalidOperationException">Resume was called in the unpaused state.</exception>
-        private void Resume(Action action)
+        private void Resume()
         {
             lock (_lock)
             {
@@ -146,29 +153,31 @@ namespace AsyncFiberWorks.Fibers
                 }
                 _paused = 2;
             }
-
-            _resumeAction = action;
         }
 
-        private void ExecuteResumeProcess()
+        private bool ExecuteResumeProcess()
         {
-            if (_paused != 2)
+            lock (_lock)
             {
-                return;
+                if (_paused == 0)
+                {
+                    return false;
+                }
             }
 
-            var action = _resumeAction;
-            _resumeAction = null;
-            try
+            _queueUsedDuringPause.Queue((_) =>
             {
-                action?.Invoke();
-            }
-            finally
+                _queueUsedDuringPause.Stop();
+            });
+            _queueUsedDuringPause.Run();
+            lock (_lock)
             {
-                lock (_lock)
+                if (_paused != 2)
                 {
-                    _paused = 0;
+                    return true;
                 }
+                _paused = 0;
+                return false;
             }
         }
 

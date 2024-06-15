@@ -67,6 +67,7 @@ namespace AsyncFiberWorks.Threading
         /// </summary>
         public void Run()
         {
+            _running = true;
             while (ExecuteNextBatch()) { }
         }
 
