@@ -33,7 +33,7 @@ namespace AsyncFiberWorksTests
             }
 
             var tcs = new TaskCompletionSource<byte>();
-            originalFiber.Enqueue(() =>
+            originalFiber.EnqueueTask(() =>
             {
                 tcs.SetResult(0);
                 return Task.CompletedTask;

@@ -56,13 +56,13 @@ namespace AsyncFiberWorks.Core
         /// <param name="firstInMs"></param>
         /// <param name="timerFactory"></param>
         /// <returns>A handle to cancel the timer.</returns>
-        public static IDisposable Schedule(this IAsyncFiber fiber, Func<Task> func, long firstInMs, IOneshotTimerFactory timerFactory = null)
+        public static IDisposable Schedule(this IAsyncExecutionContext fiber, Func<Task> func, long firstInMs, IOneshotTimerFactory timerFactory = null)
         {
             if (timerFactory == null)
             {
                 timerFactory = new ThreadingTimerFactory();
             }
-            return timerFactory.Schedule(() => fiber.Enqueue(func), firstInMs);
+            return timerFactory.Schedule(() => fiber.EnqueueTask(func), firstInMs);
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace AsyncFiberWorks.Core
         /// <param name="regularInMs"></param>
         /// <param name="timerFactory"></param>
         /// <returns>A handle to cancel the timer.</returns>
-        public static IDisposable ScheduleOnInterval(this IAsyncFiber fiber, Func<Task> func, long firstInMs, long regularInMs, IIntervalTimerFactory timerFactory = null)
+        public static IDisposable ScheduleOnInterval(this IAsyncExecutionContext fiber, Func<Task> func, long firstInMs, long regularInMs, IIntervalTimerFactory timerFactory = null)
         {
             if (regularInMs <= 0)
             {
@@ -85,7 +85,7 @@ namespace AsyncFiberWorks.Core
             {
                 timerFactory = new ThreadingTimerFactory();
             }
-            return timerFactory.ScheduleOnInterval(() => fiber.Enqueue(func), firstInMs, regularInMs);
+            return timerFactory.ScheduleOnInterval(() => fiber.EnqueueTask(func), firstInMs, regularInMs);
         }
     }
 }

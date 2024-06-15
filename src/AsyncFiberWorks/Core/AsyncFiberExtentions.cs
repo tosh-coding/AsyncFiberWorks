@@ -11,24 +11,36 @@ namespace AsyncFiberWorks.Core
         /// <summary>
         /// Enqueue a task.
         /// </summary>
-        /// <param name="fiber">An fiber.</param>
+        /// <param name="fiber">A fiber.</param>
+        /// <param name="func">A function that returns a task.</param>
+        public static void EnqueueTask(this IAsyncExecutionContext fiber, Func<Task> func)
+        {
+            fiber.Enqueue((e) => e.PauseWhileRunning(func));
+        }
+
+        /// <summary>
+        /// Enqueue a task.
+        /// </summary>
+        /// <param name="fiber">A fiber.</param>
         /// <param name="func">A function that returns a task.</param>
         /// <returns>A task that waits until a given task is finished.</returns>
-        public static async Task EnqueueAsync(this IAsyncFiber fiber, Func<Task> func)
+        public static async Task EnqueueTaskAsync(this IAsyncExecutionContext fiber, Func<Task> func)
         {
             var tcs = new TaskCompletionSource<byte>();
-            fiber.Enqueue(async () =>
+            fiber.Enqueue((e) => e.PauseWhileRunning(async () =>
             {
                 try
                 {
                     await func().ConfigureAwait(false);
                 }
-                finally
+                catch (Exception ex)
                 {
-                    tcs.SetResult(0);
+                    tcs.SetException(ex);
+                    return;
                 }
-            });
-            await tcs.Task;
+                tcs.SetResult(0);
+            }));
+            await tcs.Task.ConfigureAwait(false);
         }
     }
 }

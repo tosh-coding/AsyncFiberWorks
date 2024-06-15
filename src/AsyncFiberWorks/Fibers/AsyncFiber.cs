@@ -1,4 +1,5 @@
 ﻿using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Threading;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -6,9 +7,9 @@ using System.Threading.Tasks;
 namespace AsyncFiberWorks.Fibers
 {
     /// <summary>
-    /// A consumer queue that executes queued tasks in sequence.
+    /// Fiber implementation backed by asynchronous control flow.
     /// </summary>
-    public class AsyncFiber : IAsyncFiber
+    public class AsyncFiber : IFiber
     {
         readonly object _lockObj = new object();
         readonly Queue<Func<Task>> _queue = new Queue<Func<Task>>();
@@ -51,10 +52,8 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         async void Run()
         {
-            await Task.Yield();
             while (TryDequeue(out var func))
             {
-                await Task.Yield();
                 await _executor.Execute(func).ConfigureAwait(false);
             }
             lock (_lockObj)
@@ -67,7 +66,7 @@ namespace AsyncFiberWorks.Fibers
         /// Enqueue a task.
         /// </summary>
         /// <param name="func">A function that returns a task.</param>
-        public void Enqueue(Func<Task> func)
+        void PrivateEnqueue(Func<Task> func)
         {
             bool startedNow = false;
             lock (_lockObj)
@@ -84,6 +83,48 @@ namespace AsyncFiberWorks.Fibers
             {
                 Run();
             }
+        }
+
+        /// <summary>
+        /// Enqueue a single action. It is executed sequentially.
+        /// </summary>
+        /// <param name="action">Action to be executed.</param>
+        public void Enqueue(Action action)
+        {
+            PrivateEnqueue(() =>
+            {
+                action();
+                return Task.CompletedTask;
+            });
+        }
+
+        /// <summary>
+        /// Enqueue a single action. It is executed sequentially.
+        /// </summary>
+        /// <param name="action">Action to be executed.</param>
+        public void Enqueue(Action<FiberExecutionEventArgs> action)
+        {
+            PrivateEnqueue(async () =>
+            {
+                bool isPaused = false;
+                var tcs = new TaskCompletionSource<int>();
+                var eventArgs = new FiberExecutionEventArgs(
+                    () =>
+                    {
+                        isPaused = true;
+                    },
+                    () =>
+                    {
+                        tcs.SetResult(0);
+                    },
+                    DefaultThreadPool.Instance);
+                action(eventArgs);
+                if (isPaused)
+                {
+                    await tcs.Task.ConfigureAwait(false);
+                    await Task.Yield();
+                }
+            });
         }
     }
 }

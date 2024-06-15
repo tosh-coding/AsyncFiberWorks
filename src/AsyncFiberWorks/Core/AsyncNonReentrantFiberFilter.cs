@@ -1,3 +1,4 @@
+using AsyncFiberWorks.Fibers;
 using System;
 using System.Threading.Tasks;
 
@@ -7,17 +8,17 @@ namespace AsyncFiberWorks.Core
     /// The same instance of this class will not be executed concurrently.
     /// The one executed later is skipped.
     /// </summary>
-    public class AsyncNonReentrantFiberFilter : IAsyncFiber
+    public class AsyncNonReentrantFiberFilter
     {
         private readonly object _lockObj = new object();
-        private readonly IAsyncFiber _fiber;
+        private readonly IFiber _fiber;
         private bool _executing = false;
 
         /// <summary>
         /// Create a filter.
         /// </summary>
         /// <param name="fiber"></param>
-        public AsyncNonReentrantFiberFilter(IAsyncFiber fiber)
+        public AsyncNonReentrantFiberFilter(IFiber fiber)
         {
             _fiber = fiber;
         }
@@ -37,7 +38,7 @@ namespace AsyncFiberWorks.Core
                 _executing = true;
             }
 
-            _fiber.Enqueue(async () =>
+            _fiber.EnqueueTask(async () =>
             {
                 try
                 {

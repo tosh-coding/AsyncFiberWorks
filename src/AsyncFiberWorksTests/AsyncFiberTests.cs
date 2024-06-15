@@ -2,6 +2,7 @@
 using AsyncFiberWorks.Fibers;
 using NUnit.Framework;
 using System;
+using System.Collections;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -10,14 +11,33 @@ namespace AsyncFiberWorksTests
     [TestFixture]
     public class AsyncFiberTests
     {
-        [Test]
-        public async Task EnqueueTest()
+        public class MyDataClass
         {
-            var fiber = new AsyncFiber();
+            public static IEnumerable AllFibers
+            {
+                get
+                {
+                    Func<IFiber> poolFiber = () => new PoolFiber();
+                    yield return new TestCaseData(poolFiber);
+
+                    Func<IFiber> threadFiber = () => new ThreadFiber();
+                    yield return new TestCaseData(threadFiber);
+
+                    Func<IFiber> asyncFiber = () => new AsyncFiber();
+                    yield return new TestCaseData(asyncFiber);
+                }
+            }
+        }
+
+        [Test]
+        [TestCaseSource(typeof(MyDataClass), nameof(MyDataClass.AllFibers))]
+        public async Task EnqueueTest(Func<IFiber> fiberCreator)
+        {
+            var fiber = fiberCreator();
             int counter = 0;
             var tcs = new TaskCompletionSource<int>();
 
-            fiber.Enqueue(async () =>
+            fiber.EnqueueTask(async () =>
             {
                 Assert.AreEqual(0, counter);
                 counter = 1;
@@ -25,7 +45,7 @@ namespace AsyncFiberWorksTests
                 Assert.AreEqual(1, counter);
                 counter = 2;
             });
-            fiber.Enqueue(async () =>
+            fiber.EnqueueTask(async () =>
             {
                 Assert.AreEqual(2, counter);
                 counter = 10;
@@ -33,13 +53,13 @@ namespace AsyncFiberWorksTests
                 Assert.AreEqual(10, counter);
                 counter = 20;
             });
-            fiber.Enqueue(async () =>
+            fiber.EnqueueTask(async () =>
             {
                 Assert.AreEqual(20, counter);
                 counter += 100;
                 await Task.Yield();
             });
-            fiber.Enqueue(() =>
+            fiber.EnqueueTask(() =>
             {
                 tcs.SetResult(0);
                 return Task.CompletedTask;
@@ -50,9 +70,10 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task OneshotTimerTest()
+        [TestCaseSource(typeof(MyDataClass), nameof(MyDataClass.AllFibers))]
+        public async Task OneshotTimerTest(Func<IFiber> fiberCreator)
         {
-            var fiber = new AsyncFiber();
+            var fiber = fiberCreator();
 
             int counter = 0;
             var timer = fiber.Schedule(async () =>
@@ -67,9 +88,10 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task OneshotTimerCancallationTest()
+        [TestCaseSource(typeof(MyDataClass), nameof(MyDataClass.AllFibers))]
+        public async Task OneshotTimerCancallationTest(Func<IFiber> fiberCreator)
         {
-            var fiber = new AsyncFiber();
+            var fiber = fiberCreator();
 
             int counter = 0;
             var timer = fiber.Schedule(async () =>
@@ -84,9 +106,10 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task RepeatingTimer()
+        [TestCaseSource(typeof(MyDataClass), nameof(MyDataClass.AllFibers))]
+        public async Task RepeatingTimer(Func<IFiber> fiberCreator)
         {
-            var fiber = new AsyncFiber();
+            var fiber = fiberCreator();
 
             var sw = Stopwatch.StartNew();
             int counter = 0;
@@ -114,18 +137,19 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task EnqueueAsyncTest()
+        [TestCaseSource(typeof(MyDataClass), nameof(MyDataClass.AllFibers))]
+        public async Task EnqueueAsyncTest(Func<IFiber> fiberCreator)
         {
-            var fiber = new AsyncFiber();
+            var fiber = fiberCreator();
             int counter = 0;
             var sw = Stopwatch.StartNew();
-            var t1 = fiber.EnqueueAsync(async () =>
+            var t1 = fiber.EnqueueTaskAsync(async () =>
             {
                 counter = 1;
                 await Task.Delay(300).ConfigureAwait(false);
             });
             await Task.Delay(10).ConfigureAwait(false);
-            fiber.Enqueue(() =>
+            fiber.EnqueueTask(() =>
             {
                 counter = 2;
                 return Task.CompletedTask;
