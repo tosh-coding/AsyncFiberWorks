@@ -5,6 +5,7 @@ namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
     /// List of actions.
+    /// It is not thread-safe.
     /// </summary>
     internal sealed class ActionList
     {
@@ -17,11 +18,15 @@ namespace AsyncFiberWorks.Procedures
         /// <returns>Function for removing the action.</returns>
         public IDisposable AddHandler(Action action)
         {
-            _actions += action;
+            var maskableFilter = new ToggleFilter();
+            Action safeAction = () => maskableFilter.Execute(action);
+
+            _actions += safeAction;
 
             var unsubscriber = new Unsubscriber(() =>
             {
-                _actions -= action;
+                maskableFilter.IsEnabled = false;
+                _actions -= safeAction;
             });
 
             return unsubscriber;

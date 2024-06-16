@@ -29,23 +29,11 @@ namespace AsyncFiberWorks.Procedures
         {
             if (_executor != null)
             {
-                var maskableFilter = new MaskableExecutor();
-                var disposable = _actions.AddHandler(() => maskableFilter.Execute(() => _executor.Execute(action)));
-                return new Unsubscriber(() =>
-                {
-                    maskableFilter.IsEnabled = false;
-                    disposable.Dispose();
-                });
+                return _actions.AddHandler(() => _executor.Execute(action));
             }
             else
             {
-                var maskableFilter = new MaskableExecutor();
-                var disposable = _actions.AddHandler(() => maskableFilter.Execute(action));
-                return new Unsubscriber(() =>
-                {
-                    maskableFilter.IsEnabled = false;
-                    disposable.Dispose();
-                });
+                return _actions.AddHandler(action);
             }
         }
 

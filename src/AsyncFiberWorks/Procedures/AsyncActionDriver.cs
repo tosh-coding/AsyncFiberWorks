@@ -45,23 +45,11 @@ namespace AsyncFiberWorks.Procedures
         {
             if (_executorSingle != null)
             {
-                var maskableFilter = new AsyncMaskableExecutor();
-                var disposable = _actions.AddHandler(() => maskableFilter.Execute(() => _executorSingle.Execute(action)));
-                return new Unsubscriber(() =>
-                {
-                    maskableFilter.IsEnabled = false;
-                    disposable.Dispose();
-                });
+                return _actions.AddHandler(() => _executorSingle.Execute(action));
             }
             else
             {
-                var maskableFilter = new AsyncMaskableExecutor();
-                var disposable = _actions.AddHandler(() => maskableFilter.Execute(action));
-                return new Unsubscriber(() =>
-                {
-                    maskableFilter.IsEnabled = false;
-                    disposable.Dispose();
-                });
+                return _actions.AddHandler(action);
             }
         }
 

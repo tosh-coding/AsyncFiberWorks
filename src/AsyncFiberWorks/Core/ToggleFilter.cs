@@ -3,9 +3,9 @@ using System;
 namespace AsyncFiberWorks.Core
 {
     /// <summary>
-    /// An executor that can be toggled to run or skip.
+    /// A filter that can be toggled to run or skip.
     /// </summary>
-    public class MaskableExecutor : IExecutor
+    internal class ToggleFilter
     {
         private bool _running = true;
 
@@ -22,7 +22,8 @@ namespace AsyncFiberWorks.Core
         }
 
         /// <summary>
-        /// When disabled, actions will be ignored by executor. The executor is typically disabled at shutdown
+        /// When disabled, actions will be ignored by filter.
+        /// The filter is typically disabled at shutdown
         /// to prevent any pending actions from being executed.
         /// </summary>
         public bool IsEnabled

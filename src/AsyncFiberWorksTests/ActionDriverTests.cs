@@ -92,21 +92,24 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public void InvokingWithDefaultExecutorSingle()
+        public void ToggleAtUnsubscribe()
         {
-            var executor = new MaskableExecutor();
-            var driver = new ActionDriver(executor);
+            var driver = new ActionDriver();
 
             long counter = 0;
+
+            var unsubscriber = new Unsubscriber();
 
             Action action = () =>
             {
                 counter += 1;
-                executor.IsEnabled = false;
+                unsubscriber.Dispose();
             };
 
             var disposable1 = driver.Subscribe(action);
+            unsubscriber.AppendDisposable(disposable1);
             var disposable2 = driver.Subscribe(action);
+            unsubscriber.AppendDisposable(disposable2);
 
             driver.Invoke();
             Assert.AreEqual(1, counter);

@@ -22,16 +22,20 @@ namespace AsyncFiberWorks.Procedures
         /// <returns>Function for removing the action.</returns>
         public IDisposable AddHandler(Func<Task> action)
         {
+            var maskableFilter = new AsyncToggleFilter();
+            Func<Task> safeAction = () => maskableFilter.Execute(action);
+
             lock (_lock)
             {
-                _actions.AddLast(action);
+                _actions.AddLast(safeAction);
             }
 
             var unsubscriber = new Unsubscriber(() =>
             {
                 lock (_lock)
                 {
-                    _actions.Remove(action);
+                    maskableFilter.IsEnabled = false;
+                    _actions.Remove(safeAction);
                 }
             });
 
