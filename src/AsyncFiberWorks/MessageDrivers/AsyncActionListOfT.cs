@@ -23,16 +23,27 @@ namespace AsyncFiberWorks.MessageDrivers
         /// <returns>Function for removing the action.</returns>
         public IDisposable AddHandler(Func<T, Task> action)
         {
+            var maskableFilter = new ToggleFilter();
+            Func<T, Task> safeAction = async (message) =>
+            {
+                var enabled = maskableFilter.IsEnabled;
+                if (enabled)
+                {
+                    await action(message);
+                }
+            };
+
             lock (_lock)
             {
-                _actions.AddLast(action);
+                _actions.AddLast(safeAction);
             }
 
             var unsubscriber = new Unsubscriber(() =>
             {
                 lock (_lock)
                 {
-                    _actions.Remove(action);
+                    maskableFilter.IsEnabled = false;
+                    _actions.Remove(safeAction);
                 }
             });
 
