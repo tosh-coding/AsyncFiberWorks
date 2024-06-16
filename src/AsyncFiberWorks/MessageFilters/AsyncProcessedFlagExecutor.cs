@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
+using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.MessageFilters
 {
     /// <summary>
-    /// Call the actions in the reverse order in which they were registered.
+    /// Call all actions in the order in which they are registered.
     /// Wait for the calls to complete one at a time before proceeding.
     /// If unprocessed, proceeds to the next action. If already processed, execution ends at that point.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class AsyncProcessedFlagReverseOrderExecutor<T> : IAsyncExecutorBatch<ProcessedFlagEventArgs<T>>
+    /// <typeparam name="T">Type of argument.</typeparam>
+    public class AsyncProcessedFlagExecutor<T> : IAsyncExecutorBatch<ProcessedFlagEventArgs<T>>
     {
         /// <summary>
-        /// Call the actions in the reverse order in which they were registered.
-        /// If any action is processed, execution stops at that point.
+        /// Executes actions.
+        /// If any action returns true, execution stops at that point.
         /// </summary>
         /// <param name="eventArgs">An argument.</param>
         /// <param name="actions">A list of actions.</param>
@@ -30,7 +30,7 @@ namespace AsyncFiberWorks.Core
 
             if (executorSingle != null)
             {
-                foreach (var action in actions.Reverse())
+                foreach (var action in actions)
                 {
                     await executorSingle.Execute(eventArgs, action).ConfigureAwait(false);
                     if (eventArgs.Processed)
@@ -41,7 +41,7 @@ namespace AsyncFiberWorks.Core
             }
             else
             {
-                foreach (var action in actions.Reverse())
+                foreach (var action in actions)
                 {
                     await action(eventArgs).ConfigureAwait(false);
                     if (eventArgs.Processed)

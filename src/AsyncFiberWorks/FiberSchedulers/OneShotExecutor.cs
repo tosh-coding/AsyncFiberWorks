@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
+using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.FiberSchedulers
 {
     /// <summary>
     /// One shot executor. It is executed only once the first time.

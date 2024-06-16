@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
+using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.FiberSchedulers
 {
     /// <summary>
     /// Methods for scheduling actions that will be executed in the future.

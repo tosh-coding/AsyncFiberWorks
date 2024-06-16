@@ -5,6 +5,7 @@ using AsyncFiberWorks.Procedures;
 using System.Threading;
 using System.Threading.Tasks;
 using System;
+using AsyncFiberWorks.MessageFilters;
 
 namespace AsyncFiberWorksTests
 {

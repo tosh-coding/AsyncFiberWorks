@@ -1,7 +1,8 @@
 using System;
 using System.Threading.Tasks;
+using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.MessageFilters
 {
     /// <summary>
     /// An executor that can be toggled to run or skip.

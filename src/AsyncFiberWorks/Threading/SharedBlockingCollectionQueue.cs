@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Executors;
 
 namespace AsyncFiberWorks.Threading
 {

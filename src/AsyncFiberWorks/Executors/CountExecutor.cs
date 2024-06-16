@@ -1,6 +1,7 @@
 ﻿using System;
+using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.Executors
 {
     /// <summary>
     /// Count the number of executions.

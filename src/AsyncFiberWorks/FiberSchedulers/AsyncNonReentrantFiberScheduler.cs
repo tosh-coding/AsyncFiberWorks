@@ -1,8 +1,8 @@
-using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Core;
 using System;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.FiberSchedulers
 {
     /// <summary>
     /// The same instance of this class will not be executed concurrently.

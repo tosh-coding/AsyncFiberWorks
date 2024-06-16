@@ -3,7 +3,7 @@ using AsyncFiberWorks.Fibers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncFiberWorks.Core;
+using AsyncFiberWorks.FiberSchedulers;
 
 namespace AsyncFiberWorksTests
 {

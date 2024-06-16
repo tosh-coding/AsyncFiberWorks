@@ -2,6 +2,7 @@
 using System.Windows;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.FiberSchedulers;
 
 namespace WpfExample
 {

@@ -1,4 +1,5 @@
 ﻿using AsyncFiberWorks.Core;
+using AsyncFiberWorks.MessageFilters;
 using AsyncFiberWorks.Procedures;
 using NUnit.Framework;
 using System;
