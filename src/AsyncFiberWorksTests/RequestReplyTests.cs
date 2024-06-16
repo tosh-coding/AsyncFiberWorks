@@ -41,21 +41,28 @@ namespace AsyncFiberWorksTests
                         await e.EnqueueToOriginThreadAsync(act);
                     }));
 
-                var workFiber = new PoolFiber(new OneShotExecutor());
+                var oneshotScheduler = new OneShotScheduler();
+                var workFiber = new PoolFiber();
                 var timeoutTimer = workFiber.Schedule(() =>
                 {
-                    requesterThread.Queue((_) => Assert.Fail());
+                    oneshotScheduler.Schedule(() =>
+                    {
+                        requesterThread.Queue((_) => Assert.Fail());
+                    });
                 }, 10000);
                 var disposableRequest = new Unsubscriber();
                 var responseChannel = new Channel<DateTime>();
                 var response = responseChannel.Subscribe(workFiber, (result) =>
                 {
-                    timeoutTimer.Dispose();
-                    disposableRequest.Dispose();
-                    tcs.SetResult(() =>
+                    oneshotScheduler.Schedule(() =>
                     {
-                        Assert.AreEqual(result, now);
-                        requesterThread.Stop();
+                        timeoutTimer.Dispose();
+                        disposableRequest.Dispose();
+                        tcs.SetResult(() =>
+                        {
+                            Assert.AreEqual(result, now);
+                            requesterThread.Stop();
+                        });
                     });
                 });
                 timeCheck.Publish(new RequestReplyChannelRequest<string, DateTime>("hello", responseChannel));

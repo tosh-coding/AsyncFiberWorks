@@ -1,12 +1,11 @@
 ﻿using System;
-using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.FiberSchedulers
 {
     /// <summary>
-    /// One shot executor. It is executed only once the first time.
+    /// One shot scheduler. It is executed only once the first time.
     /// </summary>
-    public class OneShotExecutor : IExecutor
+    public class OneShotScheduler
     {
         private bool _fired = false;
 
@@ -14,7 +13,7 @@ namespace AsyncFiberWorks.FiberSchedulers
         /// Executes a single action. 
         ///</summary>
         ///<param name="toExecute"></param>
-        public void Execute(Action toExecute)
+        public void Schedule(Action toExecute)
         {
             if (!_fired)
             {
