@@ -45,9 +45,8 @@ namespace AsyncFiberWorks.Procedures
         /// <summary>
         /// Invoke all actions.
         /// </summary>
-        /// <param name="executorBatch"></param>
         /// <returns>A task that waits for actions to be performed.</returns>
-        public async Task Invoke(IAsyncExecutorBatch executorBatch)
+        public async Task Invoke()
         {
             lock (_lock)
             {
@@ -61,7 +60,10 @@ namespace AsyncFiberWorks.Procedures
             }
             try
             {
-                await executorBatch.Execute(_copied).ConfigureAwait(false);
+                foreach (var action in _copied)
+                {
+                    await action.Invoke().ConfigureAwait(false);
+                }
             }
             finally
             {
