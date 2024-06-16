@@ -1,10 +1,10 @@
 namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
-    /// Drivers provide the timing of execution. It provides methods for invoking and subscribing to actions.
-    /// The class is thread safe.
+    /// The action driver provides the timing of execution.
+    /// Provides methods for invoking and subscribing to actions.
     /// </summary>
-    public interface IActionDriver : IActionInvoker, IActionSubscriber
+    public interface IActionDriver : IActionDriverInvoker, IActionDriverSubscriber
     {
     }
 }

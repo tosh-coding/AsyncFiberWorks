@@ -22,9 +22,9 @@ namespace AsyncFiberWorks.Procedures
         /// Subscribe a driver.
         /// </summary>
         /// <param name="subscribable"></param>
-        public AsyncRegister(IAsyncActionSubscriber subscribable)
+        public AsyncRegister(IActionDriverSubscriber subscribable)
         {
-            _subscription = subscribable.Subscribe(async () =>
+            _subscription = subscribable.SubscribeAndReceiveAsTask(async () =>
             {
                 await SetFlagAndWaitClearing().ConfigureAwait(false);
             });

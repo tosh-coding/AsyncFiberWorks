@@ -1,6 +1,8 @@
 ﻿using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.MessageFilters;
 using AsyncFiberWorks.Procedures;
+using AsyncFiberWorks.Threading;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
@@ -32,14 +34,18 @@ namespace AsyncFiberWorksTests
             var disposable1 = driver.Subscribe(action1);
             var disposable2 = driver.Subscribe(action2);
 
-            driver.Invoke();
+            var loop = new ThreadPoolAdaptor();
+            var fiber = new PoolFiber(loop);
+            driver.Invoke(fiber);
+            fiber.Enqueue(() => loop.Stop());
+            loop.Run();
             Assert.AreEqual(301, counter);
         }
 
         [Test]
         public async Task AsyncInvoking()
         {
-            var driver = new AsyncActionDriver();
+            var driver = new ActionDriver();
 
             long counter = 0;
 
@@ -57,10 +63,12 @@ namespace AsyncFiberWorksTests
                 counter += 1;
             };
 
-            var disposable1 = driver.Subscribe(action1);
-            var disposable2 = driver.Subscribe(action2);
+            var disposable1 = driver.SubscribeAndReceiveAsTask(action1);
+            var disposable2 = driver.SubscribeAndReceiveAsTask(action2);
 
-            await driver.Invoke();
+            var fiber = new PoolFiber();
+            driver.Invoke(fiber);
+            await fiber.EnqueueTaskAsync(() => Task.CompletedTask);
             Assert.AreEqual(301, counter);
         }
 
@@ -112,7 +120,11 @@ namespace AsyncFiberWorksTests
             var disposable2 = driver.Subscribe(action);
             unsubscriber.AppendDisposable(disposable2);
 
-            driver.Invoke();
+            var loop = new ThreadPoolAdaptor();
+            var fiber = new PoolFiber(loop);
+            driver.Invoke(fiber);
+            fiber.Enqueue(() => loop.Stop());
+            loop.Run();
             Assert.AreEqual(1, counter);
         }
     }

@@ -1,4 +1,5 @@
 ﻿using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.MessageFilters;
 using AsyncFiberWorks.Procedures;
 using NUnit.Framework;
@@ -14,7 +15,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task WaitingOfAsyncRegister()
         {
-            var driver = new AsyncActionDriver();
+            var driver = new ActionDriver();
             int resultCounter = 0;
             var lockObj = new object();
 
@@ -43,9 +44,11 @@ namespace AsyncFiberWorksTests
             var task1 = func(3);
             var task2 = func(6);
 
+            var fiber = new PoolFiber();
             for (int i = 0; i < 10; i++)
             {
-                await driver.Invoke();
+                driver.Invoke(fiber);
+                await fiber.EnqueueTaskAsync(() => Task.CompletedTask);
             }
 
             await Task.WhenAll(task1, task2);

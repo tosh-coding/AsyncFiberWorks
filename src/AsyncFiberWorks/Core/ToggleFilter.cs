@@ -9,18 +9,6 @@ namespace AsyncFiberWorks.Core
     {
         private bool _running = true;
 
-        ///<summary>
-        /// Executes a single action.
-        ///</summary>
-        ///<param name="toExecute"></param>
-        public void Execute(Action toExecute)
-        {
-            if (_running)
-            {
-                toExecute();
-            }
-        }
-
         /// <summary>
         /// When disabled, actions will be ignored by filter.
         /// The filter is typically disabled at shutdown
