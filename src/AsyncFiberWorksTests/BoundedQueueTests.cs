@@ -60,6 +60,7 @@ namespace AsyncFiberWorksTests
                 run.Start();
                 Thread.Sleep(100);
                 queue.Enqueue(action2);
+                Thread.Sleep(100);
                 queue.Stop();
                 queue.Enqueue(action3);
                 Thread.Sleep(100);
