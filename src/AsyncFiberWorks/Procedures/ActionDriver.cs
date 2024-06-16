@@ -1,4 +1,3 @@
-using AsyncFiberWorks.Core;
 using System;
 
 namespace AsyncFiberWorks.Procedures
@@ -9,15 +8,12 @@ namespace AsyncFiberWorks.Procedures
     public class ActionDriver : IActionDriver
     {
         private readonly ActionList _actions = new ActionList();
-        private readonly IExecutor _executor;
 
         /// <summary>
         /// Create a driver.
         /// </summary>
-        /// <param name="executor"></param>
-        public ActionDriver(IExecutor executor = default)
+        public ActionDriver()
         {
-            _executor = executor;
         }
 
         /// <summary>
@@ -27,14 +23,7 @@ namespace AsyncFiberWorks.Procedures
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(Action action)
         {
-            if (_executor != null)
-            {
-                return _actions.AddHandler(() => _executor.Execute(action));
-            }
-            else
-            {
-                return _actions.AddHandler(action);
-            }
+            return _actions.AddHandler(action);
         }
 
         /// <summary>

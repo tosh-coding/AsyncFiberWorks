@@ -1,5 +1,3 @@
-using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Executors;
 using System;
 using System.Threading.Tasks;
 
@@ -11,22 +9,11 @@ namespace AsyncFiberWorks.Procedures
     public class AsyncActionDriver : IAsyncActionDriver
     {
         private readonly AsyncActionList _actions = new AsyncActionList();
-        private readonly IAsyncExecutor _executorSingle;
-
-        /// <summary>
-        /// Create a driver with custom executors.
-        /// </summary>
-        /// <param name="executorSingle"></param>
-        public AsyncActionDriver(IAsyncExecutor executorSingle = null)
-        {
-            _executorSingle = executorSingle;
-        }
 
         /// <summary>
         /// Create a driver.
         /// </summary>
         public AsyncActionDriver()
-            : this(null)
         {
         }
 
@@ -37,14 +24,7 @@ namespace AsyncFiberWorks.Procedures
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(Func<Task> action)
         {
-            if (_executorSingle != null)
-            {
-                return _actions.AddHandler(() => _executorSingle.Execute(action));
-            }
-            else
-            {
-                return _actions.AddHandler(action);
-            }
+            return _actions.AddHandler(action);
         }
 
         /// <summary>
