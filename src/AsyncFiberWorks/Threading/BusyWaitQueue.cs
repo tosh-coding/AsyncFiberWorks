@@ -13,7 +13,7 @@ namespace AsyncFiberWorks.Threading
     public class BusyWaitQueue : IDedicatedConsumerThreadWork
     {
         private readonly object _lock = new object();
-        private readonly IExecutorBatch _executorBatch;
+        private readonly IHookOfBatch _hookOfBatch;
         private readonly IExecutor _executorSingle;
         private readonly int _spinsBeforeTimeCheck;
         private readonly int _msBeforeBlockingWait;
@@ -28,11 +28,11 @@ namespace AsyncFiberWorks.Threading
         /// </summary>
         /// <param name="spinsBeforeTimeCheck"></param>
         /// <param name="msBeforeBlockingWait"></param>
-        /// <param name="executorBatch"></param>
+        /// <param name="hookOfBatch"></param>
         /// <param name="executorSingle">The executor for each operation.</param>
-        public BusyWaitQueue(int spinsBeforeTimeCheck, int msBeforeBlockingWait, IExecutorBatch executorBatch, IExecutor executorSingle)
+        public BusyWaitQueue(int spinsBeforeTimeCheck, int msBeforeBlockingWait, IHookOfBatch hookOfBatch, IExecutor executorSingle)
         {
-            _executorBatch = executorBatch;
+            _hookOfBatch = hookOfBatch;
             _executorSingle = executorSingle;
             _spinsBeforeTimeCheck = spinsBeforeTimeCheck;
             _msBeforeBlockingWait = msBeforeBlockingWait;
@@ -42,7 +42,7 @@ namespace AsyncFiberWorks.Threading
         /// BusyWaitQueue with a simple executor.
         ///</summary>
         public BusyWaitQueue(int spinsBeforeTimeCheck, int msBeforeBlockingWait)
-            : this(spinsBeforeTimeCheck, msBeforeBlockingWait, SimpleExecutorBatch.Instance, SimpleExecutor.Instance)
+            : this(spinsBeforeTimeCheck, msBeforeBlockingWait, NoneHookOfBatch.Instance, SimpleExecutor.Instance)
         {
         }
 
@@ -159,7 +159,12 @@ namespace AsyncFiberWorks.Threading
             {
                 return false;
             }
-            _executorBatch.Execute(toExecute);
+            _hookOfBatch.OnBeforeExecute(toExecute.Count);
+            foreach (var action in toExecute)
+            {
+                action();
+            }
+            _hookOfBatch.OnAfterExecute(toExecute.Count);
             return true;
         }
     }

@@ -12,7 +12,7 @@ namespace AsyncFiberWorks.Threading
     public class BoundedQueue : IDedicatedConsumerThreadWork
     {
         private readonly object _lock = new object();
-        private readonly IExecutorBatch _executorBatch;
+        private readonly IHookOfBatch _hookOfBatch;
         private readonly IExecutor _executorSingle;
 
         private bool _running = true;
@@ -23,12 +23,12 @@ namespace AsyncFiberWorks.Threading
         /// <summary>
         /// Creates a bounded queue with a custom executor.
         /// </summary>
-        /// <param name="executorBatch"></param>
+        /// <param name="hookOfBatch"></param>
         /// <param name="executorSingle">The executor for each operation.</param>
-        public BoundedQueue(IExecutorBatch executorBatch, IExecutor executorSingle)
+        public BoundedQueue(IHookOfBatch hookOfBatch, IExecutor executorSingle)
         {
             MaxDepth = -1;
-            _executorBatch = executorBatch;
+            _hookOfBatch = hookOfBatch;
             _executorSingle = executorSingle;
         }
 
@@ -36,7 +36,7 @@ namespace AsyncFiberWorks.Threading
         /// Creates a bounded queue with a simple executor.
         ///</summary>
         public BoundedQueue()
-            : this(SimpleExecutorBatch.Instance, SimpleExecutor.Instance)
+            : this(NoneHookOfBatch.Instance, SimpleExecutor.Instance)
         {
         }
 
@@ -161,7 +161,12 @@ namespace AsyncFiberWorks.Threading
             {
                 return false;
             }
-            _executorBatch.Execute(toExecute);
+            _hookOfBatch.OnBeforeExecute(toExecute.Count);
+            foreach (var action in toExecute)
+            {
+                action();
+            }
+            _hookOfBatch.OnAfterExecute(toExecute.Count);
             return true;
         }
     }

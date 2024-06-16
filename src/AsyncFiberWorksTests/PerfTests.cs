@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using AsyncFiberWorks.Channels;
@@ -10,15 +9,15 @@ using AsyncFiberWorks.Executors;
 
 namespace AsyncFiberWorksTests
 {
-    public class PerfExecutor : IExecutorBatch
+    public class PerfExecutor : IHookOfBatch
     {
-        public void Execute(IReadOnlyList<Action> toExecute)
+        public void OnBeforeExecute(int numberOfActions)
         {
-            foreach (var action in toExecute)
-            {
-                action();
-            }
-            if (toExecute.Count < 10000)
+        }
+
+        public void OnAfterExecute(int numberOfActions)
+        {
+            if (numberOfActions < 10000)
             {
                 Thread.Sleep(1);
             }
