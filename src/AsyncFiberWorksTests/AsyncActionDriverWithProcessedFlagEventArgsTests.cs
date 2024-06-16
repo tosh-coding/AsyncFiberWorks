@@ -15,7 +15,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task ForwardOrder()
         {
-            var channel = new AsyncActionDriver<ProcessedFlagEventArgs<int>>(new AsyncProcessedFlagExecutor<int>());
+            var driver = new AsyncProcessedFlagMessageDriver<int>();
 
             long counter = 0;
 
@@ -36,12 +36,12 @@ namespace AsyncFiberWorksTests
                 counter += 1;
             };
 
-            var disposable1 = channel.Subscribe(receiverFunc1);
-            var disposable2 = channel.Subscribe(receiverFunc2);
+            var disposable1 = driver.Subscribe(receiverFunc1);
+            var disposable2 = driver.Subscribe(receiverFunc2);
 
             var eventArgs = new ProcessedFlagEventArgs<int>();
             eventArgs.Arg = 123;
-            await channel.Invoke(eventArgs);
+            await driver.Invoke(eventArgs);
             Thread.Sleep(50);
             Assert.AreEqual(301, counter);
         }
@@ -49,7 +49,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task ReverseOrder()
         {
-            var channel = new AsyncActionDriver<ProcessedFlagEventArgs<int>>(new AsyncProcessedFlagReverseOrderExecutor<int>());
+            var driver = new AsyncProcessedFlagReverseOrderMessageDriver<int>();
 
             long counter = 0;
 
@@ -70,12 +70,12 @@ namespace AsyncFiberWorksTests
                 counter += 1;
             };
 
-            var disposable1 = channel.Subscribe(receiverFunc1);
-            var disposable2 = channel.Subscribe(receiverFunc2);
+            var disposable1 = driver.Subscribe(receiverFunc1);
+            var disposable2 = driver.Subscribe(receiverFunc2);
 
             var arg = new ProcessedFlagEventArgs<int>();
             arg.Arg = 123;
-            await channel.Invoke(arg).ConfigureAwait(false);
+            await driver.Invoke(arg).ConfigureAwait(false);
             Thread.Sleep(50);
             Assert.AreEqual(300, counter);
         }
@@ -83,7 +83,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task DiscontinuedDuringInvoking()
         {
-            var channel = new AsyncActionDriver<ProcessedFlagEventArgs<int>>(new AsyncProcessedFlagExecutor<int>());
+            var driver = new AsyncProcessedFlagMessageDriver<int>();
 
             long counter = 0;
 
@@ -101,12 +101,12 @@ namespace AsyncFiberWorksTests
                 await Task.CompletedTask;
             };
 
-            var disposable1 = channel.Subscribe(receiverFunc1);
-            var disposable2 = channel.Subscribe(receiverFunc2);
+            var disposable1 = driver.Subscribe(receiverFunc1);
+            var disposable2 = driver.Subscribe(receiverFunc2);
 
             var eventArgs = new ProcessedFlagEventArgs<int>();
             eventArgs.Arg = 123;
-            await channel.Invoke(eventArgs);
+            await driver.Invoke(eventArgs);
             Thread.Sleep(50);
             Assert.AreEqual(300, counter);
         }

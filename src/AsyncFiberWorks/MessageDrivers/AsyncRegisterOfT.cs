@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncFiberWorks.MessageDrivers;
 
 namespace AsyncFiberWorks.Procedures
 {
@@ -24,7 +25,7 @@ namespace AsyncFiberWorks.Procedures
         /// Subscribe a driver.
         /// </summary>
         /// <param name="subscribable"></param>
-        public AsyncRegister(IAsyncActionSubscriber<T> subscribable)
+        public AsyncRegister(IAsyncMessageDriverSubscriber<T> subscribable)
         {
             _subscription = subscribable.Subscribe(async (arg) =>
             {

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.Procedures
+namespace AsyncFiberWorks.MessageDrivers
 {
     /// <summary>
     /// List of actions.
@@ -46,7 +46,7 @@ namespace AsyncFiberWorks.Procedures
         /// <param name="executorBatch"></param>
         /// <param name="executorSingle"></param>
         /// <returns>A task that waits for actions to be performed.</returns>
-        public async Task Invoke(T arg, IAsyncExecutorBatch<T> executorBatch, IAsyncExecutor<T> executorSingle)
+        public async Task Invoke(T arg, Func<T, IReadOnlyList<Func<T, Task>>, IAsyncExecutor<T>, Task> executorBatch, IAsyncExecutor<T> executorSingle)
         {
             lock (_lock)
             {
@@ -60,7 +60,7 @@ namespace AsyncFiberWorks.Procedures
             }
             try
             {
-                await executorBatch.Execute(arg, _copied, executorSingle).ConfigureAwait(false);
+                await executorBatch(arg, _copied, executorSingle).ConfigureAwait(false);
             }
             finally
             {

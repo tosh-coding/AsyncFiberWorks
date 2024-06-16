@@ -1,4 +1,5 @@
 ﻿using AsyncFiberWorks.Core;
+using AsyncFiberWorks.MessageFilters;
 using AsyncFiberWorks.Procedures;
 using NUnit.Framework;
 using System;
@@ -66,7 +67,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task AsyncInvokingWithArgument()
         {
-            var driver = new AsyncActionDriver<int>();
+            var driver = new AsyncMessageDriver<int>();
 
             long counter = 0;
 

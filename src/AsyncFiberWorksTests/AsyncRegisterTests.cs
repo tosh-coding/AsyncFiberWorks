@@ -55,7 +55,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task WaitingOfAsyncRegisterOfT()
         {
-            var driver = new AsyncActionDriver<int>();
+            var driver = new AsyncMessageDriver<int>();
             int resultCounter = 0;
             var lockObj = new object();
 
@@ -101,7 +101,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task WaitingOfProcessedFlagEventArgs()
         {
-            var driver = new AsyncActionDriver<ProcessedFlagEventArgs<int>>(new AsyncProcessedFlagExecutor<int>());
+            var driver = new AsyncProcessedFlagMessageDriver<int>();
             int resultCounter = 0;
             var lockObj = new object();
 
