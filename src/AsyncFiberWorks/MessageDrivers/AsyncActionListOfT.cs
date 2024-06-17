@@ -13,8 +13,6 @@ namespace AsyncFiberWorks.MessageDrivers
     {
         private object _lock = new object();
         private LinkedList<Func<T, Task>> _actions = new LinkedList<Func<T, Task>>();
-        private List<Func<T, Task>> _copied = new List<Func<T, Task>>();
-        private bool _publishing;
 
         /// <summary>
         /// Add an action.
@@ -51,34 +49,14 @@ namespace AsyncFiberWorks.MessageDrivers
         }
 
         /// <summary>
-        /// Invoke all actions.
+        /// Copy all subscribers.
         /// </summary>
-        /// <param name="arg">An argument.</param>
-        /// <param name="executorBatch"></param>
-        /// <param name="executorSingle"></param>
-        /// <returns>A task that waits for actions to be performed.</returns>
-        public async Task Invoke(T arg, Func<T, IReadOnlyList<Func<T, Task>>, IAsyncExecutor<T>, Task> executorBatch, IAsyncExecutor<T> executorSingle)
+        /// <param name="destination"></param>
+        public void CopyTo(List<Func<T, Task>> destination)
         {
             lock (_lock)
             {
-                if (_publishing)
-                {
-                    throw new InvalidOperationException("Cannot be executed in parallel.");
-                }
-                _publishing = true;
-                _copied.Clear();
-                _copied.AddRange(_actions);
-            }
-            try
-            {
-                await executorBatch(arg, _copied, executorSingle).ConfigureAwait(false);
-            }
-            finally
-            {
-                lock (_lock)
-                {
-                    _publishing = false;
-                }
+                destination.AddRange(_actions);
             }
         }
 

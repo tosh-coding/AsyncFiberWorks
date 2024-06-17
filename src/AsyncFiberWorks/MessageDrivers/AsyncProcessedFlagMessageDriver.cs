@@ -17,6 +17,7 @@ namespace AsyncFiberWorks.MessageFilters
     {
         private readonly AsyncActionList<ProcessedFlagEventArgs<TMessage>> _actions = new AsyncActionList<ProcessedFlagEventArgs<TMessage>>();
         private readonly IAsyncExecutor<ProcessedFlagEventArgs<TMessage>> _executorSingle;
+        private List<Func<ProcessedFlagEventArgs<TMessage>, Task>> _copied = new List<Func<ProcessedFlagEventArgs<TMessage>, Task>>();
 
         /// <summary>
         /// Create a driver with custom executors.
@@ -51,7 +52,9 @@ namespace AsyncFiberWorks.MessageFilters
         /// <param name="message">An message.</param>
         public async Task Invoke(ProcessedFlagEventArgs<TMessage> message)
         {
-            await _actions.Invoke(message, Execute, _executorSingle).ConfigureAwait(false);
+            _actions.CopyTo(_copied);
+            await Execute(message, _copied, _executorSingle).ConfigureAwait(false);
+            _copied.Clear();
         }
 
         ///<summary>

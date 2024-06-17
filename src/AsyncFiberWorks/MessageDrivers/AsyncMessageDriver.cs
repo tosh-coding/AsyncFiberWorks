@@ -16,6 +16,7 @@ namespace AsyncFiberWorks.MessageFilters
     {
         private readonly AsyncActionList<TMessage> _actions = new AsyncActionList<TMessage>();
         private readonly IAsyncExecutor<TMessage> _executorSingle;
+        private List<Func<TMessage, Task>> _copied = new List<Func<TMessage, Task>>();
 
         /// <summary>
         /// Create a driver with custom executors.
@@ -50,7 +51,9 @@ namespace AsyncFiberWorks.MessageFilters
         /// <param name="message">An message.</param>
         public async Task Invoke(TMessage message)
         {
-            await _actions.Invoke(message, Execute, _executorSingle).ConfigureAwait(false);
+            _actions.CopyTo(_copied);
+            await Execute(message, _copied, _executorSingle).ConfigureAwait(false);
+            _copied.Clear();
         }
 
         ///<summary>
