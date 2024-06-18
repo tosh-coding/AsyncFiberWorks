@@ -87,5 +87,13 @@ namespace AsyncFiberWorks.Core
                 }
             });
         }
+
+        /// <summary>
+        /// Source thread.
+        /// </summary>
+        public IThreadPool SourceThread
+        {
+            get { return _threadPool; }
+        }
     }
 }

@@ -36,7 +36,7 @@ namespace AsyncFiberWorksTests
 
             var loop = new ThreadPoolAdaptor();
             var fiber = new PoolFiber(loop);
-            driver.Invoke(fiber);
+            fiber.Enqueue((e) => driver.InvokeAsync(e));
             fiber.Enqueue(() => loop.Stop());
             loop.Run();
             Assert.AreEqual(301, counter);
@@ -67,7 +67,7 @@ namespace AsyncFiberWorksTests
             var disposable2 = driver.SubscribeAndReceiveAsTask(action2);
 
             var fiber = new PoolFiber();
-            driver.Invoke(fiber);
+            fiber.Enqueue((e) => driver.InvokeAsync(e));
             await fiber.EnqueueTaskAsync(() => Task.CompletedTask);
             Assert.AreEqual(301, counter);
         }
@@ -122,7 +122,7 @@ namespace AsyncFiberWorksTests
 
             var loop = new ThreadPoolAdaptor();
             var fiber = new PoolFiber(loop);
-            driver.Invoke(fiber);
+            fiber.Enqueue((e) => driver.InvokeAsync(e));
             fiber.Enqueue(() => loop.Stop());
             loop.Run();
             Assert.AreEqual(1, counter);

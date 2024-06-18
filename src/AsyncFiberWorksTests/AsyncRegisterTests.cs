@@ -47,7 +47,7 @@ namespace AsyncFiberWorksTests
             var fiber = new PoolFiber();
             for (int i = 0; i < 10; i++)
             {
-                driver.Invoke(fiber);
+                fiber.Enqueue((e) => driver.InvokeAsync(e));
                 await fiber.EnqueueTaskAsync(() => Task.CompletedTask);
             }
 

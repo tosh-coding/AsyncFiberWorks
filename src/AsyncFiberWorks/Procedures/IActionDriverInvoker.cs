@@ -1,4 +1,4 @@
-using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Procedures
 {
@@ -9,8 +9,9 @@ namespace AsyncFiberWorks.Procedures
     {
         /// <summary>
         /// Invoke all subscribers.
+        /// The fiber passed in the argument may be paused.
         /// </summary>
-        /// <param name="fiber"></param>
-        void Invoke(IFiber fiber);
+        /// <param name="eventArgs">Handle for fiber pause.</param>
+        void InvokeAsync(FiberExecutionEventArgs eventArgs);
     }
 }

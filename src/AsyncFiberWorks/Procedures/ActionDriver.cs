@@ -72,18 +72,22 @@ namespace AsyncFiberWorks.Procedures
         }
 
         /// <summary>
-        /// Invoke all actions.
+        /// Invoke all subscribers.
+        /// The fiber passed in the argument may be paused.
         /// </summary>
-        /// <param name="fiber"></param>
-        public void Invoke(IFiber fiber)
+        /// <param name="eventArgs">Handle for fiber pause.</param>
+        public void InvokeAsync(FiberExecutionEventArgs eventArgs)
         {
+            eventArgs.Pause();
+            var tmpFiber = new PoolFiber(eventArgs.SourceThread);
             lock (_lock)
             {
                 foreach (var action in _actions)
                 {
-                    fiber.Enqueue(action);
+                    tmpFiber.Enqueue(action);
                 }
             }
+            tmpFiber.Enqueue(() => eventArgs.Resume());
         }
 
         ///<summary>
