@@ -89,7 +89,7 @@ namespace AsyncFiberWorksTests
 
             for (int i = 0; i < 10; i++)
             {
-                await driver.Invoke(i + 1);
+                await driver.InvokeAsync(i + 1);
             }
 
             await Task.WhenAll(task1, task2);
@@ -146,7 +146,7 @@ namespace AsyncFiberWorksTests
             for (int i = 0; i < 10; i++)
             {
                 eventArgs.Arg = i + 1;
-                await driver.Invoke(eventArgs);
+                await driver.InvokeAsync(eventArgs);
             }
 
             cts.Cancel();

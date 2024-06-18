@@ -41,7 +41,7 @@ namespace AsyncFiberWorksTests
 
             var eventArgs = new ProcessedFlagEventArgs<int>();
             eventArgs.Arg = 123;
-            await driver.Invoke(eventArgs);
+            await driver.InvokeAsync(eventArgs);
             Thread.Sleep(50);
             Assert.AreEqual(301, counter);
         }
@@ -75,7 +75,7 @@ namespace AsyncFiberWorksTests
 
             var arg = new ProcessedFlagEventArgs<int>();
             arg.Arg = 123;
-            await driver.Invoke(arg).ConfigureAwait(false);
+            await driver.InvokeAsync(arg).ConfigureAwait(false);
             Thread.Sleep(50);
             Assert.AreEqual(300, counter);
         }
@@ -106,7 +106,7 @@ namespace AsyncFiberWorksTests
 
             var eventArgs = new ProcessedFlagEventArgs<int>();
             eventArgs.Arg = 123;
-            await driver.Invoke(eventArgs);
+            await driver.InvokeAsync(eventArgs);
             Thread.Sleep(50);
             Assert.AreEqual(300, counter);
         }

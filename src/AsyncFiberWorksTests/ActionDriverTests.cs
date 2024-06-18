@@ -94,9 +94,9 @@ namespace AsyncFiberWorksTests
             var disposable1 = driver.Subscribe(action1);
             var disposable2 = driver.Subscribe(action2);
 
-            await driver.Invoke(200);
+            await driver.InvokeAsync(200);
             Assert.AreEqual(200 + 20, counter);
-            await driver.Invoke(10);
+            await driver.InvokeAsync(10);
             Assert.AreEqual(200 + 20 + 10 + 1, counter);
         }
 

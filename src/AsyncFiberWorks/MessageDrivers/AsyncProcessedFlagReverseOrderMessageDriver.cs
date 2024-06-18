@@ -33,7 +33,7 @@ namespace AsyncFiberWorks.MessageFilters
         /// Create a driver.
         /// </summary>
         public AsyncProcessedFlagReverseOrderMessageDriver()
-            : this(null)
+            : this(new AsyncSimpleExecutor<ProcessedFlagEventArgs<TMessage>>())
         {
         }
 
@@ -44,17 +44,27 @@ namespace AsyncFiberWorks.MessageFilters
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(Func<ProcessedFlagEventArgs<TMessage>, Task> action)
         {
-            return _actions.AddHandler(action);
+            return _actions.AddHandler((e) => _executorSingle.Execute(e, action));
         }
 
         /// <summary>
         /// Distribute one message.
         /// </summary>
         /// <param name="message">An message.</param>
-        public async Task Invoke(ProcessedFlagEventArgs<TMessage> message)
+        /// <returns>A task that waits for actions to be performed.</returns>
+        public async Task InvokeAsync(ProcessedFlagEventArgs<TMessage> message)
         {
             _actions.CopyTo(_copied);
-            await Execute(message, _copied, _executorSingle).ConfigureAwait(false);
+            foreach (var action in _copied.Reverse<Func<ProcessedFlagEventArgs<TMessage>, Task>>())
+            {
+                await action(message).ConfigureAwait(false);
+
+                // If any action is processed, execution stops at that point.
+                if (message.Processed)
+                {
+                    break;
+                }
+            }
             _copied.Clear();
         }
 
@@ -62,44 +72,5 @@ namespace AsyncFiberWorks.MessageFilters
         /// Number of subscribers
         ///</summary>
         public int NumSubscribers { get { return _actions.Count; } }
-
-        /// <summary>
-        /// Call the actions in the reverse order in which they were registered.
-        /// If any action is processed, execution stops at that point.
-        /// </summary>
-        /// <param name="eventArgs">An argument.</param>
-        /// <param name="actions">A list of actions.</param>
-        /// <param name="executorSingle">Executor for one task. If null, the task is executed directly.</param>
-        /// <returns>A task that waits for actions to be performed.</returns>
-        async Task Execute(ProcessedFlagEventArgs<TMessage> eventArgs, IReadOnlyList<Func<ProcessedFlagEventArgs<TMessage>, Task>> actions, IAsyncExecutor<ProcessedFlagEventArgs<TMessage>> executorSingle)
-        {
-            if (actions == null)
-            {
-                return;
-            }
-
-            if (executorSingle != null)
-            {
-                foreach (var action in actions.Reverse())
-                {
-                    await executorSingle.Execute(eventArgs, action).ConfigureAwait(false);
-                    if (eventArgs.Processed)
-                    {
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                foreach (var action in actions.Reverse())
-                {
-                    await action(eventArgs).ConfigureAwait(false);
-                    if (eventArgs.Processed)
-                    {
-                        break;
-                    }
-                }
-            }
-        }
     }
 }

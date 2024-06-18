@@ -31,7 +31,7 @@ namespace AsyncFiberWorks.MessageFilters
         /// Create a driver.
         /// </summary>
         public AsyncMessageDriver()
-            : this(null)
+            : this(new AsyncSimpleExecutor<TMessage>())
         {
         }
 
@@ -42,17 +42,21 @@ namespace AsyncFiberWorks.MessageFilters
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(Func<TMessage, Task> action)
         {
-            return _actions.AddHandler(action);
+            return _actions.AddHandler((message) => _executorSingle.Execute(message, action));
         }
 
         /// <summary>
         /// Distribute one message.
         /// </summary>
         /// <param name="message">An message.</param>
-        public async Task Invoke(TMessage message)
+        /// <returns>A task that waits for actions to be performed.</returns>
+        public async Task InvokeAsync(TMessage message)
         {
             _actions.CopyTo(_copied);
-            await Execute(message, _copied, _executorSingle).ConfigureAwait(false);
+            foreach (var action in _copied)
+            {
+                await action(message).ConfigureAwait(false);
+            }
             _copied.Clear();
         }
 
@@ -60,30 +64,5 @@ namespace AsyncFiberWorks.MessageFilters
         /// Number of subscribers
         ///</summary>
         public int NumSubscribers { get { return _actions.Count; } }
-
-        /// <summary>
-        /// Executes all actions.
-        /// </summary>
-        /// <param name="arg"></param>
-        /// <param name="actions"></param>
-        /// <param name="executorSingle"></param>
-        /// <returns></returns>
-        async Task Execute(TMessage arg, IReadOnlyList<Func<TMessage, Task>> actions, IAsyncExecutor<TMessage> executorSingle = null)
-        {
-            if (executorSingle == null)
-            {
-                foreach (var action in actions)
-                {
-                    await action.Invoke(arg).ConfigureAwait(false);
-                }
-            }
-            else
-            {
-                foreach (var action in actions)
-                {
-                    await executorSingle.Execute(arg, action).ConfigureAwait(false);
-                }
-            }
-        }
     }
 }

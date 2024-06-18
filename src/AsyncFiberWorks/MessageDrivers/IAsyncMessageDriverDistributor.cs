@@ -13,6 +13,6 @@ namespace AsyncFiberWorks.MessageDrivers
         /// </summary>
         /// <param name="message">A message.</param>
         /// <returns>Tasks waiting for call completion.</returns>
-        Task Invoke(TMessage message);
+        Task InvokeAsync(TMessage message);
     }
 }
