@@ -17,23 +17,12 @@ namespace AsyncFiberWorks.MessageFilters
     public class AsyncProcessedFlagReverseOrderMessageDriver<TMessage> : IAsyncMessageDriver<ProcessedFlagEventArgs<TMessage>>
     {
         private readonly AsyncActionList<ProcessedFlagEventArgs<TMessage>> _actions = new AsyncActionList<ProcessedFlagEventArgs<TMessage>>();
-        private readonly IAsyncExecutor<ProcessedFlagEventArgs<TMessage>> _executorSingle;
         private List<Func<ProcessedFlagEventArgs<TMessage>, Task>> _copied = new List<Func<ProcessedFlagEventArgs<TMessage>, Task>>();
-
-        /// <summary>
-        /// Create a driver with custom executors.
-        /// </summary>
-        /// <param name="executorSingle"></param>
-        public AsyncProcessedFlagReverseOrderMessageDriver(IAsyncExecutor<ProcessedFlagEventArgs<TMessage>> executorSingle = null)
-        {
-            _executorSingle = executorSingle;
-        }
 
         /// <summary>
         /// Create a driver.
         /// </summary>
         public AsyncProcessedFlagReverseOrderMessageDriver()
-            : this(new AsyncSimpleExecutor<ProcessedFlagEventArgs<TMessage>>())
         {
         }
 
@@ -44,7 +33,7 @@ namespace AsyncFiberWorks.MessageFilters
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(Func<ProcessedFlagEventArgs<TMessage>, Task> action)
         {
-            return _actions.AddHandler((e) => _executorSingle.Execute(e, action));
+            return _actions.AddHandler(action);
         }
 
         /// <summary>

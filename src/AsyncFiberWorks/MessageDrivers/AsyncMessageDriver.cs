@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AsyncFiberWorks.Core;
 using AsyncFiberWorks.MessageDrivers;
 
 namespace AsyncFiberWorks.MessageFilters
@@ -15,23 +14,12 @@ namespace AsyncFiberWorks.MessageFilters
     public class AsyncMessageDriver<TMessage> : IAsyncMessageDriver<TMessage>
     {
         private readonly AsyncActionList<TMessage> _actions = new AsyncActionList<TMessage>();
-        private readonly IAsyncExecutor<TMessage> _executorSingle;
         private List<Func<TMessage, Task>> _copied = new List<Func<TMessage, Task>>();
-
-        /// <summary>
-        /// Create a driver with custom executors.
-        /// </summary>
-        /// <param name="executorSingle"></param>
-        public AsyncMessageDriver(IAsyncExecutor<TMessage> executorSingle)
-        {
-            _executorSingle = executorSingle;
-        }
 
         /// <summary>
         /// Create a driver.
         /// </summary>
         public AsyncMessageDriver()
-            : this(new AsyncSimpleExecutor<TMessage>())
         {
         }
 
@@ -42,7 +30,7 @@ namespace AsyncFiberWorks.MessageFilters
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(Func<TMessage, Task> action)
         {
-            return _actions.AddHandler((message) => _executorSingle.Execute(message, action));
+            return _actions.AddHandler(action);
         }
 
         /// <summary>
