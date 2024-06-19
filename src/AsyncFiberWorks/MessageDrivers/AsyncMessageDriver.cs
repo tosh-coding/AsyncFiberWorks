@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AsyncFiberWorks.Core;
 using AsyncFiberWorks.MessageDrivers;
 
 namespace AsyncFiberWorks.MessageFilters
@@ -13,7 +14,8 @@ namespace AsyncFiberWorks.MessageFilters
     /// <typeparam name="TMessage">Message type.</typeparam>
     public class AsyncMessageDriver<TMessage> : IAsyncMessageDriver<TMessage>
     {
-        private readonly AsyncActionList<TMessage> _actions = new AsyncActionList<TMessage>();
+        private object _lock = new object();
+        private LinkedList<Func<TMessage, Task>> _actions = new LinkedList<Func<TMessage, Task>>();
         private List<Func<TMessage, Task>> _copied = new List<Func<TMessage, Task>>();
 
         /// <summary>
@@ -30,7 +32,31 @@ namespace AsyncFiberWorks.MessageFilters
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(Func<TMessage, Task> action)
         {
-            return _actions.AddHandler(action);
+            var maskableFilter = new ToggleFilter();
+            Func<TMessage, Task> safeAction = async (message) =>
+            {
+                var enabled = maskableFilter.IsEnabled;
+                if (enabled)
+                {
+                    await action(message);
+                }
+            };
+
+            lock (_lock)
+            {
+                _actions.AddLast(safeAction);
+            }
+
+            var unsubscriber = new Unsubscriber(() =>
+            {
+                lock (_lock)
+                {
+                    maskableFilter.IsEnabled = false;
+                    _actions.Remove(safeAction);
+                }
+            });
+
+            return unsubscriber;
         }
 
         /// <summary>
@@ -40,7 +66,10 @@ namespace AsyncFiberWorks.MessageFilters
         /// <returns>A task that waits for actions to be performed.</returns>
         public async Task InvokeAsync(TMessage message)
         {
-            _actions.CopyTo(_copied);
+            lock (_lock)
+            {
+                _copied.AddRange(_actions);
+            }
             foreach (var action in _copied)
             {
                 await action(message).ConfigureAwait(false);
@@ -51,6 +80,15 @@ namespace AsyncFiberWorks.MessageFilters
         ///<summary>
         /// Number of subscribers
         ///</summary>
-        public int NumSubscribers { get { return _actions.Count; } }
+        public int NumSubscribers
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _actions.Count;
+                }
+            }
+        }
     }
 }

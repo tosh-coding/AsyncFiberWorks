@@ -5,7 +5,7 @@ namespace AsyncFiberWorks.Core
     /// <summary>
     /// A filter that can be toggled to run or skip.
     /// </summary>
-    internal class ToggleFilter
+    public class ToggleFilter
     {
         private bool _running = true;
 
