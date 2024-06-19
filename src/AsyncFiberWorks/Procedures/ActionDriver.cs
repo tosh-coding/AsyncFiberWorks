@@ -10,8 +10,9 @@ namespace AsyncFiberWorks.Procedures
     /// </summary>
     public class ActionDriver : IActionDriver
     {
-        private object _lock = new object();
-        private LinkedList<Action<FiberExecutionEventArgs>> _actions = new LinkedList<Action<FiberExecutionEventArgs>>();
+        private readonly object _lock = new object();
+        private readonly LinkedList<Action<FiberExecutionEventArgs>> _actions = new LinkedList<Action<FiberExecutionEventArgs>>();
+        private readonly AsyncFiber _fiber = new AsyncFiber();
 
         /// <summary>
         /// Create an action driver.
@@ -73,21 +74,20 @@ namespace AsyncFiberWorks.Procedures
 
         /// <summary>
         /// Invoke all subscribers.
-        /// The fiber passed in the argument may be paused.
+        /// Fibers passed as arguments will be paused.
         /// </summary>
         /// <param name="eventArgs">Handle for fiber pause.</param>
         public void InvokeAsync(FiberExecutionEventArgs eventArgs)
         {
             eventArgs.Pause();
-            var tmpFiber = new PoolFiber(eventArgs.SourceThread);
             lock (_lock)
             {
                 foreach (var action in _actions)
                 {
-                    tmpFiber.Enqueue(action);
+                    _fiber.Enqueue(eventArgs.SourceThread, action);
                 }
             }
-            tmpFiber.Enqueue(() => eventArgs.Resume());
+            _fiber.Enqueue(() => eventArgs.Resume());
         }
 
         ///<summary>

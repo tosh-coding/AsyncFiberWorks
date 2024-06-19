@@ -1,6 +1,7 @@
 ﻿using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.FiberSchedulers;
+using AsyncFiberWorks.Threading;
 using NUnit.Framework;
 using System;
 using System.Collections;
@@ -160,6 +161,21 @@ namespace AsyncFiberWorksTests
             Assert.GreaterOrEqual(sw.Elapsed, TimeSpan.FromMilliseconds(300));
             await Task.Delay(10).ConfigureAwait(false);
             Assert.AreEqual(2, counter);
+        }
+
+        [Test]
+        public async Task AsyncFiberEnqueueWithExecutionContext()
+        {
+            var fiber = new AsyncFiber();
+            var threadPool = new UserThreadPool(1);
+            threadPool.Start();
+            var tcsThreadPool = new TaskCompletionSource<int>();
+            fiber.Enqueue(threadPool, () =>
+            {
+                tcsThreadPool.SetResult(System.Threading.Thread.CurrentThread.ManagedThreadId);
+            });
+            await tcsThreadPool.Task;
+            Assert.AreEqual(threadPool.ThreadList[0].ManagedThreadId, tcsThreadPool.Task.Result);
         }
     }
 }
