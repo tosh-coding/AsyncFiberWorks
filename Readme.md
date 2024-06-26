@@ -17,34 +17,35 @@ namespace Sample
         static void Main(string[] args)
         {
             // Create an adapter.
-            var mainThreadAdaptor = new ThreadPoolAdaptor();
+            var mainThread = new ThreadPoolAdaptor();
 
             // Starts an asynchronous operation. Pass the adapter.
-            RunAsync(mainThreadAdaptor);
+            RunAsync(mainThread);
 
             // Run the adapter on the main thread. It does not return until Stop is called.
-            mainThreadAdaptor.Run();
+            mainThread.Run();
         }
 
-        static async void RunAsync(ThreadPoolAdaptor mainThreadAdaptor)
+        static async void RunAsync(ThreadPoolAdaptor mainThread)
         {
+            // Switch the context to the main thread.
+            await mainThread.SwitchTo();
+
+            // Switch the context to a .NET ThreadPool worker thread.
             await Task.Yield();
 
             // Create a pool fiber backed the main thread.
-            var mainFiber = new PoolFiber(mainThreadAdaptor);
+            var mainFiber = new PoolFiber(mainThread);
 
             // Enqueue actions to the main thread via fiber.
             int counter = 0;
             mainFiber.Enqueue(() => counter += 1);
             mainFiber.Enqueue(() => counter += 2);
 
-            // Switch the context to the main thread.
+            // Switch the context to the main fiber.
             await mainFiber.SwitchTo();
             counter += 3;
             counter += 4;
-
-            // Switch the context to a .NET ThreadPool worker thread.
-            await Task.Yield();
 
             // When an async lambda expression is enqueued,
             // the fiber waits until it is completed.
@@ -57,7 +58,7 @@ namespace Sample
             });
 
             // Stop the Run method on the main thread.
-            mainThreadAdaptor.Stop();
+            mainThread.Stop();
         }
     }
 }
