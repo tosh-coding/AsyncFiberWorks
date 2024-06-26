@@ -5,29 +5,19 @@ namespace AsyncFiberWorks.Core
     /// <summary>
     /// Delay generator by IOneshotTimerFactory. 
     /// </summary>
-    public class OneshotTimerDelayFactory : IHighResDelayFactory
+    public static class OneshotTimerFactoryExtensions
     {
-        private readonly IOneshotTimerFactory _timerFactory;
-
-        /// <summary>
-        /// Create a delay factory.
-        /// </summary>
-        /// <param name="timerFactory"></param>
-        public OneshotTimerDelayFactory(IOneshotTimerFactory timerFactory)
-        {
-            _timerFactory = timerFactory;
-        }
-
         /// <summary>
         /// Generate a wait time task.
         /// </summary>
+        /// <param name="timerFactory">A timer.</param>
         /// <param name="millisecondsDelay">Wait time.</param>
         /// <returns>A task that is completed after a specified amount of time.</returns>
-        public Task Delay(long millisecondsDelay)
+        public static Task Delay(this IOneshotTimerFactory timerFactory, long millisecondsDelay)
         {
             var tcs = new TaskCompletionSource<int>();
             var disposer = new Unsubscriber();
-            var timer = _timerFactory.Schedule(() =>
+            var timer = timerFactory.Schedule(() =>
             {
                 tcs.SetResult(0);
             }, millisecondsDelay);

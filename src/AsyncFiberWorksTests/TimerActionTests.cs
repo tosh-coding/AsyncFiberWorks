@@ -62,7 +62,7 @@ namespace AsyncFiberWorksTests
         [Test, TestCaseSource("TimerFactories")]
         public async Task OneshotTimerDelayTest(IOneshotTimerFactory timerFactory)
         {
-            var delayFactory = new OneshotTimerDelayFactory(timerFactory);
+            var delayFactory = timerFactory;
 
             await delayFactory.Delay(10);
             await delayFactory.Delay(10);
