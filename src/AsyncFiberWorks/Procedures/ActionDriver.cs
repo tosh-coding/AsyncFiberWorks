@@ -22,31 +22,21 @@ namespace AsyncFiberWorks.Procedures
         }
 
         /// <summary>
-        /// Subscribe a channel.
+        /// Subscribe an action driver.
         /// </summary>
         /// <param name="action">Subscriber.</param>
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(Action action)
         {
-            return AddHandler((e) => action());
+            return Subscribe((e) => action());
         }
 
         /// <summary>
-        /// Subscribe a channel.
+        /// Subscribe an action driver.
         /// </summary>
         /// <param name="action">Subscriber.</param>
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(Action<FiberExecutionEventArgs> action)
-        {
-            return AddHandler(action);
-        }
-
-        /// <summary>
-        /// Add an action.
-        /// </summary>
-        /// <param name="action">An action.</param>
-        /// <returns>Function for removing the action.</returns>
-        private IDisposable AddHandler(Action<FiberExecutionEventArgs> action)
         {
             var maskableFilter = new ToggleFilter();
             Action<FiberExecutionEventArgs> safeAction = (e) =>
