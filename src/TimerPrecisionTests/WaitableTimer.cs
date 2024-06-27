@@ -1,11 +1,10 @@
-﻿#if NETFRAMEWORK || WINDOWS
-using Microsoft.Win32.SafeHandles;
+﻿using Microsoft.Win32.SafeHandles;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace AsyncFiberWorksTests.Perf
+namespace TimerPrecisionTests
 {
     /// <summary>
     /// Quoted from https://stackoverflow.com/questions/15858751/analog-to-waitable-timers-in-net
@@ -33,4 +32,3 @@ namespace AsyncFiberWorksTests.Perf
         }
     }
 }
-#endif

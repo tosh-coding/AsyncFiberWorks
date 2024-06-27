@@ -1,6 +1,8 @@
 ﻿using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.FiberSchedulers;
+using AsyncFiberWorks.Windows;
+using AsyncFiberWorks.Windows.Timer;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -8,7 +10,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorksTests
+namespace TimerPrecisionTests
 {
     [TestFixture]
     public class TimerPrecisionTests
@@ -64,22 +66,21 @@ namespace AsyncFiberWorksTests
             });
         }
 
-#if NETFRAMEWORK || WINDOWS
         [Test]
         public async Task ThreadingTimerWithTimeBeginPeriod()
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
                 return fiber.ScheduleOnInterval(action, 0, 1);
             });
-            PerfSettings.timeEndPeriod(1);
+            WinApi.timeEndPeriod(1);
         }
 
         [Test]
         public async Task TaskDelayWithTimeBeginPeriod()
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
                 var disposable = new Unsubscriber();
@@ -99,15 +100,15 @@ namespace AsyncFiberWorksTests
                 });
                 return disposable;
             });
-            PerfSettings.timeEndPeriod(1);
+            WinApi.timeEndPeriod(1);
         }
 
         [Test]
         public async Task ThreadSleepWithTimeBeginPeriod()
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             await BenchmarkThreadSleep();
-            PerfSettings.timeEndPeriod(1);
+            WinApi.timeEndPeriod(1);
         }
 
         async Task BenchmarkThreadSleep()
@@ -140,9 +141,9 @@ namespace AsyncFiberWorksTests
         {
             uint targetResolution100ns = 10000;
             uint currentResolution = 0;
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
             await BenchmarkThreadSleep();
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
         }
 
         [Test]
@@ -150,9 +151,9 @@ namespace AsyncFiberWorksTests
         {
             uint targetResolution100ns = 5000;
             uint currentResolution = 0;
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
             await BenchmarkThreadSleep();
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
         }
 
         [Test]
@@ -160,9 +161,9 @@ namespace AsyncFiberWorksTests
         {
             uint targetResolution100ns = 1000;
             uint currentResolution = 0;
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
             await BenchmarkThreadSleep();
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
         }
 
         [Test]
@@ -170,21 +171,21 @@ namespace AsyncFiberWorksTests
         {
             uint targetResolution100ns = 9990;
             uint currentResolution = 0;
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
             await BenchmarkThreadSleep();
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
         }
 
         [Test]
         public async Task TimeSetEventWithNtSetTimerResolution500us()
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             uint targetResolution100ns = 5000;
             uint currentResolution = 0;
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
             await BenchmarkTimeSetEvent();
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
-            PerfSettings.timeEndPeriod(1);
+            WinApi.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            WinApi.timeEndPeriod(1);
         }
 
         async Task BenchmarkTimeSetEvent()
@@ -192,7 +193,7 @@ namespace AsyncFiberWorksTests
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
                 uint timerID = 0;
-                PerfSettings.TimeCallback teh;
+                WinApi.TimeCallback teh;
                 teh = (UInt32 id, UInt32 msg, ref UInt32 userCtx, UInt32 rsv1, UInt32 rsv2) =>
                 {
                     fiber.Enqueue(action);
@@ -202,7 +203,7 @@ namespace AsyncFiberWorksTests
                 uint intervalMs = 1;
                 uint userctx = 0;
                 uint TIME_PERIODIC = 1;
-                timerID = PerfSettings.timeSetEvent(firstDelayMs, intervalMs, teh, ref userctx, TIME_PERIODIC);
+                timerID = WinApi.timeSetEvent(firstDelayMs, intervalMs, teh, ref userctx, TIME_PERIODIC);
 
                 var disposable = new Unsubscriber(() =>
                 {
@@ -210,7 +211,7 @@ namespace AsyncFiberWorksTests
                     {
                         if (timerID != 0)
                         {
-                            PerfSettings.timeKillEvent(timerID);
+                            WinApi.timeKillEvent(timerID);
                             timerID = 0;
                         }
                     });
@@ -222,33 +223,33 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task TimeSetEventWithNtSetTimerResolution100us()
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             uint targetResolution100ns = 1000;
             uint currentResolution = 0;
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
             await BenchmarkTimeSetEvent();
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
-            PerfSettings.timeEndPeriod(1);
+            WinApi.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            WinApi.timeEndPeriod(1);
         }
 
         [Test]
         public async Task TimeSetEventWithNtSetTimerResolution1000us()
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             uint targetResolution100ns = 10000;
             uint currentResolution = 0;
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
             await BenchmarkTimeSetEvent();
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
-            PerfSettings.timeEndPeriod(1);
+            WinApi.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            WinApi.timeEndPeriod(1);
         }
 
         [Test]
         public async Task TimeSetEventWithTimeBeginPeriod()
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             await BenchmarkTimeSetEvent();
-            PerfSettings.timeEndPeriod(1);
+            WinApi.timeEndPeriod(1);
         }
 
         [Test]
@@ -257,9 +258,9 @@ namespace AsyncFiberWorksTests
         [TestCase(100)]
         public async Task WaitableTimerAndWaitOneWithTimeBeginPeriod(int sleepUs)
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             await BenchmarkWaitableTimerAndWaitOne(sleepUs);
-            PerfSettings.timeEndPeriod(1);
+            WinApi.timeEndPeriod(1);
         }
 
         [Test]
@@ -273,12 +274,12 @@ namespace AsyncFiberWorksTests
         //[TestCase(1000u, 100)]
         public async Task WaitableTimerAndWaitOneWithNtSetTimerResolution(uint targetResolution100ns, int sleepUs)
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             uint currentResolution = 0;
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
             await BenchmarkWaitableTimerAndWaitOne(sleepUs);
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
-            PerfSettings.timeEndPeriod(1);
+            WinApi.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            WinApi.timeEndPeriod(1);
         }
 
         async Task BenchmarkWaitableTimerAndWaitOne(int sleepUs)
@@ -292,7 +293,7 @@ namespace AsyncFiberWorksTests
                     var cancellation = new CancellationTokenSource();
                     disposable.Append(cancellation);
 
-                    var timerWaitHandle = new Perf.WaitableTimer();
+                    var timerWaitHandle = new WaitableTimer();
                     while (true)
                     {
                         if (cancellation.IsCancellationRequested)
@@ -320,9 +321,9 @@ namespace AsyncFiberWorksTests
         [TestCase(100)]
         public async Task WaitableTimerHighResolutionAndWaitOneWithTimeBeginPeriod(int sleepUs)
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             await BenchmarkWaitableTimerHighResolutionAndWaitOne(sleepUs);
-            PerfSettings.timeEndPeriod(1);
+            WinApi.timeEndPeriod(1);
         }
 
         [Test]
@@ -336,12 +337,12 @@ namespace AsyncFiberWorksTests
         //[TestCase(1000u, 100)]
         public async Task WaitableTimerHighResolutionAndWaitOneWithNtSetTimerResolution(uint targetResolution100ns, int sleepUs)
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             uint currentResolution = 0;
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
             await BenchmarkWaitableTimerHighResolutionAndWaitOne(sleepUs);
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
-            PerfSettings.timeEndPeriod(1);
+            WinApi.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            WinApi.timeEndPeriod(1);
         }
 
         [Test]
@@ -360,9 +361,9 @@ namespace AsyncFiberWorksTests
         [TestCase(5u)]
         public async Task WaitableTimerHighResolutionAndWaitOne500usWithTimeBeginPeriod(uint timePeriod)
         {
-            PerfSettings.timeBeginPeriod(timePeriod);
+            WinApi.timeBeginPeriod(timePeriod);
             await BenchmarkWaitableTimerHighResolutionAndWaitOne(500);
-            PerfSettings.timeEndPeriod(timePeriod);
+            WinApi.timeEndPeriod(timePeriod);
         }
 
         async Task BenchmarkWaitableTimerHighResolutionAndWaitOne(int sleepUs)
@@ -376,7 +377,7 @@ namespace AsyncFiberWorksTests
                     var cancellation = new CancellationTokenSource();
                     disposable.Append(cancellation);
 
-                    var timerWaitHandle = new Perf.WaitableTimerEx(highResolution: true);
+                    var timerWaitHandle = new WaitableTimerEx();
                     while (true)
                     {
                         if (cancellation.IsCancellationRequested)
@@ -401,9 +402,9 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task ThreadPoolRegisterWaitForSingleObjectTimeoutWithTimeBeginPeriod()
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             await BenchmarkThreadPoolRegisterWaitForSingleObjectTimeout();
-            PerfSettings.timeEndPeriod(1);
+            WinApi.timeEndPeriod(1);
         }
 
         [Test]
@@ -412,12 +413,12 @@ namespace AsyncFiberWorksTests
         [TestCase(1000u)]
         public async Task ThreadPoolRegisterWaitForSingleObjectTimeoutWithNtSetTimerResolution(uint targetResolution100ns)
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             uint currentResolution = 0;
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
             await BenchmarkThreadPoolRegisterWaitForSingleObjectTimeout();
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
-            PerfSettings.timeEndPeriod(1);
+            WinApi.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            WinApi.timeEndPeriod(1);
         }
 
         async Task BenchmarkThreadPoolRegisterWaitForSingleObjectTimeout()
@@ -460,9 +461,9 @@ namespace AsyncFiberWorksTests
         [TestCase(100)]
         public async Task WaitableTimerAndThreadPoolRegisterWaitForSingleObjectWithTimeBeginPeriod(int sleepUs)
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             await BenchmarkWaitableTimerAndThreadPoolRegisterWaitForSingleObject(sleepUs);
-            PerfSettings.timeEndPeriod(1);
+            WinApi.timeEndPeriod(1);
         }
 
         [Test]
@@ -476,12 +477,12 @@ namespace AsyncFiberWorksTests
         //[TestCase(1000u, 100)]
         public async Task WaitableTimerAndThreadPoolRegisterWaitForSingleObjectWithNtSetTimerResolution(uint targetResolution100ns, int sleepUs)
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             uint currentResolution = 0;
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
             await BenchmarkWaitableTimerAndThreadPoolRegisterWaitForSingleObject(sleepUs);
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
-            PerfSettings.timeEndPeriod(1);
+            WinApi.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            WinApi.timeEndPeriod(1);
         }
 
         async Task BenchmarkWaitableTimerAndThreadPoolRegisterWaitForSingleObject(int sleepUs)
@@ -494,7 +495,7 @@ namespace AsyncFiberWorksTests
                 Action[] actionList = new Action[1];
                 var handleList = new RegisteredWaitHandle[1];
 
-                var waitableTimer = new Perf.WaitableTimer(manualReset: false);
+                var waitableTimer = new WaitableTimer(manualReset: false);
                 int timeoutMs = Timeout.Infinite;
                 bool executeOnlyOnce = false;
 
@@ -524,9 +525,9 @@ namespace AsyncFiberWorksTests
         [TestCase(100)]
         public async Task WaitableTimerHighResolutionAndThreadPoolRegisterWaitForSingleObjectWithTimeBeginPeriod(int sleepUs)
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             await BenchmarkWaitableTimerHighResolutionAndThreadPoolRegisterWaitForSingleObject(sleepUs);
-            PerfSettings.timeEndPeriod(1);
+            WinApi.timeEndPeriod(1);
         }
 
         [Test]
@@ -541,12 +542,12 @@ namespace AsyncFiberWorksTests
         //[TestCase(1000u, 100)]
         public async Task WaitableTimerHighResolutionAndThreadPoolRegisterWaitForSingleObjectWithNtSetTimerResolution(uint targetResolution100ns, int sleepUs)
         {
-            PerfSettings.timeBeginPeriod(1);
+            WinApi.timeBeginPeriod(1);
             uint currentResolution = 0;
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
+            WinApi.NtSetTimerResolution(targetResolution100ns, true, ref currentResolution);
             await BenchmarkWaitableTimerHighResolutionAndThreadPoolRegisterWaitForSingleObject(sleepUs);
-            PerfSettings.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
-            PerfSettings.timeEndPeriod(1);
+            WinApi.NtSetTimerResolution(targetResolution100ns, false, ref currentResolution);
+            WinApi.timeEndPeriod(1);
         }
 
         async Task BenchmarkWaitableTimerHighResolutionAndThreadPoolRegisterWaitForSingleObject(int sleepUs)
@@ -559,7 +560,7 @@ namespace AsyncFiberWorksTests
                 Action[] actionList = new Action[1];
                 var handleList = new RegisteredWaitHandle[1];
 
-                var waitableTimer = new Perf.WaitableTimerEx(manualReset: false, highResolution: true);
+                var waitableTimer = new WaitableTimerEx(manualReset: false);
                 int timeoutMs = Timeout.Infinite;
                 bool executeOnlyOnce = false;
 
@@ -582,6 +583,5 @@ namespace AsyncFiberWorksTests
                 return disposable;
             });
         }
-#endif
     }
 }

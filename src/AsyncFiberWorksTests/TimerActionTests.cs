@@ -1,10 +1,10 @@
-using System;
-using System.Threading;
-using NUnit.Framework;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
-using AsyncFiberWorksTests.Perf;
+using AsyncFiberWorks.Windows.Timer;
+using NUnit.Framework;
+using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorksTests

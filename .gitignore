@@ -6,3 +6,7 @@
 /src/AsyncFiberWorksTests/bin/
 /src/AsyncFiberWorksTests/obj/
 /src/packages
+/src/AsyncFiberWorks.Windows/bin
+/src/AsyncFiberWorks.Windows/obj
+/src/TimerPrecisionTests/bin
+/src/TimerPrecisionTests/obj

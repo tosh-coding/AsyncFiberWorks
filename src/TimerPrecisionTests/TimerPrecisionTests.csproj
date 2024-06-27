@@ -2,11 +2,11 @@
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
     <OutputType>Library</OutputType>
-    <RootNamespace>AsyncFiberWorksTests</RootNamespace>
-    <AssemblyName>AsyncFiberWorksTests</AssemblyName>
+    <RootNamespace>TimerPrecisionTests</RootNamespace>
+    <AssemblyName>TimerPrecisionTests</AssemblyName>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>AsyncFiberWorksTests.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>TimerPrecisionTests.snk</AssemblyOriginatorKeyFile>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -26,8 +26,8 @@
     <Description>*</Description>
     <Configuration>*</Configuration>
     <Company>*</Company>
-    <Product>AsyncFiberWorksTests</Product>
-    <Copyright>Copyright ©  2007</Copyright>
+    <Product>TimerPrecisionTests</Product>
+    <Copyright>Copyright ©  2024</Copyright>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>

@@ -1,9 +1,8 @@
-﻿#if NETFRAMEWORK || WINDOWS
-using AsyncFiberWorks.Core;
+﻿using AsyncFiberWorks.Core;
 using System;
 using System.Threading;
 
-namespace AsyncFiberWorksTests.Perf
+namespace AsyncFiberWorks.Windows.Timer
 {
     /// <summary>
     /// Timer using WaitableTimerEx in Windows.
@@ -19,7 +18,7 @@ namespace AsyncFiberWorksTests.Perf
         public IDisposable Schedule(Action action, long firstIntervalMs)
         {
             var disposer = new Unsubscriber();
-            var waitableTimer = new WaitableTimerEx(highResolution: true);
+            var waitableTimer = new WaitableTimerEx();
             waitableTimer.Set(firstIntervalMs * -10000L);
             var tmpHandle = ThreadPool.RegisterWaitForSingleObject(waitableTimer, (state, timeout) =>
             {
@@ -46,7 +45,7 @@ namespace AsyncFiberWorksTests.Perf
             }
 
             var disposer = new Unsubscriber();
-            var waitableTimer = new WaitableTimerEx(manualReset: false, highResolution: true);
+            var waitableTimer = new WaitableTimerEx(manualReset: false);
             waitableTimer.Set(firstIntervalMs * -10000L);
             var tmpHandle = ThreadPool.RegisterWaitForSingleObject(waitableTimer, (state, timeout) =>
             {
@@ -59,4 +58,3 @@ namespace AsyncFiberWorksTests.Perf
         }
     }
 }
-#endif
