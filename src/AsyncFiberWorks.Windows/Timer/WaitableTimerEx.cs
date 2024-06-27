@@ -49,7 +49,7 @@ namespace AsyncFiberWorks.Windows.Timer
         /// Activate the timer.
         /// see https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-setwaitabletimerex
         /// </summary>
-        /// <param name="dueTime">Initial wait time for timer. 100 nanosecond units.</param>
+        /// <param name="dueTime">Initial wait time for timer. 100 nanosecond units. Be sure to specify a negative value.</param>
         /// <param name="period">The interval at which the timer expires. In milliseconds. If this value is 0, the timer will expire only once; if it is greater than 0, it will expire periodically and continue until canceled.</param>
         /// <exception cref="Win32Exception"></exception>
         public void Set(long dueTime, int period = 0)
@@ -58,6 +58,18 @@ namespace AsyncFiberWorks.Windows.Timer
             {
                 throw new Win32Exception();
             }
+        }
+
+        /// <summary>
+        /// Activate the timer.
+        /// </summary>
+        /// <param name="dueTime">Initial wait time for timer.</param>
+        /// <param name="period">The interval at which the timer expires. In milliseconds. If this value is 0, the timer will expire only once; if it is greater than 0, it will expire periodically and continue until canceled.</param>
+        /// <exception cref="Win32Exception"></exception>
+        public void Set(TimeSpan dueTime, int period = 0)
+        {
+            long convertedDueTime = dueTime.Ticks * -10000L / TimeSpan.TicksPerMillisecond;
+            this.Set(convertedDueTime, period);
         }
 
         /// <summary>

@@ -84,5 +84,25 @@ namespace AsyncFiberWorksTests
             new object[] { new WaitableTimerExFactory() },
 #endif
         };
+
+#if NETFRAMEWORK || WINDOWS
+        [Test]
+        public async Task CancelWaitableTimer()
+        {
+            var tcs = new TaskCompletionSource<int>();
+            var timer = new WaitableTimerEx();
+            timer.Set(TimeSpan.FromMilliseconds(300));
+            var tmpHandle = ThreadPool.RegisterWaitForSingleObject(timer, (state, timeout) =>
+            {
+                tcs.SetResult(0);
+            }, null, Timeout.Infinite, executeOnlyOnce: true);
+            await Task.Delay(100).ConfigureAwait(false);
+            bool isCancelled = timer.Cancel();
+            Assert.IsTrue(isCancelled);
+            await Task.Delay(500).ConfigureAwait(false);
+            Assert.IsFalse(tcs.Task.IsCompleted);
+            tmpHandle.Unregister(null);
+        }
+#endif
     }
 }
