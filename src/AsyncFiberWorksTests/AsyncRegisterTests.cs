@@ -48,7 +48,7 @@ namespace AsyncFiberWorksTests
             for (int i = 0; i < 10; i++)
             {
                 fiber.Enqueue((e) => driver.InvokeAsync(e));
-                await fiber.EnqueueTaskAsync(() => Task.CompletedTask);
+                await fiber.SwitchTo();
             }
 
             await Task.WhenAll(task1, task2);

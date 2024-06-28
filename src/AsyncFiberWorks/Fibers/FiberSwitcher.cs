@@ -9,6 +9,7 @@ namespace AsyncFiberWorks.Fibers
     {
         /// <summary>
         /// Switch the current context to the specified one.
+        /// It is also a flush function that waits for all queued actions to be executed.
         /// </summary>
         /// <param name="fiber"></param>
         /// <returns></returns>

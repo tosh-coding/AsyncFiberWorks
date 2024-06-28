@@ -68,7 +68,7 @@ namespace AsyncFiberWorksTests
 
             var fiber = new PoolFiber();
             fiber.Enqueue((e) => driver.InvokeAsync(e));
-            await fiber.EnqueueTaskAsync(() => Task.CompletedTask);
+            await fiber.SwitchTo();
             Assert.AreEqual(301, counter);
         }
 
