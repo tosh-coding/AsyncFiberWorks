@@ -28,34 +28,36 @@ namespace Sample
 
         static async void RunAsync(ThreadPoolAdaptor mainThread)
         {
-            // Switch the context to the main thread.
-            await mainThread.SwitchTo();
-
             // Switch the context to a .NET ThreadPool worker thread.
-            await Task.Yield();
+            await DefaultThreadPool.Instance.SwitchTo();
 
             // Create a pool fiber backed the main thread.
-            var mainFiber = new PoolFiber(mainThread);
+            var fiber = new PoolFiber(mainThread);
 
             // Enqueue actions to the main thread via fiber.
             int counter = 0;
-            mainFiber.Enqueue(() => counter += 1);
-            mainFiber.Enqueue(() => counter += 2);
+            fiber.Enqueue(() => counter += 1);
+            fiber.Enqueue(() => counter += 2);
 
-            // Switch the context to the main fiber.
-            await mainFiber.SwitchTo();
+            // Wait for queued actions to complete.
+            // Then switch the context to the fiber.
+            await fiber.SwitchTo();
             counter += 3;
             counter += 4;
 
             // When an async lambda expression is enqueued,
             // the fiber waits until it is completed.
-            mainFiber.EnqueueTask(async () =>
+            fiber.EnqueueTask(async () =>
             {
                 await Task.Delay(1000);
 
-                // This is performed in the original fiber before resuming.
-                return () => { counter += 5; };
+                // Switch the context to the main thread.
+                await mainThread.SwitchTo();
+
+                zounter += 5;
             });
+
+            await fiber.SwitchTo();
 
             // Stop the Run method on the main thread.
             mainThread.Stop();
@@ -78,14 +80,16 @@ async Task SampleAsync()
     fiber.Enqueue(() => counter += 1);
     fiber.Enqueue(() => counter += 2);
 
-    // Switch the context to a user thread.
+    // Wait for queued actions to complete.
+    // Then switch the context to the fiber on a user thread.
     await fiber.SwitchTo();
 
     // It calls a blocking function, but it doesn't affect .NET ThreadPool because it's on a user thread.
     var result = SomeBlockingFunction();
 
-    // Switch the context to a .NET ThreadPool worker thread. And use the result.
-    await Task.Yield();
+    // Switch the context to a .NET ThreadPool worker thread.
+    await DefaultThreadPool.Instance.SwitchTo();
+
     Console.WriteLine($"result={result}");
 
     userThreadPool.Dispose();
