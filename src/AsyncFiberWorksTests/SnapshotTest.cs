@@ -70,6 +70,7 @@ namespace AsyncFiberWorksTests
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
                 });
+                var timerFactory = new ThreadingTimerFactory();
                 IDisposable handleReceiveReply = null;
                 bool handleReceiveDisposed = false;
                 IDisposable handleReceiveDisposableOfReceiver = null;
@@ -99,7 +100,7 @@ namespace AsyncFiberWorksTests
                             updatesChannel.Publish(currentValue);
                         }
 
-                        fiberRequest.Schedule(() =>
+                        timerFactory.Schedule(fiberRequest, () =>
                         {
                             // Finish.
 
@@ -120,7 +121,7 @@ namespace AsyncFiberWorksTests
                     });
                 });
                 requestChannel.Publish(new RequestReplyChannelRequest<Channel<int>, IDisposable>(receiveChannel, replyChannel));
-                var timeoutTimer = fiberRequest.Schedule(() =>
+                var timeoutTimer = timerFactory.Schedule(fiberRequest, () =>
                 {
                     if (!handleReceiveDisposed)
                     {

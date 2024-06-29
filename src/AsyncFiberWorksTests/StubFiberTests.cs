@@ -43,13 +43,14 @@ namespace AsyncFiberWorksTests
         {
             var subscriptions = new Subscriptions();
             var sut = new StubFiber();
+            var timerFactory = new ThreadingTimerFactory();
 
             var scheduleFired = 0;
             var scheduleOnIntervalFired = 0;
 
-            var disposableTimer = sut.Schedule(() => scheduleFired++, 100);
+            var disposableTimer = timerFactory.Schedule(sut , () => scheduleFired++, 100);
             var subscriptionFiber = subscriptions.BeginSubscription();
-            var intervalSub = sut.ScheduleOnInterval(() => scheduleOnIntervalFired++, 100, 500);
+            var intervalSub = timerFactory.ScheduleOnInterval(sut, () => scheduleOnIntervalFired++, 100, 500);
             subscriptionFiber.AppendDisposable(intervalSub);
 
             // add to the pending list.
@@ -112,9 +113,10 @@ namespace AsyncFiberWorksTests
             var subscriptions = new Subscriptions();
             var sut = new StubFiber();
             var channel = new Channel<int>();
+            var timerFactory = new ThreadingTimerFactory();
 
             var subscriptionFiber1 = subscriptions.BeginSubscription();
-            var disposableTimer = sut.Schedule(() => { }, 1000);
+            var disposableTimer = timerFactory.Schedule(sut, () => { }, 1000);
             subscriptionFiber1.AppendDisposable(disposableTimer);
             sut.ExecuteOnlyPendingNow();
             

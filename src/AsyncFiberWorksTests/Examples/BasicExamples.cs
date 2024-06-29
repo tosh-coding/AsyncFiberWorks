@@ -154,6 +154,7 @@ namespace AsyncFiberWorksTests.Examples
             // Thread for Assert.
             var testThread = new ThreadPoolAdaptor();
             var testFiber = new PoolFiber(testThread);
+            var timerFactory = new ThreadingTimerFactory();
 
             using (var subscriptions = new Subscriptions())
             {
@@ -164,7 +165,7 @@ namespace AsyncFiberWorksTests.Examples
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
 
                 var disposables = new Unsubscriber();
-                var timeoutTimer = testFiber.Schedule(() =>
+                var timeoutTimer = timerFactory.Schedule(testFiber, () =>
                 {
                     disposables.Dispose();
                     Assert.Fail();

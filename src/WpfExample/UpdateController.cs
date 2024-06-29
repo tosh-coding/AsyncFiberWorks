@@ -34,7 +34,8 @@ namespace WpfExample
             else
             {
                 var subscriptionFiber = subscriptions.BeginSubscription();
-                var timerDisposable = fiber.ScheduleOnInterval(OnTimer, 1000, 1000);
+                var timerFactory = new ThreadingTimerFactory();
+                var timerDisposable = timerFactory.ScheduleOnInterval(fiber, OnTimer, 1000, 1000);
                 subscriptionFiber.AppendDisposable(timerDisposable);
                 timer = subscriptionFiber;
             }

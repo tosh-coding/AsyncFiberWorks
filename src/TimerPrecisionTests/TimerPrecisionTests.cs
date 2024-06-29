@@ -62,7 +62,8 @@ namespace TimerPrecisionTests
         {
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
-                return fiber.ScheduleOnInterval(action, 0, 1);
+                var timerFactory = new ThreadingTimerFactory();
+                return timerFactory.ScheduleOnInterval(fiber, action, 0, 1);
             });
         }
 
@@ -72,7 +73,8 @@ namespace TimerPrecisionTests
             WinApi.timeBeginPeriod(1);
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
-                return fiber.ScheduleOnInterval(action, 0, 1);
+                var timerFactory = new ThreadingTimerFactory();
+                return timerFactory.ScheduleOnInterval(fiber, action, 0, 1);
             });
             WinApi.timeEndPeriod(1);
         }

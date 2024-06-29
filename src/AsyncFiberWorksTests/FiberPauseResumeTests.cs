@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncFiberWorks.FiberSchedulers;
+using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorksTests
 {
@@ -93,8 +94,9 @@ namespace AsyncFiberWorksTests
                 // Pause.
                 pauseFiber.Enqueue((e) => e.PauseWhileRunning(async () =>
                 {
+                    var timerFactory = new ThreadingTimerFactory();
                     var tcs = new TaskCompletionSource<int>();
-                    nonstopFiber.Schedule(() =>
+                    timerFactory.Schedule(nonstopFiber, () =>
                     {
                         counter = 10;
                         // Resume.

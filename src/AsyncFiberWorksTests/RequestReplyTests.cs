@@ -43,7 +43,8 @@ namespace AsyncFiberWorksTests
 
                 var oneshotScheduler = new OneShotScheduler();
                 var workFiber = new PoolFiber();
-                var timeoutTimer = workFiber.Schedule(() =>
+                var timerFactory = new ThreadingTimerFactory();
+                var timeoutTimer = timerFactory.Schedule(workFiber, () =>
                 {
                     oneshotScheduler.Schedule(() =>
                     {
@@ -93,9 +94,10 @@ namespace AsyncFiberWorksTests
             {
                 var requesterThread = new ThreadPoolAdaptor();
                 var workFiber = new PoolFiber(requesterThread);
+                var timerFactory = new ThreadingTimerFactory();
                 Action actionAssertFail = () => requesterThread.Queue((_) => Assert.Fail());
 
-                var timeoutTimer = workFiber.Schedule(() =>
+                var timeoutTimer = timerFactory.Schedule(workFiber, () =>
                 {
                     actionAssertFail();
                 }, 1000);
@@ -167,6 +169,7 @@ namespace AsyncFiberWorksTests
             {
                 var mainThread = new ThreadPoolAdaptor();
                 var mainFiber = new PoolFiber(mainThread);
+                var timerFactory = new ThreadingTimerFactory();
 
                 var requests = new List<string>();
                 requests.AddRange(dic.Keys);
@@ -187,7 +190,7 @@ namespace AsyncFiberWorksTests
                     else
                     {
                         var disposables = new Unsubscriber();
-                        var timeoutTimer = mainFiber.Schedule(() =>
+                        var timeoutTimer = timerFactory.Schedule(mainFiber, () =>
                         {
                             disposables.Dispose();
                             Assert.Fail();
@@ -223,8 +226,9 @@ namespace AsyncFiberWorksTests
         {
             var workFiber = new PoolFiber();
             var disposables = new Unsubscriber();
+            var timerFactory = new ThreadingTimerFactory();
             var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var timeoutTimer = workFiber.Schedule(() =>
+            var timeoutTimer = timerFactory.Schedule(workFiber, () =>
             {
                 tcs.TrySetCanceled();
                 disposables.Dispose();

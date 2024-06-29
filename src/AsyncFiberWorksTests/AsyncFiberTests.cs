@@ -76,9 +76,10 @@ namespace AsyncFiberWorksTests
         public async Task OneshotTimerTest(Func<IFiber> fiberCreator)
         {
             var fiber = fiberCreator();
+            var timerFactory = new ThreadingTimerFactory();
 
             int counter = 0;
-            var timer = fiber.Schedule(async () =>
+            var timer = timerFactory.Schedule(fiber, async () =>
             {
                 await Task.Yield();
                 counter += 1;
@@ -94,9 +95,10 @@ namespace AsyncFiberWorksTests
         public async Task OneshotTimerCancallationTest(Func<IFiber> fiberCreator)
         {
             var fiber = fiberCreator();
+            var timerFactory = new ThreadingTimerFactory();
 
             int counter = 0;
-            var timer = fiber.Schedule(async () =>
+            var timer = timerFactory.Schedule(fiber, async () =>
             {
                 await Task.Yield();
                 counter += 1;
@@ -112,10 +114,11 @@ namespace AsyncFiberWorksTests
         public async Task RepeatingTimer(Func<IFiber> fiberCreator)
         {
             var fiber = fiberCreator();
+            var timerFactory = new ThreadingTimerFactory();
 
             var sw = Stopwatch.StartNew();
             int counter = 0;
-            var timer = fiber.ScheduleOnInterval(async () =>
+            var timer = timerFactory.ScheduleOnInterval(fiber, async () =>
             {
                 await Task.Yield();
                 counter += 1;

@@ -12,16 +12,16 @@ namespace AsyncFiberWorks.FiberSchedulers
         /// <summary>
         /// Schedules an action to be executed once.
         /// </summary>
+        /// <param name="timerFactory"></param>
         /// <param name="fiber"></param>
         /// <param name="action"></param>
         /// <param name="firstInMs"></param>
-        /// <param name="timerFactory"></param>
         /// <returns>A handle to cancel the timer.</returns>
-        public static IDisposable Schedule(this IExecutionContext fiber, Action action, long firstInMs, IOneshotTimerFactory timerFactory = null)
+        public static IDisposable Schedule(this ITimerFactory timerFactory, IExecutionContext fiber, Action action, long firstInMs)
         {
-            if (timerFactory == null)
+            if (fiber == null)
             {
-                timerFactory = new ThreadingTimerFactory();
+                throw new ArgumentNullException(nameof(fiber));
             }
             return timerFactory.Schedule(() => fiber.Enqueue(action), firstInMs);
         }
@@ -29,22 +29,22 @@ namespace AsyncFiberWorks.FiberSchedulers
         /// <summary>
         /// Schedule an action to be executed on a recurring interval.
         /// </summary>
+        /// <param name="timerFactory"></param>
         /// <param name="fiber"></param>
         /// <param name="action"></param>
         /// <param name="firstInMs"></param>
         /// <param name="regularInMs"></param>
-        /// <param name="timerFactory"></param>
         /// <returns>A handle to cancel the timer.</returns>
-        public static IDisposable ScheduleOnInterval(this IExecutionContext fiber, Action action, long firstInMs, long regularInMs, IIntervalTimerFactory timerFactory = null)
+        public static IDisposable ScheduleOnInterval(this ITimerFactory timerFactory, IExecutionContext fiber, Action action, long firstInMs, long regularInMs)
         {
             if (regularInMs <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(regularInMs));
             }
 
-            if (timerFactory == null)
+            if (fiber == null)
             {
-                timerFactory = new ThreadingTimerFactory();
+                throw new ArgumentNullException(nameof(fiber));
             }
             return timerFactory.ScheduleOnInterval(() => fiber.Enqueue(action), firstInMs, regularInMs);
         }
@@ -52,16 +52,16 @@ namespace AsyncFiberWorks.FiberSchedulers
         /// <summary>
         /// Schedules a task to be executed once.
         /// </summary>
+        /// <param name="timerFactory"></param>
         /// <param name="fiber"></param>
         /// <param name="func">Task generator.</param>
         /// <param name="firstInMs"></param>
-        /// <param name="timerFactory"></param>
         /// <returns>A handle to cancel the timer.</returns>
-        public static IDisposable Schedule(this IAsyncExecutionContext fiber, Func<Task> func, long firstInMs, IOneshotTimerFactory timerFactory = null)
+        public static IDisposable Schedule(this ITimerFactory timerFactory, IAsyncExecutionContext fiber, Func<Task> func, long firstInMs)
         {
-            if (timerFactory == null)
+            if (fiber == null)
             {
-                timerFactory = new ThreadingTimerFactory();
+                throw new ArgumentNullException(nameof(fiber));
             }
             return timerFactory.Schedule(() => fiber.EnqueueTask(func), firstInMs);
         }
@@ -69,22 +69,22 @@ namespace AsyncFiberWorks.FiberSchedulers
         /// <summary>
         /// Schedule a task to be executed on a recurring interval.
         /// </summary>
+        /// <param name="timerFactory"></param>
         /// <param name="fiber"></param>
         /// <param name="func">Task generator.</param>
         /// <param name="firstInMs"></param>
         /// <param name="regularInMs"></param>
-        /// <param name="timerFactory"></param>
         /// <returns>A handle to cancel the timer.</returns>
-        public static IDisposable ScheduleOnInterval(this IAsyncExecutionContext fiber, Func<Task> func, long firstInMs, long regularInMs, IIntervalTimerFactory timerFactory = null)
+        public static IDisposable ScheduleOnInterval(this ITimerFactory timerFactory, IAsyncExecutionContext fiber, Func<Task> func, long firstInMs, long regularInMs)
         {
             if (regularInMs <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(regularInMs));
             }
 
-            if (timerFactory == null)
+            if (fiber == null)
             {
-                timerFactory = new ThreadingTimerFactory();
+                throw new ArgumentNullException(nameof(fiber));
             }
             return timerFactory.ScheduleOnInterval(() => fiber.EnqueueTask(func), firstInMs, regularInMs);
         }
