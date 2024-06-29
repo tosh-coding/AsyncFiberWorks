@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.FiberSchedulers
     /// <summary>
     /// Methods for scheduling actions that will be executed in the future.
     /// </summary>
-    public static class TimerExtensions
+    public static class TimerFactoryExtensions
     {
         /// <summary>
         /// Schedules an action to be executed once.
@@ -17,7 +17,7 @@ namespace AsyncFiberWorks.FiberSchedulers
         /// <param name="action"></param>
         /// <param name="firstInMs"></param>
         /// <returns>A handle to cancel the timer.</returns>
-        public static IDisposable Schedule(this ITimerFactory timerFactory, IExecutionContext fiber, Action action, long firstInMs)
+        public static IDisposable Schedule(this IOneshotTimerFactory timerFactory, IExecutionContext fiber, Action action, long firstInMs)
         {
             if (fiber == null)
             {
@@ -35,7 +35,7 @@ namespace AsyncFiberWorks.FiberSchedulers
         /// <param name="firstInMs"></param>
         /// <param name="regularInMs"></param>
         /// <returns>A handle to cancel the timer.</returns>
-        public static IDisposable ScheduleOnInterval(this ITimerFactory timerFactory, IExecutionContext fiber, Action action, long firstInMs, long regularInMs)
+        public static IDisposable ScheduleOnInterval(this IIntervalTimerFactory timerFactory, IExecutionContext fiber, Action action, long firstInMs, long regularInMs)
         {
             if (regularInMs <= 0)
             {
@@ -57,7 +57,7 @@ namespace AsyncFiberWorks.FiberSchedulers
         /// <param name="func">Task generator.</param>
         /// <param name="firstInMs"></param>
         /// <returns>A handle to cancel the timer.</returns>
-        public static IDisposable Schedule(this ITimerFactory timerFactory, IAsyncExecutionContext fiber, Func<Task> func, long firstInMs)
+        public static IDisposable Schedule(this IOneshotTimerFactory timerFactory, IAsyncExecutionContext fiber, Func<Task> func, long firstInMs)
         {
             if (fiber == null)
             {
@@ -75,7 +75,7 @@ namespace AsyncFiberWorks.FiberSchedulers
         /// <param name="firstInMs"></param>
         /// <param name="regularInMs"></param>
         /// <returns>A handle to cancel the timer.</returns>
-        public static IDisposable ScheduleOnInterval(this ITimerFactory timerFactory, IAsyncExecutionContext fiber, Func<Task> func, long firstInMs, long regularInMs)
+        public static IDisposable ScheduleOnInterval(this IIntervalTimerFactory timerFactory, IAsyncExecutionContext fiber, Func<Task> func, long firstInMs, long regularInMs)
         {
             if (regularInMs <= 0)
             {
@@ -87,6 +87,24 @@ namespace AsyncFiberWorks.FiberSchedulers
                 throw new ArgumentNullException(nameof(fiber));
             }
             return timerFactory.ScheduleOnInterval(() => fiber.EnqueueTask(func), firstInMs, regularInMs);
+        }
+
+        /// <summary>
+        /// Generate a wait time task.
+        /// </summary>
+        /// <param name="timerFactory">A timer.</param>
+        /// <param name="millisecondsDelay">Wait time.</param>
+        /// <returns>A task that is completed after a specified amount of time.</returns>
+        public static Task Delay(this IOneshotTimerFactory timerFactory, long millisecondsDelay)
+        {
+            var tcs = new TaskCompletionSource<int>();
+            var disposer = new Unsubscriber();
+            var timer = timerFactory.Schedule(() =>
+            {
+                tcs.SetResult(0);
+            }, millisecondsDelay);
+            disposer.AppendDisposable(timer);
+            return tcs.Task;
         }
     }
 }
