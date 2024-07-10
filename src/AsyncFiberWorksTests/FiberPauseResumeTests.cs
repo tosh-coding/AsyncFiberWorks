@@ -94,9 +94,9 @@ namespace AsyncFiberWorksTests
                 // Pause.
                 pauseFiber.Enqueue((e) => e.PauseWhileRunning(async () =>
                 {
-                    var timerFactory = new ThreadingTimerFactory();
+                    var timer = new OneshotThreadingTimer();
                     var tcs = new TaskCompletionSource<int>();
-                    timerFactory.Schedule(nonstopFiber, () =>
+                    timer.Schedule(nonstopFiber, () =>
                     {
                         counter = 10;
                         // Resume.
@@ -105,6 +105,7 @@ namespace AsyncFiberWorksTests
                     counter += 1;
 
                     await tcs.Task;
+                    timer.Dispose();
                 }));
                 pauseFiber.Enqueue(() =>
                 {

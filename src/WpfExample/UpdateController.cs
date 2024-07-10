@@ -8,42 +8,41 @@ namespace WpfExample
 {
     public class UpdateController
     {
-        private readonly IFiber fiber;
-        private readonly Subscriptions subscriptions;
-        private IDisposable timer;
-        private readonly WindowChannels channels;
+        private readonly IFiber _fiber;
+        private readonly Subscriptions _subscriptions;
+        private IDisposable _timer;
+        private readonly WindowChannels _channels;
 
         public UpdateController(WindowChannels winChannels)
         {
-            channels = winChannels;
-            subscriptions = new Subscriptions();
+            _channels = winChannels;
+            _subscriptions = new Subscriptions();
             var threadFiber = new ThreadFiber();
-            var subscriptionFiber = subscriptions.BeginSubscription();
-            var subscriptionChannel = channels.StartChannel.Subscribe(threadFiber, OnStart);
+            var subscriptionFiber = _subscriptions.BeginSubscription();
+            var subscriptionChannel = _channels.StartChannel.Subscribe(threadFiber, OnStart);
             subscriptionFiber.AppendDisposable(subscriptionChannel);
-            fiber = threadFiber;
+            _fiber = threadFiber;
         }
 
         private void OnStart(RoutedEventArgs msg)
         {
-            if (timer != null)
+            if (_timer != null)
             {
-                timer.Dispose();
-                timer = null;
+                _timer.Dispose();
+                _timer = null;
             }
             else
             {
-                var subscriptionFiber = subscriptions.BeginSubscription();
-                var timerFactory = new ThreadingTimerFactory();
-                var timerDisposable = timerFactory.ScheduleOnInterval(fiber, OnTimer, 1000, 1000);
-                subscriptionFiber.AppendDisposable(timerDisposable);
-                timer = subscriptionFiber;
+                var subscriptionFiber = _subscriptions.BeginSubscription();
+                var timer = new IntervalThreadingTimer();
+                timer.ScheduleOnInterval(_fiber, OnTimer, 1000, 1000);
+                _timer = timer;
             }
         }
 
         private void OnTimer()
         {
-            channels.TimeUpdate.Publish(DateTime.Now);
+            _channels.TimeUpdate.Publish(DateTime.Now);
         }
     }
 }

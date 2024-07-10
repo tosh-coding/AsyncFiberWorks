@@ -154,7 +154,7 @@ namespace AsyncFiberWorksTests.Examples
             // Thread for Assert.
             var testThread = new ThreadPoolAdaptor();
             var testFiber = new PoolFiber(testThread);
-            var timerFactory = new ThreadingTimerFactory();
+            var timer = new OneshotThreadingTimer();
 
             using (var subscriptions = new Subscriptions())
             {
@@ -165,15 +165,16 @@ namespace AsyncFiberWorksTests.Examples
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
 
                 var disposables = new Unsubscriber();
-                var timeoutTimer = timerFactory.Schedule(testFiber, () =>
+                var cancellation = new CancellationTokenSource();
+                timer.Schedule(testFiber, () =>
                 {
                     disposables.Dispose();
                     Assert.Fail();
-                }, 10000);
+                }, 10000, cancellation.Token);
                 var replyChannel = new Channel<string>();
                 var reply = replyChannel.Subscribe(testFiber, (result) =>
                 {
-                    timeoutTimer.Dispose();
+                    cancellation.Cancel();
                     Assert.AreEqual("bye", result);
                     testThread.Stop();
                 });
@@ -181,6 +182,7 @@ namespace AsyncFiberWorksTests.Examples
                 disposables.AppendDisposable(reply);
                 testThread.Run();
             }
+            timer.Dispose();
         }
 
         [Test]

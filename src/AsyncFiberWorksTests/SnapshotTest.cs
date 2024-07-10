@@ -6,6 +6,7 @@ using AsyncFiberWorks.Threading;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace AsyncFiberWorksTests
 {
@@ -70,7 +71,8 @@ namespace AsyncFiberWorksTests
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
                 });
-                var timerFactory = new ThreadingTimerFactory();
+                var timer1 = new OneshotThreadingTimer();
+                var timer2 = new OneshotThreadingTimer();
                 IDisposable handleReceiveReply = null;
                 bool handleReceiveDisposed = false;
                 IDisposable handleReceiveDisposableOfReceiver = null;
@@ -100,7 +102,7 @@ namespace AsyncFiberWorksTests
                             updatesChannel.Publish(currentValue);
                         }
 
-                        timerFactory.Schedule(fiberRequest, () =>
+                        timer1.Schedule(fiberRequest, () =>
                         {
                             // Finish.
 
@@ -121,7 +123,8 @@ namespace AsyncFiberWorksTests
                     });
                 });
                 requestChannel.Publish(new RequestReplyChannelRequest<Channel<int>, IDisposable>(receiveChannel, replyChannel));
-                var timeoutTimer = timerFactory.Schedule(fiberRequest, () =>
+                var cancellation = new CancellationTokenSource();
+                timer2.Schedule(fiberRequest, () =>
                 {
                     if (!handleReceiveDisposed)
                     {
@@ -138,8 +141,8 @@ namespace AsyncFiberWorksTests
                         }
                     }
                     Assert.Fail("SnapshotRequestControlEvent.Timeout");
-                }, 5000);
-                timeoutTimerCancellation.AppendDisposable(timeoutTimer);
+                }, 5000, cancellation.Token);
+                timeoutTimerCancellation.Append(cancellation);
 
                 requesterThread.Run();
                 if (!handleReceiveDisposed)
@@ -158,6 +161,8 @@ namespace AsyncFiberWorksTests
                 }
                 timeoutTimerCancellation.Dispose();
                 disposableReceive.Dispose();
+                timer1.Dispose();
+                timer2.Dispose();
             }
         }
     }

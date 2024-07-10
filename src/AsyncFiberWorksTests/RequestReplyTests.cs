@@ -43,21 +43,22 @@ namespace AsyncFiberWorksTests
 
                 var oneshotScheduler = new OneShotScheduler();
                 var workFiber = new PoolFiber();
-                var timerFactory = new ThreadingTimerFactory();
-                var timeoutTimer = timerFactory.Schedule(workFiber, () =>
+                var timer = new OneshotThreadingTimer();
+                var cancellation = new CancellationTokenSource();
+                timer.Schedule(workFiber, () =>
                 {
                     oneshotScheduler.Schedule(() =>
                     {
                         requesterThread.Queue((_) => Assert.Fail());
                     });
-                }, 10000);
+                }, 10000, cancellation.Token);
                 var disposableRequest = new Unsubscriber();
                 var responseChannel = new Channel<DateTime>();
                 var response = responseChannel.Subscribe(workFiber, (result) =>
                 {
                     oneshotScheduler.Schedule(() =>
                     {
-                        timeoutTimer.Dispose();
+                        cancellation.Cancel();
                         disposableRequest.Dispose();
                         tcs.SetResult(() =>
                         {
@@ -69,6 +70,7 @@ namespace AsyncFiberWorksTests
                 timeCheck.Publish(new RequestReplyChannelRequest<string, DateTime>("hello", responseChannel));
                 disposableRequest.AppendDisposable(response);
                 requesterThread.Run();
+                timer.Dispose();
             }
         }
 
@@ -94,13 +96,14 @@ namespace AsyncFiberWorksTests
             {
                 var requesterThread = new ThreadPoolAdaptor();
                 var workFiber = new PoolFiber(requesterThread);
-                var timerFactory = new ThreadingTimerFactory();
+                var timer = new OneshotThreadingTimer();
                 Action actionAssertFail = () => requesterThread.Queue((_) => Assert.Fail());
 
-                var timeoutTimer = timerFactory.Schedule(workFiber, () =>
+                var cancellation = new CancellationTokenSource();
+                timer.Schedule(workFiber, () =>
                 {
                     actionAssertFail();
-                }, 1000);
+                }, 1000, cancellation.Token);
                 int i = 0;
                 int state = 0;
                 var responseChannel = new Channel<int>();
@@ -119,8 +122,8 @@ namespace AsyncFiberWorksTests
                     }
                     else if (state == 1)
                     {
-                        timeoutTimer?.Dispose();
-                        timeoutTimer = null;
+                        cancellation?.Cancel();
+                        cancellation = null;
                         Assert.AreEqual(5, result);
                         requesterThread.Stop();
                     }
@@ -133,6 +136,7 @@ namespace AsyncFiberWorksTests
                     countChannel.Publish(new RequestReplyChannelRequest<string, int>("hello", responseChannel));
                     requesterThread.Run();
                 }
+                timer.Dispose();
             }
         }
 
@@ -169,7 +173,7 @@ namespace AsyncFiberWorksTests
             {
                 var mainThread = new ThreadPoolAdaptor();
                 var mainFiber = new PoolFiber(mainThread);
-                var timerFactory = new ThreadingTimerFactory();
+                var timer = new OneshotThreadingTimer();
 
                 var requests = new List<string>();
                 requests.AddRange(dic.Keys);
@@ -190,15 +194,16 @@ namespace AsyncFiberWorksTests
                     else
                     {
                         var disposables = new Unsubscriber();
-                        var timeoutTimer = timerFactory.Schedule(mainFiber, () =>
+                        var cancellation = new CancellationTokenSource();
+                        timer.Schedule(mainFiber, () =>
                         {
                             disposables.Dispose();
                             Assert.Fail();
-                        }, timeoutInMs);
+                        }, timeoutInMs, cancellation.Token);
                         var responseChannel = new Channel<int>();
                         var response = responseChannel.Subscribe(mainFiber, (responseData) =>
                         {
-                            timeoutTimer.Dispose();
+                            cancellation.Cancel();
                             disposables.Dispose();
                             if (dic.ContainsKey(requestData))
                             {
@@ -219,6 +224,7 @@ namespace AsyncFiberWorksTests
                 mainFiber.Enqueue(action);
                 mainThread.Run();
                 Assert.AreEqual(requests.Count, indexRequest);
+                timer.Dispose();
             }
         }
 
@@ -226,17 +232,20 @@ namespace AsyncFiberWorksTests
         {
             var workFiber = new PoolFiber();
             var disposables = new Unsubscriber();
-            var timerFactory = new ThreadingTimerFactory();
+            var timer = new OneshotThreadingTimer();
             var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var timeoutTimer = timerFactory.Schedule(workFiber, () =>
+            var cancellation = new CancellationTokenSource();
+            timer.Schedule(workFiber, () =>
             {
                 tcs.TrySetCanceled();
                 disposables.Dispose();
-            }, timeoutInMs);
+                timer.Dispose();
+            }, timeoutInMs, cancellation.Token);
             var responseChannel = new Channel<int>();
             var response = responseChannel.Subscribe(workFiber, (responseData) =>
             {
-                timeoutTimer.Dispose();
+                cancellation.Cancel();
+                timer.Dispose();
                 tcs.TrySetResult(responseData);
                 disposables.Dispose();
             });

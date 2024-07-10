@@ -6,6 +6,7 @@ using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorksTests
@@ -76,16 +77,16 @@ namespace AsyncFiberWorksTests
         public async Task OneshotTimerTest(Func<IFiber> fiberCreator)
         {
             var fiber = fiberCreator();
-            var timerFactory = new ThreadingTimerFactory();
+            var timer = new OneshotThreadingTimer();
 
             int counter = 0;
-            var timer = timerFactory.Schedule(fiber, async () =>
+            timer.Schedule(fiber, async () =>
             {
                 await Task.Yield();
                 counter += 1;
             }, 5);
             Assert.AreEqual(0, counter);
-            await Task.Delay(20).ConfigureAwait(false);
+            await Task.Delay(40).ConfigureAwait(false);
             Assert.AreEqual(1, counter);
             timer.Dispose();
         }
@@ -95,18 +96,20 @@ namespace AsyncFiberWorksTests
         public async Task OneshotTimerCancallationTest(Func<IFiber> fiberCreator)
         {
             var fiber = fiberCreator();
-            var timerFactory = new ThreadingTimerFactory();
+            var timer = new OneshotThreadingTimer();
 
             int counter = 0;
-            var timer = timerFactory.Schedule(fiber, async () =>
+            var cancellation = new CancellationTokenSource();
+            timer.Schedule(fiber, async () =>
             {
                 await Task.Yield();
                 counter += 1;
-            }, 50);
+            }, 50, cancellation.Token);
             Assert.AreEqual(0, counter);
-            timer.Dispose();
+            cancellation.Cancel();
             await Task.Delay(100).ConfigureAwait(false);
             Assert.AreEqual(0, counter);
+            timer.Dispose();
         }
 
         [Test]
@@ -114,11 +117,11 @@ namespace AsyncFiberWorksTests
         public async Task RepeatingTimer(Func<IFiber> fiberCreator)
         {
             var fiber = fiberCreator();
-            var timerFactory = new ThreadingTimerFactory();
+            var timer = new IntervalThreadingTimer();
 
             var sw = Stopwatch.StartNew();
             int counter = 0;
-            var timer = timerFactory.ScheduleOnInterval(fiber, async () =>
+            timer.ScheduleOnInterval(fiber, async () =>
             {
                 await Task.Yield();
                 counter += 1;
@@ -139,6 +142,7 @@ namespace AsyncFiberWorksTests
             await Task.Delay(500).ConfigureAwait(false);
             Console.WriteLine($"as{sw.Elapsed}");
             Assert.AreEqual(3, counter);
+            timer.Dispose();
         }
 
         [Test]

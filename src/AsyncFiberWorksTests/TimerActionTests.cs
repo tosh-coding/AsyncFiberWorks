@@ -13,76 +13,88 @@ namespace AsyncFiberWorksTests
     [TestFixture]
     public class TimerActionTests
     {
-        [Test, TestCaseSource("TimerFactories")]
-        public void CallbackFromTimer(IOneshotTimerFactory timerFactory)
+        [Test, TestCaseSource(nameof(OneshotTimers))]
+        public void CallbackFromTimer(Func<IOneshotTimer> timerCreator)
         {
+            var timer = timerCreator();
             var stubFiber = new StubFiber();
             long counter = 0;
             Action action = () => { counter++; };
-            var timer = timerFactory.Schedule(() => stubFiber.Enqueue(action), 2);
+            timer.Schedule(() => stubFiber.Enqueue(action), 2);
 
             Thread.Sleep(20);
             stubFiber.ExecuteOnlyPendingNow();
             Thread.Sleep(140);
             stubFiber.ExecuteOnlyPendingNow();
             Assert.AreEqual(1, counter);
+            timer.Dispose();
         }
 
-        [Test, TestCaseSource("TimerFactories")]
-        public void CallbackFromIntervalTimerWithCancel(IIntervalTimerFactory timerFactory)
+        [Test, TestCaseSource(nameof(IntervalTimers))]
+        public void CallbackFromIntervalTimerWithCancel(Func<IIntervalTimer> timerCreator)
         {
-            var stubFiber = new StubFiber();
+            var timer = timerCreator();
+            var fiber = new PoolFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
-            var timer = timerFactory.ScheduleOnInterval(() => stubFiber.Enqueue(actionOnTimer), 2, 100);
+            var cancellation = new CancellationTokenSource();
+            timer.ScheduleOnInterval(() => fiber.Enqueue(actionOnTimer), 2, 100, cancellation.Token);
 
-            Thread.Sleep(20);
-            stubFiber.ExecuteOnlyPendingNow();
-            Thread.Sleep(140);
-            stubFiber.ExecuteOnlyPendingNow();
-            timer.Dispose();
+            Thread.Sleep(40);
+            cancellation.Cancel();
             Thread.Sleep(100);
-            stubFiber.ExecuteOnlyPendingNow();
-            Assert.AreEqual(2, counterOnTimer);
+            Assert.AreEqual(1, counterOnTimer);
+            timer.Dispose();
         }
 
-        [Test, TestCaseSource("TimerFactories")]
-        public void CallbackFromTimerWithCancel(IOneshotTimerFactory timerFactory)
+        [Test, TestCaseSource(nameof(OneshotTimers))]
+        public void CallbackFromTimerWithCancel(Func<IOneshotTimer> timerCreator)
         {
+            var timer = timerCreator();
             var stubFiber = new StubFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
-            var timer = timerFactory.Schedule(() => stubFiber.Enqueue(actionOnTimer), 2);
+            var cancellation = new CancellationTokenSource();
+            timer.Schedule(() => stubFiber.Enqueue(actionOnTimer), 2, cancellation.Token);
 
-            timer.Dispose();
+            cancellation.Cancel();
             Thread.Sleep(20);
             stubFiber.ExecuteOnlyPendingNow();
             Assert.AreEqual(0, counterOnTimer);
+            timer.Dispose();
         }
 
-        [Test, TestCaseSource("TimerFactories")]
-        public async Task OneshotTimerDelayTest(IOneshotTimerFactory timerFactory)
+        [Test, TestCaseSource(nameof(OneshotTimers))]
+        public async Task OneshotTimerDelayTest(Func<IOneshotTimer> timerCreator)
         {
-            var delayFactory = timerFactory;
-
-            await delayFactory.Delay(10);
-            await delayFactory.Delay(10);
-            await delayFactory.Delay(10);
+            var timer = timerCreator();
+            await timer.ScheduleAsync(10);
+            await timer.ScheduleAsync(10);
+            await timer.ScheduleAsync(10);
 
             var sw = Stopwatch.StartNew();
-            await delayFactory.Delay(100);
+            await timer.ScheduleAsync(100);
             var elapsed = sw.Elapsed;
 
             int diff = 16;
             Assert.IsTrue(elapsed.TotalMilliseconds > (100 - diff));
             Assert.IsTrue(elapsed.TotalMilliseconds < (100 + diff));
+            timer.Dispose();
         }
 
-        static object[] TimerFactories =
+        static object[] OneshotTimers =
         {
-            new object[] { new ThreadingTimerFactory() },
+            new object[] { (Func<IOneshotTimer>)(() => new OneshotThreadingTimer()) },
 #if NETFRAMEWORK || WINDOWS
-            new object[] { new WaitableTimerExFactory() },
+            new object[] { (Func<IOneshotTimer>)(() => new OneshotWaitableTimerEx()) },
+#endif
+        };
+
+        static object[] IntervalTimers =
+        {
+            new object[] { (Func<IIntervalTimer>)(() => new IntervalThreadingTimer()) },
+#if NETFRAMEWORK || WINDOWS
+            new object[] { (Func<IIntervalTimer>)(() => new IntervalWaitableTimerEx()) },
 #endif
         };
 
@@ -103,6 +115,7 @@ namespace AsyncFiberWorksTests
             await Task.Delay(500).ConfigureAwait(false);
             Assert.IsFalse(tcs.Task.IsCompleted);
             tmpHandle.Unregister(null);
+            timer.Dispose();
         }
 #endif
     }

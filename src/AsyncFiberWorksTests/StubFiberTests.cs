@@ -43,15 +43,17 @@ namespace AsyncFiberWorksTests
         {
             var subscriptions = new Subscriptions();
             var sut = new StubFiber();
-            var timerFactory = new ThreadingTimerFactory();
+            var timer1 = new OneshotThreadingTimer();
+            var timer2 = new IntervalThreadingTimer();
 
             var scheduleFired = 0;
             var scheduleOnIntervalFired = 0;
 
-            var disposableTimer = timerFactory.Schedule(sut , () => scheduleFired++, 100);
+            timer1.Schedule(sut , () => scheduleFired++, 100);
             var subscriptionFiber = subscriptions.BeginSubscription();
-            var intervalSub = timerFactory.ScheduleOnInterval(sut, () => scheduleOnIntervalFired++, 100, 500);
-            subscriptionFiber.AppendDisposable(intervalSub);
+            var cancellation = new CancellationTokenSource();
+            timer2.ScheduleOnInterval(sut, () => scheduleOnIntervalFired++, 100, 500, cancellation.Token);
+            subscriptionFiber.AppendDisposable(cancellation);
 
             // add to the pending list.
             Thread.Sleep(200);
@@ -69,6 +71,8 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(2, scheduleOnIntervalFired);
 
             subscriptionFiber.Dispose();
+            timer1.Dispose();
+            timer2.Dispose();
 
             // The regularInMs has passed after dispose.
             Thread.Sleep(500);
@@ -113,11 +117,12 @@ namespace AsyncFiberWorksTests
             var subscriptions = new Subscriptions();
             var sut = new StubFiber();
             var channel = new Channel<int>();
-            var timerFactory = new ThreadingTimerFactory();
+            var timer = new OneshotThreadingTimer();
 
             var subscriptionFiber1 = subscriptions.BeginSubscription();
-            var disposableTimer = timerFactory.Schedule(sut, () => { }, 1000);
-            subscriptionFiber1.AppendDisposable(disposableTimer);
+            var cancellation = new CancellationTokenSource();
+            timer.Schedule(sut, () => { }, 1000, cancellation.Token);
+            subscriptionFiber1.AppendDisposable(cancellation);
             sut.ExecuteOnlyPendingNow();
             
             var subscriptionFiber2 = subscriptions.BeginSubscription();
@@ -130,6 +135,7 @@ namespace AsyncFiberWorksTests
             subscriptions.Dispose();
 
             Assert.AreEqual(0, subscriptions.NumSubscriptions);
+            timer.Dispose();
         }
     }
 }
