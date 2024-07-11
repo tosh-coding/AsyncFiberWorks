@@ -38,12 +38,26 @@ namespace AsyncFiberWorksTests
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
             var cancellation = new CancellationTokenSource();
-            timer.ScheduleOnInterval(() => fiber.Enqueue(actionOnTimer), 2, 100, cancellation.Token);
+            int intervalMs = 300;
+            timer.ScheduleOnInterval(() => fiber.Enqueue(actionOnTimer), intervalMs / 2, intervalMs, cancellation.Token);
 
-            Thread.Sleep(40);
-            cancellation.Cancel();
-            Thread.Sleep(100);
+            Thread.Sleep(intervalMs);
             Assert.AreEqual(1, counterOnTimer);
+            Thread.Sleep(intervalMs);
+            Assert.AreEqual(2, counterOnTimer);
+            Thread.Sleep(intervalMs);
+            Assert.AreEqual(3, counterOnTimer);
+            Thread.Sleep(intervalMs);
+            Assert.AreEqual(4, counterOnTimer);
+            Thread.Sleep(intervalMs);
+            Assert.AreEqual(5, counterOnTimer);
+            Thread.Sleep(intervalMs);
+            Assert.AreEqual(6, counterOnTimer);
+            cancellation.Cancel();
+            Thread.Sleep(intervalMs);
+            Assert.AreEqual(6, counterOnTimer);
+            Thread.Sleep(intervalMs);
+            Assert.AreEqual(6, counterOnTimer);
             timer.Dispose();
         }
 

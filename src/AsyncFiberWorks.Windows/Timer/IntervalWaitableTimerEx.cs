@@ -78,14 +78,18 @@ namespace AsyncFiberWorks.Windows.Timer
                     }
 
                     _waitableTimer.Set(firstIntervalMs * -10000L, intervalMs);
-                    int index = WaitHandle.WaitAny(_waitHandles);
-                    if (index == 0)
+                    while (true)
                     {
-                        copiedAction();
-                    }
-                    else
-                    {
-                        _waitableTimer.Cancel();
+                        int index = WaitHandle.WaitAny(_waitHandles);
+                        if (index == 0)
+                        {
+                            copiedAction();
+                        }
+                        else
+                        {
+                            _waitableTimer.Cancel();
+                            break;
+                        }
                     }
 
                     lock (_lockObj)
