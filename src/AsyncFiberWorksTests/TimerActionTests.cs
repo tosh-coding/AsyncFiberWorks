@@ -82,17 +82,70 @@ namespace AsyncFiberWorksTests
         public async Task OneshotTimerDelayTest(Func<IOneshotTimer> timerCreator)
         {
             var timer = timerCreator();
-            await timer.ScheduleAsync(10);
-            await timer.ScheduleAsync(10);
-            await timer.ScheduleAsync(10);
+            int tolerance = 32;
+            var sw = new Stopwatch();
 
-            var sw = Stopwatch.StartNew();
-            await timer.ScheduleAsync(100);
+            // Warm up.
+            await timer.ScheduleAsync(1);
+            sw.Restart();
+
+            int expectedWaitTime = 300;
+            sw.Restart();
+            await timer.ScheduleAsync(expectedWaitTime);
             var elapsed = sw.Elapsed;
+            Assert.IsTrue(elapsed.TotalMilliseconds > (expectedWaitTime - tolerance));
+            Assert.IsTrue(elapsed.TotalMilliseconds < (expectedWaitTime + tolerance));
 
-            int diff = 16;
-            Assert.IsTrue(elapsed.TotalMilliseconds > (100 - diff));
-            Assert.IsTrue(elapsed.TotalMilliseconds < (100 + diff));
+            expectedWaitTime = 200;
+            sw.Restart();
+            await timer.ScheduleAsync(expectedWaitTime);
+            elapsed = sw.Elapsed;
+            Assert.IsTrue(elapsed.TotalMilliseconds > (expectedWaitTime - tolerance));
+            Assert.IsTrue(elapsed.TotalMilliseconds < (expectedWaitTime + tolerance));
+
+            expectedWaitTime = 300;
+            sw.Restart();
+            await timer.ScheduleAsync(expectedWaitTime);
+            elapsed = sw.Elapsed;
+            Assert.IsTrue(elapsed.TotalMilliseconds > (expectedWaitTime - tolerance));
+            Assert.IsTrue(elapsed.TotalMilliseconds < (expectedWaitTime + tolerance));
+
+            timer.Dispose();
+        }
+
+        [Test, TestCaseSource(nameof(OneshotTimers))]
+        public async Task DelayedSwitchToTest(Func<IOneshotTimer> timerCreator)
+        {
+            var timer = timerCreator();
+            var fiber = new PoolFiber();
+            var sw = new Stopwatch();
+            int tolerance = 32;
+
+            // warm up.
+            sw.Restart();
+            await fiber.DelayedSwitchTo(1, timer);
+
+            int expectedWaitTime = 300;
+            sw.Restart();
+            await fiber.DelayedSwitchTo(expectedWaitTime, timer);
+            var elapsed = sw.Elapsed;
+            Assert.IsTrue(elapsed.TotalMilliseconds > (expectedWaitTime - tolerance ));
+            Assert.IsTrue(elapsed.TotalMilliseconds < (expectedWaitTime + tolerance ), $"elapsedMs={elapsed.TotalMilliseconds}");
+
+            expectedWaitTime = 200;
+            sw.Restart();
+            await fiber.DelayedSwitchTo(expectedWaitTime, timer);
+            elapsed = sw.Elapsed;
+            Assert.IsTrue(elapsed.TotalMilliseconds > (expectedWaitTime - tolerance ));
+            Assert.IsTrue(elapsed.TotalMilliseconds < (expectedWaitTime + tolerance ));
+
+            expectedWaitTime = 100;
+            sw.Restart();
+            await fiber.DelayedSwitchTo(expectedWaitTime, timer);
+            elapsed = sw.Elapsed;
+            Assert.IsTrue(elapsed.TotalMilliseconds > (expectedWaitTime - tolerance ));
+            Assert.IsTrue(elapsed.TotalMilliseconds < (expectedWaitTime + tolerance ));
+
             timer.Dispose();
         }
 
