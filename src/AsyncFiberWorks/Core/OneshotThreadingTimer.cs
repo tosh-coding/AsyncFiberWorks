@@ -12,7 +12,8 @@ namespace AsyncFiberWorks.Core
         readonly Timer _timer;
         bool _scheduled = false;
         bool _disposed = false;
-        Action _copiedAction = null;
+        Action<object> _copiedAction = null;
+        object _state;
         CancellationTokenRegistration? _registration;
 
         /// <summary>
@@ -27,9 +28,10 @@ namespace AsyncFiberWorks.Core
         /// Start a timer.
         /// </summary>
         /// <param name="action">The process to be called when the timer expires.</param>
+        /// <param name="state">Arguments passed when that callback is invoked.</param>
         /// <param name="intervalMs">Timer wait time.</param>
         /// <param name="token">A handle to cancel the timer.</param>
-        public void Schedule(Action action, int intervalMs, CancellationToken token)
+        public void InternalSchedule(Action<object> action, object state, int intervalMs, CancellationToken token)
         {
             if (intervalMs < 0)
             {
@@ -57,6 +59,7 @@ namespace AsyncFiberWorks.Core
                 }
 
                 _copiedAction = action;
+                _state = state;
                 _timer.Change(intervalMs, Timeout.Infinite);
             }
         }
@@ -75,9 +78,8 @@ namespace AsyncFiberWorks.Core
                     _registration.Value.Dispose();
                     _registration = null;
                 }
+                _copiedAction(_state);
             }
-
-            _copiedAction();
         }
 
         void Cancel()

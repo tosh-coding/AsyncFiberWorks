@@ -14,7 +14,7 @@ namespace AsyncFiberWorks.FiberSchedulers
         /// Schedules an action to be executed once.
         /// </summary>
         /// <param name="timer"></param>
-        /// <param name="fiber"></param>
+        /// <param name="fiber">The context in which the action is executed.</param>
         /// <param name="action">The process to be called when the timer expires.</param>
         /// <param name="firstInMs">Timer wait time. Must be greater than or equal to 0.</param>
         /// <param name="token">A handle to cancel the timer.</param>
@@ -24,14 +24,14 @@ namespace AsyncFiberWorks.FiberSchedulers
             {
                 throw new ArgumentNullException(nameof(fiber));
             }
-            timer.Schedule(() => fiber.Enqueue(action), firstInMs, token);
+            timer.InternalSchedule((state) => fiber.Enqueue((Action)state), action, firstInMs, token);
         }
 
         /// <summary>
         /// Schedule an action to be executed on a recurring interval.
         /// </summary>
         /// <param name="timer"></param>
-        /// <param name="fiber"></param>
+        /// <param name="fiber">The context in which the action is executed.</param>
         /// <param name="action">The process to be called when the timer expires.</param>
         /// <param name="firstInMs">Initial wait time. Must be greater than or equal to 0.</param>
         /// <param name="regularInMs">The waiting interval time after the second time. Must be greater than 0.</param>
@@ -54,7 +54,7 @@ namespace AsyncFiberWorks.FiberSchedulers
         /// Schedules a task to be executed once.
         /// </summary>
         /// <param name="timer"></param>
-        /// <param name="fiber"></param>
+        /// <param name="fiber">The context in which the action is executed.</param>
         /// <param name="func">Task generator.</param>
         /// <param name="firstInMs">Timer wait time. Must be greater than or equal to 0.</param>
         /// <param name="token">A handle to cancel the timer.</param>
@@ -64,14 +64,14 @@ namespace AsyncFiberWorks.FiberSchedulers
             {
                 throw new ArgumentNullException(nameof(fiber));
             }
-            timer.Schedule(() => fiber.EnqueueTask(func), firstInMs, token);
+            timer.InternalSchedule((state) => fiber.EnqueueTask((Func<Task>)state), func, firstInMs, token);
         }
 
         /// <summary>
         /// Schedule a task to be executed on a recurring interval.
         /// </summary>
         /// <param name="timer"></param>
-        /// <param name="fiber"></param>
+        /// <param name="fiber">The context in which the action is executed.</param>
         /// <param name="func">Task generator.</param>
         /// <param name="firstInMs">Initial wait time. Must be greater than or equal to 0.</param>
         /// <param name="regularInMs">The waiting interval time after the second time. Must be greater than 0.</param>
@@ -100,10 +100,10 @@ namespace AsyncFiberWorks.FiberSchedulers
         public static Task ScheduleAsync(this IOneshotTimer timer, int millisecondsDelay, CancellationToken token = default)
         {
             var tcs = new TaskCompletionSource<int>();
-            timer.Schedule(() =>
+            timer.InternalSchedule((state) =>
             {
-                tcs.SetResult(0);
-            }, millisecondsDelay, token);
+                ((TaskCompletionSource<int>)state).SetResult(0);
+            }, tcs, millisecondsDelay, token);
             return tcs.Task;
         }
     }

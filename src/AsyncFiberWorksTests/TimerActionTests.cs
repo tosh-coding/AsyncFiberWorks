@@ -20,7 +20,7 @@ namespace AsyncFiberWorksTests
             var stubFiber = new StubFiber();
             long counter = 0;
             Action action = () => { counter++; };
-            timer.Schedule(() => stubFiber.Enqueue(action), 2);
+            timer.Schedule(stubFiber, action, 2);
 
             Thread.Sleep(20);
             stubFiber.ExecuteOnlyPendingNow();
@@ -69,7 +69,7 @@ namespace AsyncFiberWorksTests
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
             var cancellation = new CancellationTokenSource();
-            timer.Schedule(() => stubFiber.Enqueue(actionOnTimer), 2, cancellation.Token);
+            timer.Schedule(stubFiber, actionOnTimer, 2, cancellation.Token);
 
             cancellation.Cancel();
             Thread.Sleep(20);

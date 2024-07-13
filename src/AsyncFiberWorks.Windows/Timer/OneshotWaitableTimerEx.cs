@@ -15,6 +15,8 @@ namespace AsyncFiberWorks.Windows.Timer
         readonly WaitableTimerEx _waitableTimer;
         readonly ManualResetEventSlim _resetEvent = new ManualResetEventSlim();
         WaitHandle[] _waitHandles = null;
+        Action<object> _copiedAction;
+        object _state;
         int _scheduled = 0;
         bool _disposed = false;
 
@@ -33,16 +35,16 @@ namespace AsyncFiberWorks.Windows.Timer
         /// Start a timer.
         /// </summary>
         /// <param name="action">The process to be called when the timer expires.</param>
+        /// <param name="state">Arguments passed when that callback is invoked.</param>
         /// <param name="firstIntervalMs">Timer wait time. Must be greater than or equal to 0.</param>
         /// <param name="token">A handle to cancel the timer.</param>
-        public void Schedule(Action action, int firstIntervalMs, CancellationToken token = default)
+        public void InternalSchedule(Action<object> action, object state, int firstIntervalMs, CancellationToken token = default)
         {
             if (firstIntervalMs < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(firstIntervalMs), $"{nameof(firstIntervalMs)} must be greater than or equal to 0.");
             }
 
-            var copiedAction = action;
             lock (_lockObj)
             {
                 if (_disposed)
@@ -54,6 +56,8 @@ namespace AsyncFiberWorks.Windows.Timer
                     _resetEvent.Set();
                 }
                 _scheduled += 1;
+                _copiedAction = action;
+                _state = state;
 
                 _thread.Enqueue(() =>
                 {
@@ -76,16 +80,19 @@ namespace AsyncFiberWorks.Windows.Timer
                     int index = WaitHandle.WaitAny(_waitHandles);
                     if (index == 0)
                     {
-                        copiedAction();
+                        lock (_lockObj)
+                        {
+                            _scheduled -= 1;
+                            _copiedAction(_state);
+                        }
                     }
                     else
                     {
                         _waitableTimer.Cancel();
-                    }
-
-                    lock (_lockObj)
-                    {
-                        _scheduled -= 1;
+                        lock (_lockObj)
+                        {
+                            _scheduled -= 1;
+                        }
                     }
                 });
             }
