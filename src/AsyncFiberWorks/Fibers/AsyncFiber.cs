@@ -53,13 +53,20 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         async void Run()
         {
-            while (TryDequeue(out var func))
+            while (true)
             {
-                await _executor.Execute(func).ConfigureAwait(false);
-            }
-            lock (_lockObj)
-            {
-                _running = false;
+                while (TryDequeue(out var func))
+                {
+                    await _executor.Execute(func).ConfigureAwait(false);
+                }
+                lock (_lockObj)
+                {
+                    if (_queue.Count <= 0)
+                    {
+                        _running = false;
+                        return;
+                    }
+                }
             }
         }
 
