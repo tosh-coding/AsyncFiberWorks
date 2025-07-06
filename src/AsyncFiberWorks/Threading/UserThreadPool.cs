@@ -69,7 +69,7 @@ namespace AsyncFiberWorks.Threading
             for (int i = 0; i < _threadList.Length; i++)
             {
                 string threadName = $"{poolName}-{i}";
-                var th = new UserWorkerThread(works[i], threadName, isBackground, priority);
+                var th = new UserWorkerThread(works[i].Run, threadName, isBackground, priority);
                 _threadList[i] = th;
             }
         }
@@ -166,9 +166,9 @@ namespace AsyncFiberWorks.Threading
             else if (ExecutionState == ExecutionStateEnum.Running)
             {
                 ExecutionState = ExecutionStateEnum.Stopped;
-                for (int i = 0; i < _threadList.Length; i++)
+                for (int i = 0; i < _queue.Works.Length; i++)
                 {
-                    _threadList[i].Stop();
+                    _queue.Works[i].Stop();
                 }
             }
             else if (ExecutionState == ExecutionStateEnum.Stopped)

@@ -59,7 +59,7 @@ namespace AsyncFiberWorks.Fibers
             _queue = queue;
             _queueUsedDuringPause = new ThreadPoolAdaptor(new DefaultQueue());
             _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume, _queueUsedDuringPause);
-            _workerThread = new UserWorkerThread(queue, threadName, isBackground, priority);
+            _workerThread = new UserWorkerThread(queue.Run, threadName, isBackground, priority);
             _workerThread.Start();
         }
 
@@ -76,7 +76,7 @@ namespace AsyncFiberWorks.Fibers
                 }
                 _stopped = true;
             }
-            _workerThread.Stop();
+            _queue.Stop();
         }
 
         /// <summary>
