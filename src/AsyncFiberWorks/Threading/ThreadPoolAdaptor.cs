@@ -5,7 +5,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Wrapper that shows IDedicatedConsumerThread as an IThreadPool.
     /// </summary>
-    public class ThreadPoolAdaptor : IThreadWork, IThreadPool
+    public class ThreadPoolAdaptor : IThreadPool
     {
         private readonly IDedicatedConsumerThreadWork _queue;
 
