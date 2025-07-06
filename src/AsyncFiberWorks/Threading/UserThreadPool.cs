@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Another thread pool implementation.
     /// </summary>
-    public class UserThreadPool : IDedicatedThreadPool, IDisposable
+    public class UserThreadPool : IThreadPool, IDisposable
     {
         private static readonly object _staticLockObj = new object();
         private static int _staticPoolCounter = 0;
@@ -155,6 +155,7 @@ namespace AsyncFiberWorks.Threading
 
         /// <summary>
         /// Stop the threads.
+        /// Once stopped, it cannot be restarted.
         /// </summary>
         public void Stop()
         {

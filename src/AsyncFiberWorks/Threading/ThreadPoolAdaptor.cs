@@ -5,7 +5,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Wrapper that shows IDedicatedConsumerThread as an IThreadPool.
     /// </summary>
-    public class ThreadPoolAdaptor : IThreadWork, IDedicatedThreadPool
+    public class ThreadPoolAdaptor : IThreadWork, IThreadPool
     {
         private readonly IDedicatedConsumerThreadWork _queue;
 
@@ -42,13 +42,6 @@ namespace AsyncFiberWorks.Threading
         public void Run()
         {
             _queue.Run();
-        }
-
-        /// <summary>
-        /// No effect. For IThreadPoolController.
-        /// </summary>
-        public void Start()
-        {
         }
 
         /// <summary>
