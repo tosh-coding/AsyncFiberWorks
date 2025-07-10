@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Consumer sharing one queue.
     /// </summary>
-    internal class SharedBlockingCollectionQueueConsumer : IThreadWork
+    internal class SharedBlockingCollectionQueueConsumer
     {
         private readonly object _lock = new object();
         private readonly IExecutor _executor;
@@ -31,7 +31,8 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
-        /// <see cref="IThreadWork.Run"/>
+        /// Start working.
+        /// Does not return from the call until it stops.
         /// </summary>
         public void Run()
         {
@@ -39,7 +40,8 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
-        /// <see cref="IThreadWork.Stop"/>
+        /// Stop working.
+        /// Once stopped, it cannot be restarted.
         /// </summary>
         public void Stop()
         {
