@@ -43,7 +43,7 @@ jobs:
           ls $GITHUB_WORKSPACE/docfx_project/_site
 
       - name: Upload to the temporary place.
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: docfx_project/_site
       - uses: actions/upload-pages-artifact@v1
