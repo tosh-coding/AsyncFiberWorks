@@ -17,11 +17,11 @@ namespace WpfExample
         {
             _channels = winChannels;
             _subscriptions = new Subscriptions();
-            var threadFiber = new ThreadFiber();
+            var fiber = new AnotherFiberDisposable();
             var subscriptionFiber = _subscriptions.BeginSubscription();
-            var subscriptionChannel = _channels.StartChannel.Subscribe(threadFiber, OnStart);
+            var subscriptionChannel = _channels.StartChannel.Subscribe(fiber, OnStart);
             subscriptionFiber.AppendDisposable(subscriptionChannel);
-            _fiber = threadFiber;
+            _fiber = fiber;
         }
 
         private void OnStart(RoutedEventArgs msg)

@@ -35,7 +35,7 @@ namespace AsyncFiberWorksTests.Examples
         [Test]
         public void PubSubWithDedicatedThread()
         {
-            using (var fiber = new ThreadFiber())
+            using (var fiber = new AnotherFiberDisposable())
             using (var subscriptions = new Subscriptions())
             {
                 var channel = new Channel<string>();
@@ -53,7 +53,7 @@ namespace AsyncFiberWorksTests.Examples
         [Test]
         public void PubSubWithDedicatedThreadWithFilter()
         {
-            using (var fiber = new ThreadFiber())
+            using (var fiber = new AnotherFiberDisposable())
             using (var subscriptions = new Subscriptions())
             {
                 var channel = new Channel<int>();
@@ -85,7 +85,7 @@ namespace AsyncFiberWorksTests.Examples
         [Test]
         public void Batching()
         {
-            using (var fiber = new ThreadFiber())
+            using (var fiber = new AnotherFiberDisposable())
             using (var subscriptions = new Subscriptions())
             {
                 var counter = new Channel<int>();
@@ -117,7 +117,7 @@ namespace AsyncFiberWorksTests.Examples
         [Test]
         public void BatchingWithKey()
         {
-            using (var fiber = new ThreadFiber())
+            using (var fiber = new AnotherFiberDisposable())
             using (var subscriptions = new Subscriptions())
             {
                 var counter = new Channel<int>();
@@ -207,9 +207,9 @@ namespace AsyncFiberWorksTests.Examples
         }
 
         [Test]
-        public void ShouldIncreaseThreadFiberSubscriberCountByOne()
+        public void ShouldIncreasedAnotherFiberDisposableSubscriberCountByOne()
         {
-            var fiber = new ThreadFiber();
+            var fiber = new AnotherFiberDisposable();
             var subscriptions = new Subscriptions();
             var channel = new Channel<int>();
 

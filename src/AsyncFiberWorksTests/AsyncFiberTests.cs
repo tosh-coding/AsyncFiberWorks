@@ -23,8 +23,8 @@ namespace AsyncFiberWorksTests
                     Func<IFiber> poolFiber = () => new PoolFiber();
                     yield return new TestCaseData(poolFiber);
 
-                    Func<IFiber> threadFiber = () => new ThreadFiber();
-                    yield return new TestCaseData(threadFiber);
+                    Func<IFiber> anotherFiber = () => new AnotherFiberDisposable();
+                    yield return new TestCaseData(anotherFiber);
 
                     Func<IFiber> asyncFiber = () => new AsyncFiber();
                     yield return new TestCaseData(asyncFiber);
