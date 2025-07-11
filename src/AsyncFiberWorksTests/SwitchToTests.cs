@@ -1,12 +1,11 @@
-﻿using System;
+﻿using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Threading;
+using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
-using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.Threading;
 
 namespace AsyncFiberWorksTests
 {
@@ -73,7 +72,7 @@ namespace AsyncFiberWorksTests
             var userThreadPoolA = UserThreadPool.StartNew();
             var userThreadPoolB = UserThreadPool.StartNew();
 
-            var threadFiber = new ThreadFiber();
+            var consumerThread = ConsumerThread.StartNew();
             var anotherFiber = new AnotherFiberDisposable();
             var dotnetPoolFiber1 = new PoolFiber(defaultThreadPool);
             var dotnetPoolFiber2 = new PoolFiber();
@@ -96,7 +95,7 @@ namespace AsyncFiberWorksTests
                 await mainFiber.SwitchTo();
                 idListOfStub.Add(Thread.CurrentThread.ManagedThreadId);
 
-                await threadFiber.SwitchTo();
+                await consumerThread.SwitchTo();
                 idListOfThread.Add(Thread.CurrentThread.ManagedThreadId);
 
                 await anotherFiber.SwitchTo();

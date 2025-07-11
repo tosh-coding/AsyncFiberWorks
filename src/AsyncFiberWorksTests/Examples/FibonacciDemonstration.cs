@@ -1,9 +1,9 @@
-using System;
-using NUnit.Framework;
 using AsyncFiberWorks.Channels;
-using AsyncFiberWorks.Fibers;
-using System.Threading;
 using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Threading;
+using NUnit.Framework;
+using System;
+using System.Threading;
 
 namespace AsyncFiberWorksTests.Examples
 {
@@ -49,7 +49,7 @@ namespace AsyncFiberWorksTests.Examples
             private readonly IChannel<IntPair> _outboundChannel;
             private readonly int _limit;
 
-            public FibonacciCalculator(ThreadFiber fiber, string name, 
+            public FibonacciCalculator(ConsumerThread fiber, string name, 
                 ISubscriber<IntPair> inboundChannel, 
                 IChannel<IntPair> outboundChannel,
                 int limit,
@@ -108,7 +108,7 @@ namespace AsyncFiberWorksTests.Examples
                 sem.Release(1);
             };
 
-            using (ThreadFiber oddFiber = new ThreadFiber(), evenFiber = new ThreadFiber())
+            using (ConsumerThread oddFiber = ConsumerThread.StartNew(), evenFiber = ConsumerThread.StartNew())
             using (Subscriptions oddSubscriptions = new Subscriptions(), evenSubscriptions = new Subscriptions())
             {
                 var oddCalculator = new FibonacciCalculator(oddFiber, "Odd", oddChannel, evenChannel, limit, onCompleted, oddSubscriptions);

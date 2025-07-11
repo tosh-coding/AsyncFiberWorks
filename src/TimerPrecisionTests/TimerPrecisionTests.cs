@@ -1,6 +1,7 @@
 ﻿using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.FiberSchedulers;
+using AsyncFiberWorks.Threading;
 using AsyncFiberWorks.Windows;
 using AsyncFiberWorks.Windows.Timer;
 using NUnit.Framework;
@@ -120,8 +121,8 @@ namespace TimerPrecisionTests
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
                 var disposable = new Unsubscriber();
-                var threadFiber = new ThreadFiber();
-                threadFiber.Enqueue(() =>
+                var consumerThread = ConsumerThread.StartNew();
+                consumerThread.Enqueue(() =>
                 {
                     var cancellation = new CancellationTokenSource();
                     disposable.Append(cancellation);
@@ -134,7 +135,7 @@ namespace TimerPrecisionTests
                             break;
                         }
                     }
-                    threadFiber.Stop();
+                    consumerThread.Stop();
                 });
                 return disposable;
             });
@@ -291,8 +292,8 @@ namespace TimerPrecisionTests
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
                 var disposable = new Unsubscriber();
-                var threadFiber = new ThreadFiber();
-                threadFiber.Enqueue(() =>
+                var consumerThread = ConsumerThread.StartNew();
+                consumerThread.Enqueue(() =>
                 {
                     var cancellation = new CancellationTokenSource();
                     disposable.Append(cancellation);
@@ -302,7 +303,7 @@ namespace TimerPrecisionTests
                     {
                         if (cancellation.IsCancellationRequested)
                         {
-                            threadFiber.Stop();
+                            consumerThread.Stop();
                             break;
                         }
                         else
@@ -375,8 +376,8 @@ namespace TimerPrecisionTests
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
                 var disposable = new Unsubscriber();
-                var threadFiber = new ThreadFiber();
-                threadFiber.Enqueue(() =>
+                var consumerThread = ConsumerThread.StartNew();
+                consumerThread.Enqueue(() =>
                 {
                     var cancellation = new CancellationTokenSource();
                     disposable.Append(cancellation);
@@ -386,7 +387,7 @@ namespace TimerPrecisionTests
                     {
                         if (cancellation.IsCancellationRequested)
                         {
-                            threadFiber.Stop();
+                            consumerThread.Stop();
                             break;
                         }
                         else

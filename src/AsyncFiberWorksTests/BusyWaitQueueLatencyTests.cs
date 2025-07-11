@@ -1,11 +1,10 @@
-﻿using System;
+﻿using AsyncFiberWorks.Channels;
+using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Threading;
+using NUnit.Framework;
+using System;
 using System.Diagnostics;
 using System.Threading;
-using NUnit.Framework;
-using AsyncFiberWorks.Channels;
-using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.Threading;
 
 namespace AsyncFiberWorksTests
 {
@@ -16,8 +15,8 @@ namespace AsyncFiberWorksTests
         [Explicit]
         public void CompareBusyWaitQueueVsDefaultQueueLatency()
         {
-            Func<ThreadFiber> blocking = () => new ThreadFiber();
-            Func<ThreadFiber> polling = () => new ThreadFiber(new BusyWaitQueue(100000, 30000));
+            Func<ConsumerThread> blocking = () => ConsumerThread.StartNew();
+            Func<ConsumerThread> polling = () => ConsumerThread.StartNew(new BusyWaitQueue(100000, 30000));
 
             for (var i = 0; i < 20; i++)
             {
@@ -27,7 +26,7 @@ namespace AsyncFiberWorksTests
             }
         }
 
-        private static void Execute(Func<ThreadFiber> creator, String name)
+        private static void Execute(Func<ConsumerThread> creator, String name)
         {
             Console.WriteLine(name);
 
@@ -41,14 +40,14 @@ namespace AsyncFiberWorksTests
                 channels[i] = new Channel<Msg>();
             }
 
-            var fibers = new ThreadFiber[channelCount];
+            var consumerList = new ConsumerThread[channelCount];
             var subscriptionsList = new Subscriptions[channelCount];
-            for (var i = 0; i < fibers.Length; i++)
+            for (var i = 0; i < consumerList.Length; i++)
             {
-                fibers[i] = creator();
+                consumerList[i] = creator();
                 subscriptionsList[i] = new Subscriptions();
                 var prior = i - 1;
-                var isLast = i + 1 == fibers.Length;
+                var isLast = i + 1 == consumerList.Length;
                 var target = !isLast ? channels[i] : null;
 
                 if (prior >= 0)
@@ -71,10 +70,10 @@ namespace AsyncFiberWorksTests
                                              }
                                          };
 
-                    var fiber = fibers[i];
+                    var consumer = consumerList[i];
                     var subscriptions = subscriptionsList[i];
                     var subscriptionFiber = subscriptions.BeginSubscription();
-                    var subscriptionChannel = channels[prior].Subscribe(fiber, cb);
+                    var subscriptionChannel = channels[prior].Subscribe(consumer, cb);
                     subscriptionFiber.AppendDisposable(subscriptionChannel);
                 }
             }
@@ -98,7 +97,7 @@ namespace AsyncFiberWorksTests
                 subscriptions.Dispose();
             }
 
-            foreach (var fiber in fibers)
+            foreach (var fiber in consumerList)
             {
                 fiber.Dispose();
             }

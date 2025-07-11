@@ -1,5 +1,5 @@
 ﻿using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Threading;
 using System;
 using System.Threading;
 
@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Windows.Timer
     /// </summary>
     public class IntervalWaitableTimerEx : IIntervalTimer, IDisposable
     {
-        readonly ThreadFiber _thread;
+        readonly ConsumerThread _thread;
         readonly WaitableTimerEx _waitableTimer;
         readonly ManualResetEventSlim _resetEvent = new ManualResetEventSlim();
         WaitHandle[] _waitHandles = null;
@@ -25,7 +25,7 @@ namespace AsyncFiberWorks.Windows.Timer
         /// </summary>
         public IntervalWaitableTimerEx()
         {
-            _thread = new ThreadFiber();
+            _thread = ConsumerThread.StartNew();
             _waitableTimer = new WaitableTimerEx(manualReset: false);
         }
 

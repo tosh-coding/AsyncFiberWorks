@@ -1,10 +1,10 @@
+using AsyncFiberWorks.Channels;
+using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Threading;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
-using AsyncFiberWorks.Channels;
-using AsyncFiberWorks.Fibers;
 using System.Threading;
-using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorksTests.Examples
 {
@@ -226,7 +226,7 @@ namespace AsyncFiberWorksTests.Examples
         public void DoDemonstration()
         {
             // We create a source to generate the quadratics.
-            var sinkFiber = new ThreadFiber("sink");
+            var sinkQueue = ConsumerThread.StartNew(null, "sink");
             var subscriptions = new Subscriptions();
 
             // We create and store a reference to 10 solvers,
@@ -239,10 +239,10 @@ namespace AsyncFiberWorksTests.Examples
 
             for (var i = 0; i < quadraticChannels.Length; i++)
             {
-                var fiber = new ThreadFiber("solver " + (i + 1));
+                var consumer = ConsumerThread.StartNew(null, "solver " + (i + 1));
                 var fiberSubscriptions = new Subscriptions();
                 quadraticChannels[i] = new Channel<Quadratic>();
-                solvers.Add(new QuadraticSolver(fiber, quadraticChannels[i], solvedChannel, fiberSubscriptions));
+                solvers.Add(new QuadraticSolver(consumer, quadraticChannels[i], solvedChannel, fiberSubscriptions));
             }
 
             var sem = new SemaphoreSlim(0);
@@ -254,7 +254,7 @@ namespace AsyncFiberWorksTests.Examples
             var source = new QuadraticSource(quadraticChannels, quadraticChannels.Length, DateTime.Now.Millisecond);
 
             // Finally a sink to output our results.
-            new SolvedQuadraticSink(sinkFiber, solvedChannel, quadraticChannels.Length, onCompleted, subscriptions);
+            new SolvedQuadraticSink(sinkQueue, solvedChannel, quadraticChannels.Length, onCompleted, subscriptions);
 
             // This starts streaming the equations.
             source.PublishQuadratics();
@@ -262,7 +262,7 @@ namespace AsyncFiberWorksTests.Examples
             // We pause here to allow all the problems to be solved.
             sem.Wait();
             subscriptions.Dispose();
-            sinkFiber.Dispose();
+            sinkQueue.Dispose();
 
             Console.WriteLine("Demonstration complete.");
         }

@@ -1,11 +1,10 @@
-﻿using System;
-using System.Threading;
-using NUnit.Framework;
-using AsyncFiberWorks.Channels;
+﻿using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.Threading;
 using AsyncFiberWorks.Executors;
+using AsyncFiberWorks.Threading;
+using NUnit.Framework;
+using System;
+using System.Threading;
 
 namespace AsyncFiberWorksTests
 {
@@ -46,8 +45,8 @@ namespace AsyncFiberWorksTests
       
         private static void RunBoundedQueue()
         {
-            var executor = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
-            using (var fiber = new ThreadFiber(executor))
+            var queue = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
+            using (var consumerThread = ConsumerThread.StartNew(queue))
             using (var subscriptions = new Subscriptions())
             {
                 var channel = new Channel<MsgStruct>();
@@ -61,7 +60,7 @@ namespace AsyncFiberWorksTests
                     }
                 };
                 var subscriptionFiber = subscriptions.BeginSubscription();
-                var subscriptionChannel = channel.Subscribe(fiber, onMsg);
+                var subscriptionChannel = channel.Subscribe(consumerThread, onMsg);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 using (new PerfTimer(max))
                 {
@@ -76,8 +75,8 @@ namespace AsyncFiberWorksTests
 
         private static void RunBusyWaitQueue()
         {
-            var executor = new BusyWaitQueue(100000, 30000, new PerfExecutor(), SimpleExecutor.Instance);
-            using (var fiber = new ThreadFiber(executor))
+            var queue = new BusyWaitQueue(100000, 30000, new PerfExecutor(), SimpleExecutor.Instance);
+            using (var consumerThread = ConsumerThread.StartNew(queue))
             using (var subscriptions = new Subscriptions())
             {
                 var channel = new Channel<MsgStruct>();
@@ -91,7 +90,7 @@ namespace AsyncFiberWorksTests
                                                   }
                                               };
                 var subscriptionFiber = subscriptions.BeginSubscription();
-                var subscriptionChannel = channel.Subscribe(fiber, onMsg);
+                var subscriptionChannel = channel.Subscribe(consumerThread, onMsg);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 using (new PerfTimer(max))
                 {
@@ -107,8 +106,8 @@ namespace AsyncFiberWorksTests
         [Test, Explicit]
         public void PointToPointPerfTestWithInt()
         {
-            var executor = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
-            using (var fiber = new ThreadFiber(executor))
+            var queue = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
+            using (var consumerThread = ConsumerThread.StartNew(queue))
             using (var subscriptions = new Subscriptions())
             {
                 var channel = new Channel<int>();
@@ -122,7 +121,7 @@ namespace AsyncFiberWorksTests
                                             }
                                         };
                 var subscriptionFiber = subscriptions.BeginSubscription();
-                var subscriptionChannel = channel.Subscribe(fiber, onMsg);
+                var subscriptionChannel = channel.Subscribe(consumerThread, onMsg);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 using (new PerfTimer(max))
                 {
@@ -138,8 +137,8 @@ namespace AsyncFiberWorksTests
         [Test, Explicit]
         public void PointToPointPerfTestWithObject()
         {
-            var executor = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 100000, MaxEnqueueWaitTimeInMs = 1000 };
-            using (var fiber = new ThreadFiber(executor))
+            var queue = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 100000, MaxEnqueueWaitTimeInMs = 1000 };
+            using (var consumerThread = ConsumerThread.StartNew(queue))
             using (var subscriptions = new Subscriptions())
             {
                 var channel = new Channel<object>();
@@ -154,7 +153,7 @@ namespace AsyncFiberWorksTests
                                                }
                                            };
                 var subscriptionFiber = subscriptions.BeginSubscription();
-                var subscriptionChannel = channel.Subscribe(fiber, onMsg);
+                var subscriptionChannel = channel.Subscribe(consumerThread, onMsg);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
                 using (new PerfTimer(max))
                 {
