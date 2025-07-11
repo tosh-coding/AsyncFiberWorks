@@ -18,7 +18,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="executionContext">The execution context of the message receive handler.</param>
         /// <param name="receive">Subscriber.</param>
         /// <returns>Unsubscriber.</returns>
-        public IDisposable Subscribe(IFiber executionContext, Action<T> receive)
+        public IDisposable Subscribe(IExecutionContext executionContext, Action<T> receive)
         {
             return this._channel.AddHandler((msg) => executionContext.Enqueue(() => receive(msg)));
         }

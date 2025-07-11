@@ -79,6 +79,10 @@ namespace AsyncFiberWorks.Threading
         {
             lock (_lock)
             {
+                if (!_running)
+                {
+                    return;
+                }
                 _running = false;
                 Monitor.PulseAll(_lock);
             }

@@ -149,7 +149,7 @@ namespace AsyncFiberWorksTests.Examples
         {
             private readonly IChannel<SolvedQuadratic> _solvedChannel;
 
-            public QuadraticSolver(IFiber fiber, ISubscriber<Quadratic> channel, IChannel<SolvedQuadratic> solvedChannel, Subscriptions subscriptions)
+            public QuadraticSolver(IExecutionContext fiber, ISubscriber<Quadratic> channel, IChannel<SolvedQuadratic> solvedChannel, Subscriptions subscriptions)
             {
                 _solvedChannel = solvedChannel;
                 var subscriptionFiber = subscriptions.BeginSubscription();
@@ -198,7 +198,7 @@ namespace AsyncFiberWorksTests.Examples
             private readonly int _numberToOutput;
             private int _solutionsReceived;
 
-            public SolvedQuadraticSink(IFiber fiber, ISubscriber<SolvedQuadratic> solvedChannel, int numberToOutput, Action onComplete, Subscriptions subscriptions)
+            public SolvedQuadraticSink(IExecutionContext fiber, ISubscriber<SolvedQuadratic> solvedChannel, int numberToOutput, Action onComplete, Subscriptions subscriptions)
             {
                 _onComplete = onComplete;
                 _numberToOutput = numberToOutput;
