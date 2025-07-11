@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
 using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Threading
@@ -13,6 +15,7 @@ namespace AsyncFiberWorks.Threading
         private readonly IExecutor _executor;
         private readonly BlockingCollection<Action> _actions;
         private readonly Action _callbackOnStop;
+        private readonly UserWorkerThread _thread;
 
         private bool _running = true;
         private bool _disposed = false;
@@ -22,11 +25,19 @@ namespace AsyncFiberWorks.Threading
         /// </summary>
         /// <param name="actions"></param>
         /// <param name="executor"></param>
+        /// <param name="threadName"></param>
         /// <param name="callbackOnStop"></param>
-        public SharedBlockingCollectionQueueConsumer(BlockingCollection<Action> actions, IExecutor executor, Action callbackOnStop)
+        public SharedBlockingCollectionQueueConsumer(
+            BlockingCollection<Action> actions,
+            Action callbackOnStop,
+            IExecutor executor,
+            string threadName,
+            bool isBackground = true,
+            ThreadPriority priority = ThreadPriority.Normal)
         {
             _actions = actions;
             _executor = executor;
+            _thread = new UserWorkerThread(this.Run, threadName, isBackground, priority);
             _callbackOnStop = callbackOnStop;
         }
 
@@ -34,7 +45,7 @@ namespace AsyncFiberWorks.Threading
         /// Start working.
         /// Does not return from the call until it stops.
         /// </summary>
-        public void Run()
+        private void Run()
         {
             while (ExecuteNextBatch()) { }
         }
@@ -86,6 +97,30 @@ namespace AsyncFiberWorks.Threading
                 }
                 return true;
             }
+        }
+
+        /// <summary>
+        /// Worker thread.
+        /// </summary>
+        public Thread Thread
+        {
+            get { return _thread.Thread; }
+        }
+
+        /// <summary>
+        /// Start the thread.
+        /// </summary>
+        public void Start()
+        {
+            _thread.Start();
+        }
+
+        /// <summary>
+        /// Returns a task waiting for thread termination.
+        /// </summary>
+        public async Task JoinAsync()
+        {
+            await _thread.JoinAsync();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using AsyncFiberWorks.Executors;
+﻿using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Executors;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -19,7 +20,6 @@ namespace AsyncFiberWorks.Threading
         private readonly object _lock = new object();
         private readonly BlockingCollection<Action> _actions = new BlockingCollection<Action>();
         private readonly SharedBlockingCollectionQueueConsumer[] _consumerList;
-        private readonly UserWorkerThread[] _threadList = null;
 
         private long _executionStateLong;
         private int _disposedConsumers;
@@ -59,8 +59,9 @@ namespace AsyncFiberWorks.Threading
         /// <param name="poolName"></param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
+        /// <param name="executor"></param>
         /// <exception cref="ArgumentOutOfRangeException">The numberOfThread must be at least 1.</exception>
-        public UserThreadPool(int numberOfThread = 1, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public UserThreadPool(int numberOfThread = 1, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal, IExecutor executor = null)
         {
             if (numberOfThread < 1)
             {
@@ -71,12 +72,17 @@ namespace AsyncFiberWorks.Threading
                 poolName = "UserThreadPool" + GetNextPoolId();
             }
 
+            if (executor == null)
+            {
+                executor = SimpleExecutor.Instance;
+            }
             _poolName = poolName;
             _disposedConsumers = 0;
             _consumerList = new SharedBlockingCollectionQueueConsumer[numberOfThread];
             for (int i = 0; i < _consumerList.Length; i++)
             {
-                _consumerList[i] = new SharedBlockingCollectionQueueConsumer(_actions, SimpleExecutor.Instance, () =>
+                string threadName = $"{poolName}-{i}";
+                _consumerList[i] = new SharedBlockingCollectionQueueConsumer(_actions, () =>
                 {
                     bool lastConsumer = false;
                     lock (_lock)
@@ -91,26 +97,17 @@ namespace AsyncFiberWorks.Threading
                     {
                         _actions.Dispose();
                     }
-                });
+                }, executor, threadName, isBackground, priority);
             }
             ExecutionState = ExecutionStateEnum.Created;
-
-            var works = _consumerList;
-            _threadList = new UserWorkerThread[works.Length];
-            for (int i = 0; i < _threadList.Length; i++)
-            {
-                string threadName = $"{poolName}-{i}";
-                var th = new UserWorkerThread(works[i].Run, threadName, isBackground, priority);
-                _threadList[i] = th;
-            }
         }
 
         /// <summary>
-        /// The dedicated worker threads.
+        /// Worker threads.
         /// </summary>
         public Thread[] ThreadList
         {
-            get { return _threadList.Select(x => x.Thread).ToArray(); }
+            get { return _consumerList.Select(x => x.Thread).ToArray(); }
         }
 
         /// <summary>
@@ -165,9 +162,9 @@ namespace AsyncFiberWorks.Threading
             }
 
             ExecutionState = ExecutionStateEnum.Running;
-            for (int i = 0; i < _threadList.Length; i++)
+            for (int i = 0; i < _consumerList.Length; i++)
             {
-                _threadList[i].Start();
+                _consumerList[i].Start();
             }
         }
 
@@ -205,7 +202,7 @@ namespace AsyncFiberWorks.Threading
         ///</summary>
         public Task JoinAsync()
         {
-            return Task.WhenAll(_threadList.Select(x => x.JoinAsync()).ToArray());
+            return Task.WhenAll(_consumerList.Select(x => x.JoinAsync()).ToArray());
         }
 
         /// <summary>
