@@ -15,7 +15,8 @@ namespace AsyncFiberWorks.Threading
         private readonly IExecutor _executor;
         private readonly BlockingCollection<Action> _actions;
         private readonly Action _callbackOnStop;
-        private readonly UserWorkerThread _thread;
+        private readonly Thread _thread;
+        private readonly TaskCompletionSource<bool> _taskCompletionSource;
 
         private bool _running = true;
         private bool _disposed = false;
@@ -24,9 +25,11 @@ namespace AsyncFiberWorks.Threading
         /// Create a consumer with custom executor
         /// </summary>
         /// <param name="actions"></param>
+        /// <param name="callbackOnStop"></param>
         /// <param name="executor"></param>
         /// <param name="threadName"></param>
-        /// <param name="callbackOnStop"></param>
+        /// <param name="isBackground"></param>
+        /// <param name="priority"></param>
         public SharedBlockingCollectionQueueConsumer(
             BlockingCollection<Action> actions,
             Action callbackOnStop,
@@ -35,10 +38,18 @@ namespace AsyncFiberWorks.Threading
             bool isBackground = true,
             ThreadPriority priority = ThreadPriority.Normal)
         {
+            if (threadName == null)
+            {
+                throw new ArgumentNullException(nameof(threadName));
+            }
             _actions = actions;
             _executor = executor;
-            _thread = new UserWorkerThread(this.Run, threadName, isBackground, priority);
             _callbackOnStop = callbackOnStop;
+            _thread = new Thread(() => this.Run());
+            _thread.Name = threadName;
+            _thread.IsBackground = isBackground;
+            _thread.Priority = priority;
+            _taskCompletionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
         /// <summary>
@@ -47,7 +58,14 @@ namespace AsyncFiberWorks.Threading
         /// </summary>
         private void Run()
         {
-            while (ExecuteNextBatch()) { }
+            try
+            {
+                while (ExecuteNextBatch()) { }
+            }
+            finally
+            {
+                _taskCompletionSource.SetResult(true);
+            }
         }
 
         /// <summary>
@@ -104,7 +122,7 @@ namespace AsyncFiberWorks.Threading
         /// </summary>
         public Thread Thread
         {
-            get { return _thread.Thread; }
+            get { return _thread; }
         }
 
         /// <summary>
@@ -118,9 +136,9 @@ namespace AsyncFiberWorks.Threading
         /// <summary>
         /// Returns a task waiting for thread termination.
         /// </summary>
-        public async Task JoinAsync()
+        public Task JoinAsync()
         {
-            await _thread.JoinAsync();
+            return _taskCompletionSource.Task;
         }
     }
 }
