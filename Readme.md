@@ -54,7 +54,7 @@ namespace Sample
                 // Switch the context to the main thread.
                 await mainThread.SwitchTo();
 
-                zounter += 5;
+                counter += 5;
             });
 
             await fiber.SwitchTo();
