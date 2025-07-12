@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace AsyncFiberWorksTests
 {
     [TestFixture]
-    public class AsyncFiberTests
+    public class FiberAsyncContextTests
     {
         public class MyDataClass
         {

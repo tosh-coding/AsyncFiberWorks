@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 namespace AsyncFiberWorks.Core
 {
     /// <summary>
-    /// Extensions to AsyncFiber.
+    /// Extension of fiber asynchronous context.
     /// </summary>
-    public static class AsyncFiberExtentions
+    public static class FiberAsyncContextExtensions
     {
         /// <summary>
         /// Enqueue a task.
