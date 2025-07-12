@@ -64,15 +64,6 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
-        /// Execute actions until stopped.
-        /// </summary>
-        public void Run()
-        {
-            _running = true;
-            while (ExecuteNextBatch()) { }
-        }
-
-        /// <summary>
         /// Stop consuming actions.
         /// </summary>
         public void Stop()
@@ -112,9 +103,9 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
-        /// Remove all actions and execute.
+        /// Perform pending actions.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Is it still in operation?</returns>
         public bool ExecuteNextBatch()
         {
             var toExecute = DequeueAll();

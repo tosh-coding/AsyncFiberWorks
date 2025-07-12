@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Threading
         private readonly object _lockObj = new object();
         private readonly BlockingCollection<Action> _queue = new BlockingCollection<Action>();
 
-        private bool _isStarted = false;
+        private bool _requestedToStop = false;
         private bool _canRunning = true;
         private bool _isDisposed = false;
 
@@ -24,56 +24,31 @@ namespace AsyncFiberWorks.Threading
             _queue.Add(action);
         }
 
-        private bool CanRunning
-        {
-            get
-            {
-                lock (_lockObj)
-                {
-                    return _canRunning;
-                }
-            }
-        }
-
         /// <summary>
-        /// Start consumption. Continue until stopped.
+        /// Perform pending actions.
         /// </summary>
-        public void Run()
+        /// <returns>Still in operation. False if already stopped.</returns>
+        public bool ExecuteNextBatch()
         {
-            lock (_lockObj)
+            if (_isDisposed)
             {
-                if (_isDisposed)
-                {
-                    return;
-                }
-                if (_isStarted)
-                {
-                    return;
-                }
-                _isStarted = true;
+                return false;
             }
-            try
+
+            Action action = _queue.Take();
+            action();
+            while (_queue.TryTake(out action))
             {
-                Action action;
-                while (CanRunning)
-                {
-                    action = _queue.Take();
-                    action();
-                    while (_queue.TryTake(out action))
-                    {
-                        action();
-                    }
-                }
+                action();
             }
-            finally
+
+            if (!_canRunning)
             {
-                lock (_lockObj)
-                {
-                    _isDisposed = true;
-                    _canRunning = false;
-                    _queue.Dispose();
-                }
+                _isDisposed = true;
+                _queue.Dispose();
+                return false;
             }
+            return true;
         }
 
         /// <summary>
@@ -83,22 +58,16 @@ namespace AsyncFiberWorks.Threading
         {
             lock (_lockObj)
             {
-                if (_isDisposed)
+                if (_requestedToStop)
                 {
                     return;
                 }
-                _isDisposed = true;
-
-                _canRunning = false;
-                if (!_isStarted)
-                {
-                    _queue.Dispose();
-                }
-                else
-                {
-                    Enqueue(() => { });
-                }
+                _requestedToStop = true;
             }
+
+            Enqueue(() => {
+                _canRunning = false;
+            });
         }
     }
 }

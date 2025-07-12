@@ -8,10 +8,10 @@ namespace AsyncFiberWorks.Threading
     public interface IDedicatedConsumerThreadWork : IExecutionContext
     {
         /// <summary>
-        /// Start working.
-        /// Does not return from the call until it stops.
+        /// Perform pending actions.
         /// </summary>
-        void Run();
+        /// <returns>Still in operation. False if already stopped.</returns>
+        bool ExecuteNextBatch();
 
         /// <summary>
         /// Stop working.

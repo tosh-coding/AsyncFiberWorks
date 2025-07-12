@@ -41,7 +41,7 @@ namespace AsyncFiberWorks.Threading
         /// </summary>
         public void Run()
         {
-            _queue.Run();
+            while (_queue.ExecuteNextBatch()) { }
         }
 
         /// <summary>

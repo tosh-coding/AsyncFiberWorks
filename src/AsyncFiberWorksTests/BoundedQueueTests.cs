@@ -55,7 +55,10 @@ namespace AsyncFiberWorksTests
                 var queue = new DefaultQueue();
                 queue.Enqueue(action1);
 
-                var run = new Thread(queue.Run);
+                var run = new Thread(() =>
+                {
+                    while (queue.ExecuteNextBatch()) { }
+                });
 
                 run.Start();
                 Thread.Sleep(100);

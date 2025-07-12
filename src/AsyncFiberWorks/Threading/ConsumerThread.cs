@@ -55,7 +55,7 @@ namespace AsyncFiberWorks.Threading
             }
 
             _queue = queue;
-            _thread = new Thread(() => RunThread(queue.Run));
+            _thread = new Thread(this.RunThread);
             _thread.Name = threadName;
             _thread.IsBackground = isBackground;
             _thread.Priority = priority;
@@ -81,11 +81,11 @@ namespace AsyncFiberWorks.Threading
             return $"UserWorkerThread-{count}";
         }
 
-        private void RunThread(Action work)
+        private void RunThread()
         {
             try
             {
-                work.Invoke();
+                while (_queue.ExecuteNextBatch()) { }
             }
             finally
             {
