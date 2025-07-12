@@ -50,7 +50,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void SwitchToFiber()
         {
-            var mainThread = new ThreadPoolAdaptor();
+            var mainThread = new ThreadPoolAdapter();
             var t = SwitchToFiberAsync(mainThread);
             try
             {
@@ -62,7 +62,7 @@ namespace AsyncFiberWorksTests
             t.Wait();
         }
 
-        public async Task SwitchToFiberAsync(ThreadPoolAdaptor mainThread)
+        public async Task SwitchToFiberAsync(ThreadPoolAdapter mainThread)
         {
             await Task.Yield();
 

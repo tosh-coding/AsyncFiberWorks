@@ -17,7 +17,7 @@ namespace Sample
         static void Main(string[] args)
         {
             // Create an adapter.
-            var mainThread = new ThreadPoolAdaptor();
+            var mainThread = new ThreadPoolAdapter();
 
             // Starts an asynchronous operation. Pass the adapter.
             RunAsync(mainThread);
@@ -26,7 +26,7 @@ namespace Sample
             mainThread.Run();
         }
 
-        static async void RunAsync(ThreadPoolAdaptor mainThread)
+        static async void RunAsync(ThreadPoolAdapter mainThread)
         {
             // Switch the context to a .NET ThreadPool worker thread.
             await DefaultThreadPool.Instance.SwitchTo();
@@ -157,7 +157,7 @@ while (...)
 ### Context generation method ###
 
 - Create `PoolFiber`. Most basic method.
-- Create `ThreadPoolAdaptor`. Allows the main thread to be used like a thread pool.
+- Create `ThreadPoolAdapter`. Allows the main thread to be used like a thread pool.
 - Create `UserThreadPool`. Suitable for handling blocking processes.
 - Create `ActionDriver` and use it with a repeating timer, which works well with tick-based game loop implementations.
 - Create `AsyncMessageDriver<T>` and use it for event distribution.
@@ -182,7 +182,7 @@ Fiber is a mechanism for sequential processing.  Actions added to a fiber are ex
 ## ThreadPools ##
  * _[DefaultThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/DefaultThreadPool.cs)_ - Default implementation that uses the .NET thread pool.
  * _[UserThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/UserThreadPool.cs)_ - Another thread pool implementation, using the Thread class to create a thread pool.  If you need to use blocking functions, you should use the user thread pool. This does not disturb the .NET ThreadPool.
- * _[ThreadPoolAdaptor](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/ThreadPoolAdaptor.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
+ * _[ThreadPoolAdapter](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/ThreadPoolAdapter.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
 
 ## Drivers ##
 Drivers call their own Subscriber handlers. There are two types: timing notification and message delivery.  They are processed in series.

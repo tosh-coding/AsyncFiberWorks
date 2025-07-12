@@ -34,7 +34,7 @@ namespace AsyncFiberWorksTests
             var disposable1 = driver.Subscribe(action1);
             var disposable2 = driver.Subscribe(action2);
 
-            var loop = new ThreadPoolAdaptor();
+            var loop = new ThreadPoolAdapter();
             var fiber = new PoolFiber(loop);
             fiber.Enqueue((e) => driver.InvokeAsync(e));
             fiber.Enqueue(() => loop.Stop());
@@ -120,7 +120,7 @@ namespace AsyncFiberWorksTests
             var disposable2 = driver.Subscribe(action);
             unsubscriber.AppendDisposable(disposable2);
 
-            var loop = new ThreadPoolAdaptor();
+            var loop = new ThreadPoolAdapter();
             var fiber = new PoolFiber(loop);
             fiber.Enqueue((e) => driver.InvokeAsync(e));
             fiber.Enqueue(() => loop.Stop());

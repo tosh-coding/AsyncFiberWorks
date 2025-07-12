@@ -18,7 +18,7 @@ namespace AsyncFiberWorks.Fibers
         private readonly ConcurrentQueue<Action> _pending = new ConcurrentQueue<Action>();
         private readonly IExecutor _executor;
         private readonly FiberExecutionEventArgs _eventArgs;
-        private readonly ThreadPoolAdaptor _queueUsedDuringPause;
+        private readonly ThreadPoolAdapter _queueUsedDuringPause;
 
         private bool _enabledPause;
         private int _paused = 0;
@@ -38,7 +38,7 @@ namespace AsyncFiberWorks.Fibers
         public StubFiber(IExecutor executor)
         {
             _executor = executor;
-            _queueUsedDuringPause = new ThreadPoolAdaptor(new DefaultQueue());
+            _queueUsedDuringPause = new ThreadPoolAdapter(new DefaultQueue());
             _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume, _queueUsedDuringPause);
         }
 
