@@ -147,7 +147,7 @@ namespace AsyncFiberWorksTests
 
         [Test]
         [TestCaseSource(typeof(MyDataClass), nameof(MyDataClass.AllFibers))]
-        public async Task EnqueueAsyncTest(Func<IFiber> fiberCreator)
+        public async Task EnqueueTaskAsyncTest(Func<IFiber> fiberCreator)
         {
             var fiber = fiberCreator();
             int counter = 0;
@@ -168,6 +168,25 @@ namespace AsyncFiberWorksTests
             Assert.GreaterOrEqual(sw.Elapsed, TimeSpan.FromMilliseconds(300));
             await Task.Delay(10).ConfigureAwait(false);
             Assert.AreEqual(2, counter);
+        }
+
+        [Test]
+        [TestCaseSource(typeof(MyDataClass), nameof(MyDataClass.AllFibers))]
+        public async Task EnqueueAsyncTest(Func<IFiber> fiberCreator)
+        {
+            var fiber = fiberCreator();
+            int counter = 0;
+            await fiber.EnqueueAsync(() =>
+            {
+                Thread.Sleep(300);
+                counter += 1;
+            });
+            fiber.Enqueue(() =>
+            {
+                counter *= 100;
+            });
+            await fiber.EnqueueAsync(() => { });
+            Assert.AreEqual(100, counter);
         }
 
         [Test]

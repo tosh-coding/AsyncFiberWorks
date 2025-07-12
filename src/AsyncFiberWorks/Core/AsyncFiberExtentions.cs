@@ -42,5 +42,30 @@ namespace AsyncFiberWorks.Core
             }));
             await tcs.Task.ConfigureAwait(false);
         }
+
+        /// <summary>
+        /// Enqueue an action. Then returns a task to wait for the completion of the action.
+        /// </summary>
+        /// <param name="fiber">A fiber.</param>
+        /// <param name="action">An action.</param>
+        /// <returns>A task that waits until a given action is finished.</returns>
+        public static async Task EnqueueAsync(this IExecutionContext fiber, Action action)
+        {
+            var tcs = new TaskCompletionSource<byte>(TaskCreationOptions.RunContinuationsAsynchronously);
+            fiber.Enqueue(() =>
+            {
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                    return;
+                }
+                tcs.SetResult(0);
+            });
+            await tcs.Task.ConfigureAwait(false);
+        }
     }
 }
