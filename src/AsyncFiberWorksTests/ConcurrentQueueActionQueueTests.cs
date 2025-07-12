@@ -6,16 +6,18 @@ using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.FiberSchedulers;
+using AsyncFiberWorks.Threading;
 
 namespace AsyncFiberWorksTests
 {
     [TestFixture]
-    public class StubFiberTests
+    public class ConcurrentQueueActionQueueTests
     {
         [Test]
-        public void StubFiberPendingTasksShouldAllowEnqueueOfCommandsWhenExecutingAllPending()
+        public void PendingTasksShouldAllowEnqueueOfCommandsWhenExecutingAllPending()
         {
-            var sut = new StubFiber();
+            var queue = new ConcurrentQueueActionQueue();
+            var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
 
             var fired1 = new object();
             var fired2 = new object();
@@ -24,17 +26,17 @@ namespace AsyncFiberWorksTests
             var actionMarkers = new List<object>();
 
             Action command1 = delegate
-                                  {
-                                      actionMarkers.Add(fired1);
-                                      sut.Enqueue(() => actionMarkers.Add(fired3));
-                                  };
+            {
+                actionMarkers.Add(fired1);
+                fiber.Enqueue(() => actionMarkers.Add(fired3));
+            };
 
             Action command2 = () => actionMarkers.Add(fired2);
 
-            sut.Enqueue(command1);
-            sut.Enqueue(command2);
+            fiber.Enqueue(command1);
+            fiber.Enqueue(command2);
 
-            sut.ExecuteAll();
+            queue.ExecuteAll();
             Assert.AreEqual(new[] { fired1, fired2, fired3 }, actionMarkers.ToArray());
         }
 
@@ -42,17 +44,18 @@ namespace AsyncFiberWorksTests
         public void ScheduledTasksShouldBeExecutedOnceScheduleIntervalShouldBeExecutedEveryTimeExecuteScheduleAllIsCalled()
         {
             var subscriptions = new Subscriptions();
-            var sut = new StubFiber();
+            var queue = new ConcurrentQueueActionQueue();
+            var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
             var timer1 = new OneshotThreadingTimer();
             var timer2 = new IntervalThreadingTimer();
 
             var scheduleFired = 0;
             var scheduleOnIntervalFired = 0;
 
-            timer1.Schedule(sut , () => scheduleFired++, 100);
+            timer1.Schedule(fiber , () => scheduleFired++, 100);
             var subscriptionFiber = subscriptions.BeginSubscription();
             var cancellation = new CancellationTokenSource();
-            timer2.ScheduleOnInterval(sut, () => scheduleOnIntervalFired++, 100, 500, cancellation.Token);
+            timer2.ScheduleOnInterval(fiber, () => scheduleOnIntervalFired++, 100, 500, cancellation.Token);
             subscriptionFiber.AppendDisposable(cancellation);
 
             // add to the pending list.
@@ -60,13 +63,13 @@ namespace AsyncFiberWorksTests
 
             // Both firstInMs have passed.
             Thread.Sleep(300);
-            sut.ExecuteOnlyPendingNow();
+            queue.ExecuteOnlyPendingNow();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(1, scheduleOnIntervalFired);
 
             // The regularInMs has passed.
             Thread.Sleep(400);
-            sut.ExecuteOnlyPendingNow();
+            queue.ExecuteOnlyPendingNow();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(2, scheduleOnIntervalFired);
 
@@ -76,7 +79,7 @@ namespace AsyncFiberWorksTests
 
             // The regularInMs has passed after dispose.
             Thread.Sleep(500);
-            sut.ExecuteOnlyPendingNow();
+            queue.ExecuteOnlyPendingNow();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(2, scheduleOnIntervalFired);
         }
@@ -86,11 +89,12 @@ namespace AsyncFiberWorksTests
         {
             var msgs = new List<int>();
 
-            var sut = new StubFiber();
+            var queue = new ConcurrentQueueActionQueue();
+            var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
             var channel = new Channel<int>();
             const int count = 4;
 
-            var unsubscriber = channel.Subscribe(sut, delegate (int x)
+            var unsubscriber = channel.Subscribe(fiber, delegate (int x)
             {
                 if (x == count)
                 {
@@ -102,7 +106,7 @@ namespace AsyncFiberWorksTests
             });
 
             channel.Publish(0);
-            sut.ExecuteAll();
+            queue.ExecuteAll();
 
             Assert.AreEqual(count, msgs.Count);
             for (var i = 0; i < msgs.Count; i++)
@@ -115,18 +119,19 @@ namespace AsyncFiberWorksTests
         public void DisposeShouldClearAllLists()
         {
             var subscriptions = new Subscriptions();
-            var sut = new StubFiber();
+            var queue = new ConcurrentQueueActionQueue();
+            var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
             var channel = new Channel<int>();
             var timer = new OneshotThreadingTimer();
 
             var subscriptionFiber1 = subscriptions.BeginSubscription();
             var cancellation = new CancellationTokenSource();
-            timer.Schedule(sut, () => { }, 1000, cancellation.Token);
+            timer.Schedule(fiber, () => { }, 1000, cancellation.Token);
             subscriptionFiber1.AppendDisposable(cancellation);
-            sut.ExecuteOnlyPendingNow();
+            queue.ExecuteOnlyPendingNow();
             
             var subscriptionFiber2 = subscriptions.BeginSubscription();
-            var subscriptionChannel = channel.Subscribe(sut, x => { });
+            var subscriptionChannel = channel.Subscribe(fiber, x => { });
             subscriptionFiber2.AppendDisposable(subscriptionChannel);
             channel.Publish(2);
 

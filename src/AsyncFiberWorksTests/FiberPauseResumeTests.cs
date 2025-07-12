@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AsyncFiberWorks.FiberSchedulers;
 using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Threading;
 
 namespace AsyncFiberWorksTests
 {
@@ -45,12 +46,13 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public void PauseAndResumeStubFiber()
+        public void PauseAndResumeConcurrentQueue()
         {
-            var fiber = new StubFiber();
+            var queue = new ConcurrentQueueActionQueue();
+            var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
             int counter = 0;
             fiber.Enqueue(() => counter += 1);
-            fiber.ExecuteAll();
+            queue.ExecuteNextBatch();
             Assert.AreEqual(1, counter);
 
             var tcs = new TaskCompletionSource<Action>();
@@ -67,7 +69,7 @@ namespace AsyncFiberWorksTests
                 {
                     counter += 1;
                 });
-                fiber.ExecuteAll();
+                queue.ExecuteNextBatch();
                 Assert.AreEqual(1, counter);
             }
 
@@ -75,9 +77,9 @@ namespace AsyncFiberWorksTests
             tcs.SetResult(() => counter = 5);
             Thread.Sleep(10);
 
-            fiber.ExecuteAll();
+            queue.ExecuteNextBatch();
             Thread.Sleep(10);
-            fiber.ExecuteAll();
+            queue.ExecuteNextBatch();
             Assert.AreEqual(6, counter);
         }
 

@@ -3,7 +3,7 @@
 namespace AsyncFiberWorks.Threading
 {
     /// <summary>
-    /// Wrapper that shows IDedicatedConsumerThread as an IThreadPool.
+    /// Wrapper that shows IDedicatedConsumerThreadWork as an IThreadPool.
     /// </summary>
     public class ThreadPoolAdapter : IThreadPool
     {
@@ -19,7 +19,7 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
-        /// Create an IThreadPool wrapper using some IDedicatedConsumerThread.
+        /// Create an IThreadPool wrapper using some queue.
         /// </summary>
         public ThreadPoolAdapter()
             : this(new BlockingCollectionQueue())
@@ -42,6 +42,15 @@ namespace AsyncFiberWorks.Threading
         public void Run()
         {
             while (_queue.ExecuteNextBatch()) { }
+        }
+
+        /// <summary>
+        /// Perform pending actions.
+        /// </summary>
+        /// <returns>Still in operation. False if already stopped.</returns>
+        public bool ExecuteNextBatch()
+        {
+            return _queue.ExecuteNextBatch();
         }
 
         /// <summary>

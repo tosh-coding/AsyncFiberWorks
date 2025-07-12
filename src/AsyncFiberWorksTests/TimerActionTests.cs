@@ -1,6 +1,7 @@
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.FiberSchedulers;
+using AsyncFiberWorks.Threading;
 using AsyncFiberWorks.Windows.Timer;
 using NUnit.Framework;
 using System;
@@ -17,15 +18,16 @@ namespace AsyncFiberWorksTests
         public void CallbackFromTimer(Func<IOneshotTimer> timerCreator)
         {
             var timer = timerCreator();
-            var stubFiber = new StubFiber();
+            var queue = new ConcurrentQueueActionQueue();
+            var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
             long counter = 0;
             Action action = () => { counter++; };
-            timer.Schedule(stubFiber, action, 2);
+            timer.Schedule(fiber, action, 2);
 
             Thread.Sleep(20);
-            stubFiber.ExecuteOnlyPendingNow();
+            queue.ExecuteOnlyPendingNow();
             Thread.Sleep(140);
-            stubFiber.ExecuteOnlyPendingNow();
+            queue.ExecuteOnlyPendingNow();
             Assert.AreEqual(1, counter);
             timer.Dispose();
         }
@@ -65,15 +67,16 @@ namespace AsyncFiberWorksTests
         public void CallbackFromTimerWithCancel(Func<IOneshotTimer> timerCreator)
         {
             var timer = timerCreator();
-            var stubFiber = new StubFiber();
+            var queue = new ConcurrentQueueActionQueue();
+            var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
             var cancellation = new CancellationTokenSource();
-            timer.Schedule(stubFiber, actionOnTimer, 2, cancellation.Token);
+            timer.Schedule(fiber, actionOnTimer, 2, cancellation.Token);
 
             cancellation.Cancel();
             Thread.Sleep(20);
-            stubFiber.ExecuteOnlyPendingNow();
+            queue.ExecuteOnlyPendingNow();
             Assert.AreEqual(0, counterOnTimer);
             timer.Dispose();
         }

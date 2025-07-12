@@ -229,10 +229,11 @@ namespace AsyncFiberWorksTests.Examples
         }
 
         [Test]
-        public void ShouldIncreaseStubFiberSubscriberCountByOne()
+        public void ShouldIncreaseConcurrentQueueActionQueueSubscriberCountByOne()
         {
             var subscriptions = new Subscriptions();
-            var fiber = new StubFiber();
+            var queue = new ConcurrentQueueActionQueue();
+            var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, subscriptions.NumSubscriptions);
@@ -253,7 +254,8 @@ namespace AsyncFiberWorksTests.Examples
         public void UnsubscriptionShouldRemoveSubscriber()
         {
             var subscriptions = new Subscriptions();
-            var fiber = new PoolFiber();
+            var queue = new ConcurrentQueueActionQueue();
+            var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
             var channel = new Channel<int>();
 
             Assert.AreEqual(0, subscriptions.NumSubscriptions);
