@@ -1,16 +1,17 @@
 ﻿using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Executors;
+using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.Threading;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.Fibers
+namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
-    /// Fiber implementation backed by asynchronous control flow.
+    /// Task queue loop implementation backed by asynchronous control flow.
     /// </summary>
-    public class AsyncFiber : IFiber
+    internal class AsyncTaskQueueLoop
     {
         readonly object _lockObj = new object();
         readonly Queue<Func<Task>> _queue = new Queue<Func<Task>>();
@@ -21,7 +22,7 @@ namespace AsyncFiberWorks.Fibers
         /// Create a fiber.
         /// </summary>
         /// <param name="executor"></param>
-        public AsyncFiber(IAsyncExecutor executor)
+        public AsyncTaskQueueLoop(IAsyncExecutor executor)
         {
             _executor = executor;
         }
@@ -29,7 +30,7 @@ namespace AsyncFiberWorks.Fibers
         /// <summary>
         /// Create a fiber.
         /// </summary>
-        public AsyncFiber()
+        public AsyncTaskQueueLoop()
             : this(AsyncSimpleExecutor.Instance)
         {
         }
@@ -103,49 +104,6 @@ namespace AsyncFiberWorks.Fibers
             {
                 action();
                 return Task.CompletedTask;
-            });
-        }
-
-        /// <summary>
-        /// Enqueue a single action. It is executed sequentially.
-        /// </summary>
-        /// <param name="action">Action to be executed.</param>
-        public void Enqueue(Action<FiberExecutionEventArgs> action)
-        {
-            PrivateEnqueue(async () =>
-            {
-                bool isPaused = false;
-                var tcs = new TaskCompletionSource<int>();
-                var eventArgs = new FiberExecutionEventArgs(
-                    () =>
-                    {
-                        isPaused = true;
-                    },
-                    () =>
-                    {
-                        tcs.SetResult(0);
-                    },
-                    DefaultThreadPool.Instance);
-                action(eventArgs);
-                if (isPaused)
-                {
-                    await tcs.Task.ConfigureAwait(false);
-                    await Task.Yield();
-                }
-            });
-        }
-
-        /// <summary>
-        /// Enqueue a single action. It is executed sequentially.
-        /// </summary>
-        /// <param name="threadPool">The execution context for the specified action.</param>
-        /// <param name="action">Action to be executed.</param>
-        public void Enqueue(IThreadPool threadPool, Action action)
-        {
-            PrivateEnqueue(async () =>
-            {
-                await threadPool.SwitchTo();
-                action();
             });
         }
 

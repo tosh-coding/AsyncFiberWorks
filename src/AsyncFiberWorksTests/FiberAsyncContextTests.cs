@@ -25,9 +25,6 @@ namespace AsyncFiberWorksTests
 
                     Func<IFiber> anotherFiber = () => new AnotherFiberDisposable();
                     yield return new TestCaseData(anotherFiber);
-
-                    Func<IFiber> asyncFiber = () => new AsyncFiber();
-                    yield return new TestCaseData(asyncFiber);
                 }
             }
         }
@@ -187,21 +184,6 @@ namespace AsyncFiberWorksTests
             });
             await fiber.EnqueueAsync(() => { });
             Assert.AreEqual(100, counter);
-        }
-
-        [Test]
-        public async Task AsyncFiberEnqueueWithExecutionContext()
-        {
-            var fiber = new AsyncFiber();
-            var threadPool = new UserThreadPool(1);
-            threadPool.Start();
-            var tcsThreadPool = new TaskCompletionSource<int>();
-            fiber.Enqueue(threadPool, () =>
-            {
-                tcsThreadPool.SetResult(System.Threading.Thread.CurrentThread.ManagedThreadId);
-            });
-            await tcsThreadPool.Task;
-            Assert.AreEqual(threadPool.ThreadList[0].ManagedThreadId, tcsThreadPool.Task.Result);
         }
     }
 }

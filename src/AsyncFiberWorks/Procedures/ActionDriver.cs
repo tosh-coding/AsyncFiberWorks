@@ -1,5 +1,4 @@
 using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Fibers;
 using System;
 using System.Collections.Generic;
 
@@ -12,7 +11,7 @@ namespace AsyncFiberWorks.Procedures
     {
         private readonly object _lock = new object();
         private readonly LinkedList<Action<FiberExecutionEventArgs>> _actions = new LinkedList<Action<FiberExecutionEventArgs>>();
-        private readonly AsyncFiber _fiber = new AsyncFiber();
+        private readonly AsyncTaskQueueLoop _fiber = new AsyncTaskQueueLoop();
 
         /// <summary>
         /// Create an action driver.
