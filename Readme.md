@@ -3,99 +3,6 @@ https://github.com/tosh-coding/AsyncFiberWorks
 # AsyncFiberWorks #
 This is a fiber-based C# threading library. The goal is to make it easy to combine fiber and asynchronous methods.
 
-The main thread can be handled via fiber.
-
-```csharp
-using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.Threading;
-
-namespace Sample
-{
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            // Create an adapter.
-            var mainThread = new ThreadPoolAdapter();
-
-            // Starts an asynchronous operation. Pass the adapter.
-            RunAsync(mainThread);
-
-            // Run the adapter on the main thread. It does not return until Stop is called.
-            mainThread.Run();
-        }
-
-        static async void RunAsync(ThreadPoolAdapter mainThread)
-        {
-            // Switch the context to a .NET ThreadPool worker thread.
-            await DefaultThreadPool.Instance.SwitchTo();
-
-            // Create a pool fiber backed the main thread.
-            var fiber = new PoolFiber(mainThread);
-
-            // Enqueue actions to the main thread via fiber.
-            int counter = 0;
-            fiber.Enqueue(() => counter += 1);
-            fiber.Enqueue(() => counter += 2);
-
-            // Wait for queued actions to complete.
-            // Then switch the context to the fiber.
-            await fiber.SwitchTo();
-            counter += 3;
-            counter += 4;
-
-            // When an async lambda expression is enqueued,
-            // the fiber waits until it is completed.
-            fiber.EnqueueTask(async () =>
-            {
-                await Task.Delay(1000);
-
-                // Switch the context to the main thread.
-                await mainThread.SwitchTo();
-
-                counter += 5;
-            });
-
-            await fiber.SwitchTo();
-
-            // Stop the Run method on the main thread.
-            mainThread.Stop();
-        }
-    }
-}
-```
-
-A user-created thread pool is also available. This is useful to avoid the execution of blocking functions on .NET ThreadPool.
-
-```csharp
-async Task SampleAsync()
-{
-    // Create a user thread pool and its fiber.
-    var userThreadPool = UserThreadPool.StartNew(2);
-    var fiber = new PoolFiber(userThreadPool);
-
-    // Enqueue actions to a user thread pool via fiber.
-    int counter = 0;
-    fiber.Enqueue(() => counter += 1);
-    fiber.Enqueue(() => counter += 2);
-
-    // Wait for queued actions to complete.
-    // Then switch the context to the fiber on a user thread.
-    await fiber.SwitchTo();
-
-    // It calls a blocking function, but it doesn't affect .NET ThreadPool because it's on a user thread.
-    var result = SomeBlockingFunction();
-
-    // Switch the context to a .NET ThreadPool worker thread.
-    await DefaultThreadPool.Instance.SwitchTo();
-
-    Console.WriteLine($"result={result}");
-
-    userThreadPool.Dispose();
-}
-```
-
 # Features #
   * Fiber with high affinity for asynchronous methods.
   * The main thread is available from Fibers.
@@ -108,68 +15,135 @@ Forked from [Retlang](https://code.google.com/archive/p/retlang/). I'm refactori
 
 This is still in the process of major design changes.
 
-# API Documentation #
-See https://tosh-coding.github.io/AsyncFiberWorks/api/
+# Use case #
 
-[Unit tests](https://github.com/tosh-coding/AsyncFiberWorks/tree/main/src/AsyncFiberWorksTests) can also be used as a code sample.
+## Another Task.Run ##
 
-The following is a brief description of some typical functions.
+"Task.Run" uses a shared thread pool in the background. If I/O wait processing is performed synchronously there, other tasks will get stuck, causing performance degradation.  This can be avoided by using a separate thread instead.
 
-## Hierarchical structure ##
-
-### Contexts ###
-
-1. IThreadPool - Base layer. High-speed consumer loop.
-2. IExecutionContext - Second layer. Fiber. Guaranteed execution order.
-3. Context triggered by event/message subscription.
-4. Context triggered by timing subscriptions.
-
-### Context usage ###
-
-#### 1. SwitchTo() ####
 ```csharp
-await threadPool.SwitchTo();
-await executionContext.SwitchTo();
-```
-
-#### 2. Enqueue(Action) ####
-```csharp
-threadPool.Queue((_) => action());
-executionContext.Enqueue(action);
-```
-
-#### 3. Subscribe(...) ####
-```csharp
-driver1.SubscribeAndReceiveAsTask(async (ev) => {...});
-driver2.SubscribeAndReceiveAsTask(async () => {...});
-```
-
-#### 4. Subscribe(...) via AsyncRegister ####
-```csharp
-using var reg = new AsyncRegister<SomeEvent>(driver3);
-while (...)
+async Task SampleAsync()
 {
-    var ev = await reg.WaitSetting();
+    // Create an another thread.
+    using var anotherThread = new AnotherFiberDisposable();
+
+    await anotherThread.EnqueueAsync(() =>
+    {
+        // It calls a blocking function, but it doesn't affect .NET ThreadPool.
+        // Because it's on an another thread.
+        SomeBlockingFunction();
+    });
+
     ...
 }
 ```
 
-### Context generation method ###
+To "Fire and forget” multiple tasks in parallel, create an another thread pool.
 
-- Create `PoolFiber`. Most basic method.
-- Create `ThreadPoolAdapter`. Allows the main thread to be used like a thread pool.
-- Create `UserThreadPool`. Suitable for handling blocking processes.
-- Create `ActionDriver` and use it with a repeating timer, which works well with tick-based game loop implementations.
-- Create `AsyncMessageDriver<T>` and use it for event distribution.
+```csharp
+UserThreadPool anotherThreadPool = UserThreadPool.StartNew(4);
+...
+anotherThreadPool.Queue((x) => SomeReadWriteSyncAction());
+...
+anotherThreadPool.Dispose();
+```
 
-### How to pause contexts ###
+## Process in the main thread ##
 
-| Execution context type | Method |
-|:-|:-|
-| Threads | `Thread.Sleep()` |
-| Fiber on dedicated thread | `Thread.Sleep()` |
-| Fiber on shared threads | `fiber.Enqueue(Action<FiberExecutionEventArgs>) & FiberExecutionEventArgs.Pause()/Resume()` |
-| Asynchronous control flow | `await Task.Deley()` |
+Often in game libraries, there are functions that can only be called in the main thread. By treating the main thread as a task queue loop, they can be used on asynchronous contexts.
+
+```csharp
+class Program
+{
+    static void Main(string[] args)
+    {
+        // Create a task queue.
+        var mainThreadLoop = new ThreadPoolAdapter();
+
+        // Starts an asynchronous operation. Pass the task queue.
+        RunAsync(mainThreadLoop);
+
+        // Consume tasks taken from that queue, on the main thread.
+        // It will not return until the task queue is stopped.
+        mainThreadLoop.Run();
+    }
+
+    static async void RunAsync(ThreadPoolAdapter mainThreadLoop)
+    {
+        ...
+        // Enqueue actions to the main thread loop.
+        mainThreadLoop.Enqueue(() => someAction());
+        mainThreadLoop.Enqueue(() => someAction());
+
+        ...
+        // Stop the task queue loop of the main thread .
+        mainThreadLoop.Stop();
+    }
+```
+
+## Guarantee execution order ##
+
+A task queue loop running on a thread pool does not guarantee the order in which tasks are executed. Fiber can be used to guarantee the order.
+
+```csharp
+// Create a fiber that runs on the default `.NET ThreadPool`.
+var fiber = new PoolFiber();
+
+// Enqueue actions via fiber to guarantee execution order.
+int counter = 0;
+fiber.Enqueue(() => counter += 1);
+fiber.EnqueueTask(async () =>
+{
+    await Task.Delay(1000);
+    counter *= 100;
+});
+fiber.Enqueue(() => counter += 2);
+fiber.Enqueue(() => Assert.AreEquals(102, counter));
+```
+
+Can wait for fiber processing completion in an asynchronous context.
+
+```csharp
+async Task SomeMethodAsync()
+{
+    using var anotherThread = new AnotherFiberDisposable();
+    anotherThread.Enqueue(() => someA());
+    anotherThread.Enqueue(() => someB());
+    anotherThread.Enqueue(() => someC());
+
+    // Wait for queued actions to complete.
+    await anotherThread.EnqueueAsync(() => {});
+    ...
+}
+```
+
+# Proper use #
+
+## Drivers of task queue loop ##
+
+Running on a shared thread:
+
+- (DefaultThreadPool &) PoolFiber
+- UserThreadPool & PoolFiber
+
+Runs on a newly created dedicated thread:
+
+- AnotherFiberDisposable
+- ConsumerThread
+
+Runs on a dedicated specific thread:
+
+- ThreadPoolAdapter & PoolFiber
+
+Runs by manually pumping tasks:
+
+- ConcurrentQueueActionQueue & ThreadPoolAdapter & PoolFiber
+
+# API Documentation #
+
+See API Documentation here: https://tosh-coding.github.io/AsyncFiberWorks/api/
+
+[Unit tests](https://github.com/tosh-coding/AsyncFiberWorks/tree/main/src/AsyncFiberWorksTests) can also be used as a code sample.
 
 ## Fibers ##
 Fiber is a mechanism for sequential processing.  Actions added to a fiber are executed sequentially.
@@ -179,6 +153,8 @@ Fiber is a mechanism for sequential processing.  Actions added to a fiber are ex
   * _[AsyncFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/AsyncFiber.cs)_ - Fiber implementation built with asynchronous control flow. It's operating thread is unstable.
 
 ## ThreadPools ##
+Producer-Consumer pattern.  One or more threads become consumers and execute tasks taken from the task queue.
+
  * _[DefaultThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/DefaultThreadPool.cs)_ - Default implementation that uses the .NET thread pool.
  * _[UserThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/UserThreadPool.cs)_ - Another thread pool implementation, using the Thread class to create a thread pool.  If you need to use blocking functions, you should use the user thread pool. This does not disturb the .NET ThreadPool.
  * _[ThreadPoolAdapter](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/ThreadPoolAdapter.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
@@ -204,3 +180,13 @@ The design concept of the channel has not changed much from its source, Retlang.
 > The library is intended for use in [message based concurrency](http://en.wikipedia.org/wiki/Message_passing) similar to [event based actors in Scala](http://lampwww.epfl.ch/~phaller/doc/haller07actorsunify.pdf).  The library does not provide remote messaging capabilities. It is designed specifically for high performance in-memory messaging.
 
 (Quote from [Retlang page](https://code.google.com/archive/p/retlang/). Broken links were replaced.)
+
+# Internal implementation note #
+
+## How to pause context ##
+
+| Execution context | Pause method |
+|:-|:-|
+| Dedicated thread | `Thread.Sleep()` |
+| Fiber on shared threads | `fiber.Enqueue(Action<FiberExecutionEventArgs>) & FiberExecutionEventArgs.Pause()/Resume()` |
+| Asynchronous control flow | `await Task.Deley()` |
