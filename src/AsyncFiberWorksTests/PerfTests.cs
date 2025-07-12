@@ -32,20 +32,21 @@ namespace AsyncFiberWorksTests
     public class PerfTests
     {
         [Test, Explicit]
-        public void PointToPointPerfTestWithStruct()
+        public void PointToPointPerfTestWithStructBoundedQueue()
         {
-            RunBoundedQueue();
+            var queue = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
+            PointToPointPerfTestWithStructInternal(queue);
         }
 
         [Test, Explicit]
-        public void BusyWaitQueuePointToPointPerfTestWithStruct()
+        public void PointToPointPerfTestWithStructBusyWaitQueue()
         {
-            RunBusyWaitQueue();
+            var queue = new BusyWaitQueue(100000, 30000, new PerfExecutor(), SimpleExecutor.Instance);
+            PointToPointPerfTestWithStructInternal(queue);
         }
-      
-        private static void RunBoundedQueue()
+
+        private static void PointToPointPerfTestWithStructInternal(IDedicatedConsumerThreadWork queue)
         {
-            var queue = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
             using (var consumerThread = ConsumerThread.StartNew(queue))
             using (var subscriptions = new Subscriptions())
             {
@@ -59,36 +60,6 @@ namespace AsyncFiberWorksTests
                         reset.Set();
                     }
                 };
-                var subscriptionFiber = subscriptions.BeginSubscription();
-                var subscriptionChannel = channel.Subscribe(consumerThread, onMsg);
-                subscriptionFiber.AppendDisposable(subscriptionChannel);
-                using (new PerfTimer(max))
-                {
-                    for (var i = 0; i <= max; i++)
-                    {
-                        channel.Publish(new MsgStruct { count = i });
-                    }
-                    Assert.IsTrue(reset.WaitOne(30000, false));
-                }
-            }
-        }
-
-        private static void RunBusyWaitQueue()
-        {
-            var queue = new BusyWaitQueue(100000, 30000, new PerfExecutor(), SimpleExecutor.Instance);
-            using (var consumerThread = ConsumerThread.StartNew(queue))
-            using (var subscriptions = new Subscriptions())
-            {
-                var channel = new Channel<MsgStruct>();
-                const int max = 5000000;
-                var reset = new AutoResetEvent(false);
-                Action<MsgStruct> onMsg = delegate(MsgStruct count)
-                                              {
-                                                  if (count.count == max)
-                                                  {
-                                                      reset.Set();
-                                                  }
-                                              };
                 var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(consumerThread, onMsg);
                 subscriptionFiber.AppendDisposable(subscriptionChannel);
