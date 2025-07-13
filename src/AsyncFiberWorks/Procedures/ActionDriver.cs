@@ -79,6 +79,19 @@ namespace AsyncFiberWorks.Procedures
         }
 
         /// <summary>
+        /// Subscribe a channel.
+        /// </summary>
+        /// <param name="task">Subscriber.</param>
+        /// <returns>Unsubscriber.</returns>
+        public IDisposable SubscribeAndReceiveAsTask(Func<Task> task)
+        {
+            return Subscribe((e) =>
+            {
+                e.PauseWhileRunning(task);
+            });
+        }
+
+        /// <summary>
         /// Invoke all subscribers.
         /// Fibers passed as arguments will be paused.
         /// </summary>
