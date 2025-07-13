@@ -1,8 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.FiberSchedulers;
+using AsyncFiberWorks.Threading;
 
 namespace WpfExample
 {
@@ -10,18 +12,24 @@ namespace WpfExample
     {
         private readonly IFiber _fiber;
         private readonly Subscriptions _subscriptions;
-        private IDisposable _timer;
         private readonly WindowChannels _channels;
+        private IDisposable _timer;
 
         public UpdateController(WindowChannels winChannels)
         {
             _channels = winChannels;
             _subscriptions = new Subscriptions();
-            var fiber = new AnotherFiberDisposable();
-            var subscriptionFiber = _subscriptions.BeginSubscription();
-            var subscriptionChannel = _channels.StartChannel.Subscribe(fiber, OnStart);
-            subscriptionFiber.AppendDisposable(subscriptionChannel);
+
+            var disposables = _subscriptions.BeginSubscription();
+
+            var fiber = AnotherThreadPool.Instance.CreateFiber();
             _fiber = fiber;
+
+            var subscriptionStartChannel = _channels.StartChannel.Subscribe(fiber, OnStart);
+            disposables.AppendDisposable(subscriptionStartChannel);
+
+            var subscriptionOnWindowClosing = _channels.OnWindowClosing.Subscribe(fiber, OnWindowClosing);
+            disposables.AppendDisposable(subscriptionOnWindowClosing);
         }
 
         private void OnStart(RoutedEventArgs msg)
@@ -43,6 +51,11 @@ namespace WpfExample
         private void OnTimer()
         {
             _channels.TimeUpdate.Publish(DateTime.Now);
+        }
+
+        public void OnWindowClosing(object sender, CancelEventArgs e)
+        {
+            _subscriptions.Dispose();
         }
     }
 }

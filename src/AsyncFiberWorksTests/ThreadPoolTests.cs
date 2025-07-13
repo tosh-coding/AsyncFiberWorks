@@ -122,14 +122,10 @@ namespace AsyncFiberWorksTests
             long counter1 = 0;
             long counter2 = 0;
             long counter3 = 0;
-            using (var pool1 = UserThreadPool.Create(1, poolName: "Pool1"))
-            using (var pool2 = UserThreadPool.Create(2, poolName: "Pool2"))
-            using (var pool3 = UserThreadPool.Create(3, poolName: "Pool3"))
+            using (var pool1 = UserThreadPool.StartNew(1, poolName: "Pool1"))
+            using (var pool2 = UserThreadPool.StartNew(2, poolName: "Pool2"))
+            using (var pool3 = UserThreadPool.StartNew(3, poolName: "Pool3"))
             {
-                pool1.Start();
-                pool2.Start();
-                pool3.Start();
-
                 for (int i = 0; i < loopCount; i++)
                 {
                     pool1.Enqueue(() => Interlocked.Increment(ref counter1));
@@ -162,9 +158,8 @@ namespace AsyncFiberWorksTests
         [Test]
         public void PoolFiberWithUserThreadPool()
         {
-            using (var pool = UserThreadPool.Create(4))
+            using (var pool = UserThreadPool.StartNew(4))
             {
-                pool.Start();
                 var fiber1 = new PoolFiber(pool);
                 var fiber2 = new PoolFiber(pool);
                 var fiber3 = new PoolFiber(pool);

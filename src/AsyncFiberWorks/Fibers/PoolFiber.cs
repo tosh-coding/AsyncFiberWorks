@@ -32,8 +32,12 @@ namespace AsyncFiberWorks.Fibers
         /// <param name="executor"></param>
         public PoolFiber(IThreadPool pool, IExecutor executor)
         {
+            if (pool == null)
+            {
+                throw new ArgumentNullException(nameof(pool));
+            }
             _pool = pool;
-            _executor = executor;
+            _executor = executor ?? SimpleExecutor.Instance;
             _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume, _pool);
         }
 
@@ -50,7 +54,7 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         /// <param name="pool"></param>
         public PoolFiber(IThreadPool pool)
-            : this(pool, SimpleExecutor.Instance)
+            : this(pool, null)
         {
         }
 
@@ -58,7 +62,7 @@ namespace AsyncFiberWorks.Fibers
         /// Create a pool fiber with the default thread pool and a simple executor.
         /// </summary>
         public PoolFiber()
-            : this(DefaultThreadPool.Instance, SimpleExecutor.Instance)
+            : this(DefaultThreadPool.Instance, null)
         {
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Threading;
 using AsyncFiberWorks.Channels;
@@ -12,33 +13,42 @@ namespace WpfExample
     /// </summary>
     public partial class Window1 : Window
     {
-        private readonly WindowChannels channels = new WindowChannels();
-        private readonly IFiber fiber;
-        private readonly Subscriptions subscriptions = new Subscriptions();
+        private readonly WindowChannels _channels = new WindowChannels();
+        private readonly IFiber _fiber;
+        private readonly Subscriptions _subscriptions = new Subscriptions();
 
         public Window1()
         {
             InitializeComponent();
             var adapter = new DispatcherAdapter(Dispatcher, DispatcherPriority.Normal);
-            fiber = new PoolFiber(adapter);
+            _fiber = new PoolFiber(adapter);
 
-            var subscriptionFiber = subscriptions.BeginSubscription();
+            var disposables = _subscriptions.BeginSubscription();
 
-            var subscriber = new LastFilter<DateTime>(0, fiber, OnTimeUpdate);
-            var subscriptionChannel = channels.TimeUpdate.Subscribe(fiber, subscriber.Receive);
-            subscriptionFiber.AppendDisposable(subscriber, subscriptionChannel);
+            var lastFilter = new LastFilter<DateTime>(0, _fiber, OnTimeUpdate);
+            disposables.AppendDisposable(lastFilter);
 
-            new UpdateController(channels);
+            var subscriptionTimeUpdate = _channels.TimeUpdate.Subscribe(_fiber, lastFilter.Receive);
+            disposables.AppendDisposable(subscriptionTimeUpdate);
+
+            Closing += this.OnWindowClosing;
+
+            new UpdateController(_channels);
         }
 
         private void startButton_Click(object sender, RoutedEventArgs e)
         {
-            channels.StartChannel.Publish(e);
+            _channels.StartChannel.Publish(e);
         }
 
         private void OnTimeUpdate(DateTime time)
         {
             cpuTextBox.Text = time.ToString();
+        }
+
+        public void OnWindowClosing(object sender, CancelEventArgs e)
+        {
+            _channels.OnWindowClosing.Publish(e);
         }
     }
 }
