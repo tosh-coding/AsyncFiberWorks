@@ -86,8 +86,9 @@ namespace AsyncFiberWorksTests
         [Test]
         public void PauseAndTimerCallback()
         {
-            using (var nonstopFiber = new AnotherFiberDisposable())
+            using (var userThreadPool = UserThreadPool.StartNew(1))
             {
+                var nonstopFiber = userThreadPool.CreateFiber();
                 var pauseFiber = new PoolFiber();
 
                 int counter = 0;
@@ -166,9 +167,9 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task AnotherPoolFiberDisposableTest()
+        public async Task AnotherThreadPoolFiberTest()
         {
-            var fiber = new AnotherFiberDisposable();
+            var fiber = AnotherThreadPool.Instance.CreateFiber();
             var counter = new IntClass();
             counter.Value = 0;
             var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);

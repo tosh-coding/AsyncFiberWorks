@@ -73,7 +73,7 @@ namespace AsyncFiberWorksTests
             var userThreadPoolB = UserThreadPool.StartNew();
 
             var consumerThread = ConsumerThread.StartNew();
-            var anotherFiber = new AnotherFiberDisposable();
+            var anotherFiber = AnotherThreadPool.Instance.CreateFiber();
             var dotnetPoolFiber1 = new PoolFiber(defaultThreadPool);
             var dotnetPoolFiber2 = new PoolFiber();
             var userPoolFiberA1 = new PoolFiber(userThreadPoolA);

@@ -33,7 +33,7 @@ namespace AsyncFiberWorks.Threading
 
         private AnotherThreadPool()
         {
-            _userThreadPool = UserThreadPool.StartNew();
+            _userThreadPool = UserThreadPool.StartNew(numberOfThread: 2);
         }
 
         /// <summary>

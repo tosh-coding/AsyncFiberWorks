@@ -24,10 +24,8 @@ This is still in the process of major design changes.
 ```csharp
 async Task SampleAsync()
 {
-    // Create an another thread.
-    using var anotherThread = new AnotherFiberDisposable();
-
-    await anotherThread.EnqueueAsync(() =>
+    // Ready-made another thread pool is available.
+    await AnotherThreadPool.Instance.CreateFiber().EnqueueAsync(() =>
     {
         // It calls a blocking function, but it doesn't affect .NET ThreadPool.
         // Because it's on an another thread.
@@ -41,11 +39,11 @@ async Task SampleAsync()
 To "Fire and forget” multiple tasks in parallel, create an another thread pool.
 
 ```csharp
-UserThreadPool anotherThreadPool = UserThreadPool.StartNew(4);
+UserThreadPool userThreadPool = UserThreadPool.StartNew(4);
 ...
-anotherThreadPool.Queue((x) => SomeReadWriteSyncAction());
+userThreadPool.Queue((x) => SomeReadWriteSyncAction());
 ...
-anotherThreadPool.Dispose();
+userThreadPool.Dispose();
 ```
 
 ## Process in the main thread ##
@@ -106,13 +104,13 @@ Can wait for fiber processing completion in an asynchronous context.
 ```csharp
 async Task SomeMethodAsync()
 {
-    using var anotherThread = new AnotherFiberDisposable();
-    anotherThread.Enqueue(() => someA());
-    anotherThread.Enqueue(() => someB());
-    anotherThread.Enqueue(() => someC());
+    var anotherThreadFiber = AnotherThreadPool.Instance.CreateFiber();
+    anotherThreadFiber.Enqueue(() => someA());
+    anotherThreadFiber.Enqueue(() => someB());
+    anotherThreadFiber.Enqueue(() => someC());
 
     // Wait for queued actions to complete.
-    await anotherThread.EnqueueAsync(() => {});
+    await anotherThreadFiber.EnqueueAsync(() => {});
     ...
 }
 ```
@@ -125,10 +123,11 @@ Running on a shared thread:
 
 - (DefaultThreadPool &) PoolFiber
 - UserThreadPool & PoolFiber
+- AnotherThreadPool & PoolFiber
 
 Runs on a newly created dedicated thread:
 
-- AnotherFiberDisposable
+- UserThreadPool.StartNew(1) & PoolFiber
 - ConsumerThread
 
 Runs on a dedicated specific thread:
@@ -148,14 +147,14 @@ See API Documentation here: https://tosh-coding.github.io/AsyncFiberWorks/api/
 ## Fibers ##
 Fiber is a mechanism for sequential processing.  Actions added to a fiber are executed sequentially.
 
-  * _[PoolFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/PoolFiber.cs)_ - The most commonly used fiber.  Internally, the [.NET thread pool is used](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/DefaultThreadPool.cs#L22) by default, and a user thread pool is also available.
-  * _[AnotherFiberDisposable](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/AnotherFiberDisposable.cs)_ - This fiber generates and uses a dedicated thread internally.  A convenience wrapper for a combination of PoolFiber and UserThreadPool.
+  * _[PoolFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/PoolFiber.cs)_ - Fiber. ".NET ThreadPool" is used by default. User thread pools are also available.
 
 ## ThreadPools ##
 Producer-Consumer pattern.  One or more threads become consumers and execute tasks taken from the task queue.
 
  * _[DefaultThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/DefaultThreadPool.cs)_ - Default implementation that uses the .NET thread pool.
  * _[UserThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/UserThreadPool.cs)_ - Another thread pool implementation, using the Thread class to create a thread pool.  If you need to use blocking functions, you should use the user thread pool. This does not disturb the .NET ThreadPool.
+ * _[AnotherThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/AnotherThreadPool.cs)_ - Convenience wrapper for UserThreadPool.  There are two worker threads.
  * _[ThreadPoolAdapter](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/ThreadPoolAdapter.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
 
 ## Drivers ##
