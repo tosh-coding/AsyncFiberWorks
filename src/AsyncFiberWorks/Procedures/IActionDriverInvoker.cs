@@ -1,4 +1,5 @@
-using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Fibers;
+using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Procedures
 {
@@ -9,9 +10,8 @@ namespace AsyncFiberWorks.Procedures
     {
         /// <summary>
         /// Invoke all subscribers.
-        /// The fiber passed in the argument may be paused.
         /// </summary>
-        /// <param name="eventArgs">Handle for fiber pause.</param>
-        void InvokeAsync(FiberExecutionEventArgs eventArgs);
+        /// <param name="defaultContext">Default context to be used if not specified.</param>
+        Task InvokeAsync(IFiber defaultContext);
     }
 }

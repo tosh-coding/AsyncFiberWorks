@@ -1,6 +1,6 @@
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Executors;
-using AsyncFiberWorks.Threading;
+using AsyncFiberWorks.Fibers;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,27 +13,28 @@ namespace AsyncFiberWorks.Procedures
     public class ActionDriver : IActionDriver
     {
         private readonly object _lock = new object();
-        private readonly LinkedList<Action<FiberExecutionEventArgs>> _actions = new LinkedList<Action<FiberExecutionEventArgs>>();
-        private readonly object _lockObj = new object();
-        private readonly Queue<Func<Task>> _queue = new Queue<Func<Task>>();
-        bool _running = false;
-        IAsyncExecutor _executor;
+        private readonly LinkedList<RegisteredAction> _actions = new LinkedList<RegisteredAction>();
+        private readonly List<RegisteredAction> _copiedActions = new List<RegisteredAction>();
+        IAsyncExecutor _asyncExecutor;
+        IExecutor _executor;
+        bool _inInvoking = false;
 
         /// <summary>
         /// Create an action driver.
         /// </summary>
+        /// <param name="asyncExecutor"></param>
         /// <param name="executor"></param>
-        public ActionDriver(IAsyncExecutor executor)
+        public ActionDriver(IAsyncExecutor asyncExecutor, IExecutor executor)
         {
-            _executor = executor;
+            _asyncExecutor = asyncExecutor ?? AsyncSimpleExecutor.Instance;
+            _executor = executor ?? SimpleExecutor.Instance;
         }
 
         /// <summary>
         /// Create an action driver.
         /// </summary>
-        /// <param name="executor"></param>
         public ActionDriver()
-            : this(AsyncSimpleExecutor.Instance)
+            : this(null, null)
         {
         }
 
@@ -41,189 +42,203 @@ namespace AsyncFiberWorks.Procedures
         /// Subscribe an action driver.
         /// </summary>
         /// <param name="action">Subscriber.</param>
+        /// <param name="context">The context in which the action will execute. if null, the default is used.</param>
         /// <returns>Unsubscriber.</returns>
-        public IDisposable Subscribe(Action action)
-        {
-            return Subscribe((e) => action());
-        }
-
-        /// <summary>
-        /// Subscribe an action driver.
-        /// </summary>
-        /// <param name="action">Subscriber.</param>
-        /// <returns>Unsubscriber.</returns>
-        public IDisposable Subscribe(Action<FiberExecutionEventArgs> action)
+        public IDisposable Subscribe(Action action, IFiber context = null)
         {
             var maskableFilter = new ToggleFilter();
-            Action<FiberExecutionEventArgs> safeAction = (e) =>
+            Action safeAction = () =>
             {
                 var enabled = maskableFilter.IsEnabled;
                 if (enabled)
                 {
-                    action(e);
+                    action();
                 }
+            };
+            var registeredAction = new RegisteredAction()
+            {
+                ActionType = ActionType.SimpleAction,
+                Context = context,
+                SimpleAction = safeAction,
             };
 
             lock (_lock)
             {
-                _actions.AddLast(safeAction);
+                _actions.AddLast(registeredAction);
             }
 
             var unsubscriber = new Unsubscriber(() =>
             {
                 maskableFilter.IsEnabled = false;
-                _actions.Remove(safeAction);
+                lock (_lock)
+                {
+                    _actions.Remove(registeredAction);
+                }
             });
 
             return unsubscriber;
         }
 
         /// <summary>
-        /// Subscribe a channel.
+        /// Subscribe an action driver.
         /// </summary>
-        /// <param name="task">Subscriber.</param>
+        /// <param name="action">Subscriber.</param>
+        /// <param name="context">The context in which the action will execute. if null, the default is used.</param>
         /// <returns>Unsubscriber.</returns>
-        public IDisposable SubscribeAndReceiveAsTask(Func<Task> task)
+        public IDisposable Subscribe(Func<Task> action, IFiber context = null)
         {
-            return Subscribe((e) =>
+            var maskableFilter = new ToggleFilter();
+            Func<Task> safeAction = async () =>
             {
-                e.PauseWhileRunning(task);
+                var enabled = maskableFilter.IsEnabled;
+                if (enabled)
+                {
+                    await action();
+                }
+            };
+            var registeredAction = new RegisteredAction()
+            {
+                ActionType = ActionType.FuncTask,
+                Context = context,
+                FuncTask = safeAction,
+            };
+
+            lock (_lock)
+            {
+                _actions.AddLast(registeredAction);
+            }
+
+            var unsubscriber = new Unsubscriber(() =>
+            {
+                maskableFilter.IsEnabled = false;
+                lock (_lock)
+                {
+                    _actions.Remove(registeredAction);
+                }
             });
+
+            return unsubscriber;
         }
 
         /// <summary>
         /// Invoke all subscribers.
-        /// Fibers passed as arguments will be paused.
         /// </summary>
-        /// <param name="eventArgs">Handle for fiber pause.</param>
-        public void InvokeAsync(FiberExecutionEventArgs eventArgs)
+        /// <param name="defaultContext">Default context to be used if not specified.</param>
+        /// <returns>A task that waits for actions to be performed.</returns>
+        public async Task InvokeAsync(IFiber defaultContext)
         {
-            eventArgs.Pause();
             lock (_lock)
             {
-                foreach (var action in _actions)
+                if (_inInvoking)
                 {
-                    Enqueue(eventArgs.SourceThread, action);
+                    throw new InvalidOperationException("InvokeAsync can be called only once at the same time.");
                 }
-            }
-            Enqueue(() => eventArgs.Resume());
-        }
 
-        ///<summary>
-        /// Number of subscribers
-        ///</summary>
-        public int NumSubscribers
-        {
-            get
+                _copiedActions.Clear();
+                _copiedActions.AddRange(_actions);
+
+                if (_copiedActions.Count <= 0)
+                {
+                    return;
+                }
+                _inInvoking = true;
+            }
+
+            try
             {
+                int nextIndex = 0;
+                Func<RegisteredAction> getNextAction = () =>
+                {
+                    if (nextIndex >= _copiedActions.Count)
+                    {
+                        return null;
+                    }
+                    var result = _copiedActions[nextIndex];
+                    nextIndex += 1;
+                    return result;
+                };
+
+                var tcs = new TaskCompletionSource<int>();
+                var executionOfSimpleActionArray = new Action<RegisteredAction>[1];
+                var executionOfFuncTaskArray = new Func<RegisteredAction, Task>[1];
+
+                Action enqueueNextAction = () =>
+                {
+                    var nextAction = getNextAction();
+                    if (nextAction == null)
+                    {
+                        defaultContext.Enqueue(() => { tcs.SetResult(0); });
+                    }
+                    else
+                    {
+                        var nextContext = nextAction.Context ?? defaultContext;
+                        if (nextAction.ActionType == ActionType.SimpleAction)
+                        {
+                            nextContext.Enqueue(() => executionOfSimpleActionArray[0](nextAction));
+                        }
+                        else if (nextAction.ActionType == ActionType.FuncTask)
+                        {
+                            nextContext.EnqueueTask(() => executionOfFuncTaskArray[0](nextAction));
+                        }
+                        else
+                        {
+                            throw new Exception($"Unknown ActionType found. ActionType={nextAction.ActionType}, nextIndex={nextIndex}.");
+                        }
+                    }
+                };
+
+                Action<RegisteredAction> executionOfSimpleAction = (currentAction) =>
+                {
+                    try
+                    {
+                        _executor.Execute(currentAction.SimpleAction);
+                    }
+                    finally
+                    {
+                        enqueueNextAction();
+                    }
+                };
+                executionOfSimpleActionArray[0] = executionOfSimpleAction;
+
+                Func<RegisteredAction, Task> executionOfFuncTask = async (currentAction) =>
+                {
+                    try
+                    {
+                        await _asyncExecutor.Execute(currentAction.FuncTask).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        enqueueNextAction();
+                    }
+                };
+                executionOfFuncTaskArray[0] = executionOfFuncTask;
+
+                enqueueNextAction();
+                await tcs.Task.ConfigureAwait(false);
+                await Task.Yield();
+            }
+            finally
+            {
+                _copiedActions.Clear();
                 lock (_lock)
                 {
-                    return _actions.Count;
+                    _inInvoking = false;
                 }
             }
         }
 
-        bool TryDequeue(out Func<Task> result)
+        internal class RegisteredAction
         {
-            lock (_lockObj)
-            {
-                if (_queue.Count > 0)
-                {
-                    result = _queue.Dequeue();
-                    return true;
-                }
-            }
-            result = default;
-            return false;
+            public ActionType ActionType;
+            public IFiber Context;
+            public Action SimpleAction;
+            public Func<Task> FuncTask;
         }
 
-        /// <summary>
-        /// Start consumption.
-        /// </summary>
-        async void Run()
+        internal enum ActionType
         {
-            while (true)
-            {
-                while (TryDequeue(out var func))
-                {
-                    await _executor.Execute(func).ConfigureAwait(false);
-                }
-                lock (_lockObj)
-                {
-                    if (_queue.Count <= 0)
-                    {
-                        _running = false;
-                        return;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Enqueue a task.
-        /// </summary>
-        /// <param name="func">A function that returns a task.</param>
-        void PrivateEnqueue(Func<Task> func)
-        {
-            bool startedNow = false;
-            lock (_lockObj)
-            {
-                _queue.Enqueue(func);
-                if (!_running)
-                {
-                    _running = true;
-                    startedNow = true;
-                }
-            }
-
-            if (startedNow)
-            {
-                Run();
-            }
-        }
-
-        /// <summary>
-        /// Enqueue a single action. It is executed sequentially.
-        /// </summary>
-        /// <param name="action">Action to be executed.</param>
-        void Enqueue(Action action)
-        {
-            PrivateEnqueue(() =>
-            {
-                action();
-                return Task.CompletedTask;
-            });
-        }
-
-        /// <summary>
-        /// Enqueue a single action. It is executed sequentially.
-        /// </summary>
-        /// <param name="threadPool">The execution context for the specified action.</param>
-        /// <param name="action">Action to be executed.</param>
-        void Enqueue(IThreadPool threadPool, Action<FiberExecutionEventArgs> action)
-        {
-            PrivateEnqueue(async () =>
-            {
-                await threadPool.SwitchTo();
-                bool isPaused = false;
-                var tcs = new TaskCompletionSource<int>();
-                var eventArgs = new FiberExecutionEventArgs(
-                    () =>
-                    {
-                        isPaused = true;
-                    },
-                    () =>
-                    {
-                        tcs.SetResult(0);
-                    },
-                    DefaultThreadPool.Instance);
-                action(eventArgs);
-                if (isPaused)
-                {
-                    await tcs.Task.ConfigureAwait(false);
-                    await Task.Yield();
-                }
-            });
+            SimpleAction,
+            FuncTask,
         }
     }
 }

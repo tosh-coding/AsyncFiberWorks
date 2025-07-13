@@ -13,10 +13,13 @@ namespace AsyncFiberWorksTests
     public class ActionDriverTests
     {
         [Test]
-        public void Invoking()
+        public void SubscribeSimpleActions()
         {
-            var driver = new ActionDriver();
+            // Fiber of main thread for Assertion.
+            var mainLoop = new ThreadPoolAdapter();
+            var fiber = mainLoop.CreateFiber();
 
+            var driver = new ActionDriver();
             long counter = 0;
 
             Action action1 = () =>
@@ -34,19 +37,26 @@ namespace AsyncFiberWorksTests
             var disposable1 = driver.Subscribe(action1);
             var disposable2 = driver.Subscribe(action2);
 
-            var loop = new ThreadPoolAdapter();
-            var fiber = new PoolFiber(loop);
-            fiber.Enqueue((e) => driver.InvokeAsync(e));
-            fiber.Enqueue(() => loop.Stop());
-            loop.Run();
-            Assert.AreEqual(301, counter);
+            _ = Task.Run(async () =>
+            {
+                await driver.InvokeAsync(fiber);
+                await fiber.EnqueueAsync(() =>
+                {
+                    Assert.AreEqual(301, counter);
+                });
+                mainLoop.Stop();
+            });
+            mainLoop.Run();
         }
 
         [Test]
-        public async Task AsyncInvoking()
+        public void SubscribeFuncTask()
         {
-            var driver = new ActionDriver();
+            // Fiber of main thread for Assertion.
+            var mainLoop = new ThreadPoolAdapter();
+            var fiber = mainLoop.CreateFiber();
 
+            var driver = new ActionDriver();
             long counter = 0;
 
             Func<Task> action1 = async () =>
@@ -63,13 +73,19 @@ namespace AsyncFiberWorksTests
                 counter += 1;
             };
 
-            var disposable1 = driver.SubscribeAndReceiveAsTask(action1);
-            var disposable2 = driver.SubscribeAndReceiveAsTask(action2);
+            var disposable1 = driver.Subscribe(action1);
+            var disposable2 = driver.Subscribe(action2);
 
-            var fiber = new PoolFiber();
-            fiber.Enqueue((e) => driver.InvokeAsync(e));
-            await fiber.SwitchTo();
-            Assert.AreEqual(301, counter);
+            _ = Task.Run(async () =>
+            {
+                await driver.InvokeAsync(fiber);
+                await fiber.EnqueueAsync(() =>
+                {
+                    Assert.AreEqual(301, counter);
+                });
+                mainLoop.Stop();
+            });
+            mainLoop.Run();
         }
 
         [Test]
@@ -103,10 +119,12 @@ namespace AsyncFiberWorksTests
         [Test]
         public void ToggleAtUnsubscribe()
         {
+            // Fiber of main thread for Assertion.
+            var mainLoop = new ThreadPoolAdapter();
+            var fiber = mainLoop.CreateFiber();
+
             var driver = new ActionDriver();
-
             long counter = 0;
-
             var unsubscriber = new Unsubscriber();
 
             Action action = () =>
@@ -120,12 +138,16 @@ namespace AsyncFiberWorksTests
             var disposable2 = driver.Subscribe(action);
             unsubscriber.AppendDisposable(disposable2);
 
-            var loop = new ThreadPoolAdapter();
-            var fiber = new PoolFiber(loop);
-            fiber.Enqueue((e) => driver.InvokeAsync(e));
-            fiber.Enqueue(() => loop.Stop());
-            loop.Run();
-            Assert.AreEqual(1, counter);
+            _ = Task.Run(async () =>
+            {
+                await driver.InvokeAsync(fiber);
+                await fiber.EnqueueAsync(() =>
+                {
+                    Assert.AreEqual(1, counter);
+                });
+                mainLoop.Stop();
+            });
+            mainLoop.Run();
         }
     }
 }

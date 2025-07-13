@@ -24,13 +24,9 @@ namespace AsyncFiberWorks.Procedures
         /// <param name="subscribable"></param>
         public AsyncRegister(IActionDriverSubscriber subscribable)
         {
-            var task = new Func<Task>(async () =>
+            _subscription = subscribable.Subscribe(async () =>
             {
                 await SetFlagAndWaitClearing().ConfigureAwait(false);
-            });
-            _subscription = subscribable.Subscribe((e) =>
-            {
-                e.PauseWhileRunning(task);
             });
         }
 
