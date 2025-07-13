@@ -110,9 +110,10 @@ namespace AsyncFiberWorksTests
             var disposable1 = driver.Subscribe(action1);
             var disposable2 = driver.Subscribe(action2);
 
-            await driver.InvokeAsync(200);
+            var defaultFiber = new PoolFiber();
+            await driver.InvokeAsync(200, defaultFiber);
             Assert.AreEqual(200 + 20, counter);
-            await driver.InvokeAsync(10);
+            await driver.InvokeAsync(10, defaultFiber);
             Assert.AreEqual(200 + 20 + 10 + 1, counter);
         }
 

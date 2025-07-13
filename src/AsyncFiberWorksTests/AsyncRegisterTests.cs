@@ -86,9 +86,10 @@ namespace AsyncFiberWorksTests
             var task1 = func(3);
             var task2 = func(6);
 
+            var defaultContext = new PoolFiber();
             for (int i = 0; i < 10; i++)
             {
-                await driver.InvokeAsync(i + 1);
+                await driver.InvokeAsync(i + 1, defaultContext);
             }
 
             await Task.WhenAll(task1, task2);

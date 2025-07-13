@@ -1,3 +1,4 @@
+using AsyncFiberWorks.Fibers;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.MessageDrivers
@@ -12,7 +13,8 @@ namespace AsyncFiberWorks.MessageDrivers
         /// Distribute one message.
         /// </summary>
         /// <param name="message">A message.</param>
-        /// <returns>Tasks waiting for call completion.</returns>
-        Task InvokeAsync(TMessage message);
+        /// <param name="defaultContext">Default context to be used if not specified.</param>
+        /// <returns>A task that waits for actions to be performed.</returns>
+        Task InvokeAsync(TMessage message, IFiber defaultContext);
     }
 }
