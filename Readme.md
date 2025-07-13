@@ -158,13 +158,13 @@ Producer-Consumer pattern.  One or more threads become consumers and execute tas
  * _[ThreadPoolAdapter](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/ThreadPoolAdapter.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
 
 ## Drivers ##
-Drivers call their own Subscriber handlers. There are two types: timing notification and message delivery.  They are processed in series.
+Drivers call their own subscriber handlers. There are two types: timing notification and message delivery.  They are processed in series.
 
- * _[ActionDriver](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/ActionDriver.cs)_ - Calls the subscriber's handler. It runs on one fiber. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ActionDriverTests.cs).
- * _[AsyncMessageDriver{TMessage}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/MessageDrivers/AsyncMessageDriver.cs)_ - It distributes messages to subscribers.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ActionDriverTests.cs#L78).
+ * _[ActionDriver](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/ActionDriver.cs)_ - Calls the subscribers's handler.  Can specify the fiber to be executed. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ActionDriverTests.cs).
+ * _[MessageDriver{TMessage}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/MessageDrivers/MessageDriver.cs)_ - It distributes messages to subscribers.  Can specify the fiber to be executed. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ActionDriverTests.cs#L94).
 
 ## Channels ##
-This is a mechanism for parallel processing. If you do not need that much performance, `AsyncMessageDriver{T}` is recommended. It is easy to handle because it is serial.
+This is a mechanism for parallel processing. If you do not need that much performance, `MessageDriver{T}` is recommended. It is easy to handle because it is serial.
 
 A channel is a messaging mechanism that abstracts the communication destination.  Fibers act as actors. Arrival messages are processed in parallel for each fiber. 
 
