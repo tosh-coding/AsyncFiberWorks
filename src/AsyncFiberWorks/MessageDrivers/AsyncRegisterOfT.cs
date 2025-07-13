@@ -25,7 +25,7 @@ namespace AsyncFiberWorks.Procedures
         /// Subscribe a driver.
         /// </summary>
         /// <param name="subscribable"></param>
-        public AsyncRegister(IAsyncMessageDriverSubscriber<T> subscribable)
+        public AsyncRegister(IMessageDriverSubscriber<T> subscribable)
         {
             _subscription = subscribable.Subscribe(async (arg) =>
             {

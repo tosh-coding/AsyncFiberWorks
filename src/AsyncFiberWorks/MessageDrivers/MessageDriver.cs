@@ -13,7 +13,7 @@ namespace AsyncFiberWorks.MessageFilters
     /// Wait for the calls to complete one by one before proceeding.
     /// </summary>
     /// <typeparam name="TMessage">Message type.</typeparam>
-    public class AsyncMessageDriver<TMessage> : IAsyncMessageDriver<TMessage>
+    public class MessageDriver<TMessage> : IMessageDriver<TMessage>
     {
         private object _lock = new object();
         private LinkedList<RegisteredHandler> _actions = new LinkedList<RegisteredHandler>();
@@ -23,7 +23,7 @@ namespace AsyncFiberWorks.MessageFilters
         /// <summary>
         /// Create a driver.
         /// </summary>
-        public AsyncMessageDriver()
+        public MessageDriver()
         {
         }
 

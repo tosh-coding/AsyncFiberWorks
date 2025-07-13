@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.MessageDrivers
     /// Message driver distribution interface.
     /// </summary>
     /// <typeparam name="TMessage">Message type.</typeparam>
-    public interface IAsyncMessageDriverDistributor<TMessage>
+    public interface IMessageDriverDistributor<TMessage>
     {
         /// <summary>
         /// Distribute one message.

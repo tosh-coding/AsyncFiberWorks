@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.MessageDrivers
     /// Message driver subscription interface.
     /// </summary>
     /// <typeparam name="TMessage">Message type.</typeparam>
-    public interface IAsyncMessageDriverSubscriber<TMessage>
+    public interface IMessageDriverSubscriber<TMessage>
     {
         /// <summary>
         /// Subscribe a message driver.

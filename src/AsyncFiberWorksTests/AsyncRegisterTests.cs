@@ -57,7 +57,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task WaitingOfAsyncRegisterOfT()
         {
-            var driver = new AsyncMessageDriver<int>();
+            var driver = new MessageDriver<int>();
             int resultCounter = 0;
             var lockObj = new object();
 

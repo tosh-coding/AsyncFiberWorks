@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.MessageDrivers
     /// Non-thread-safe, assuming single-threaded processing.
     /// </summary>
     /// <typeparam name="TMessage"></typeparam>
-    public interface IAsyncMessageDriver<TMessage> : IAsyncMessageDriverSubscriber<TMessage>, IAsyncMessageDriverDistributor<TMessage>
+    public interface IMessageDriver<TMessage> : IMessageDriverSubscriber<TMessage>, IMessageDriverDistributor<TMessage>
     {
     }
 }

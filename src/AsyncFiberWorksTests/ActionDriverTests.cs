@@ -91,7 +91,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task AsyncInvokingWithArgument()
         {
-            var driver = new AsyncMessageDriver<int>();
+            var driver = new MessageDriver<int>();
 
             long counter = 0;
 
