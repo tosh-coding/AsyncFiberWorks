@@ -15,26 +15,23 @@ namespace AsyncFiberWorks.Procedures
         private readonly object _lock = new object();
         private readonly LinkedList<RegisteredAction> _actions = new LinkedList<RegisteredAction>();
         private readonly List<RegisteredAction> _copiedActions = new List<RegisteredAction>();
-        IAsyncExecutor _asyncExecutor;
-        IExecutor _executor;
+        IActionExecutor _executor;
         bool _inInvoking = false;
 
         /// <summary>
         /// Create an action driver.
         /// </summary>
-        /// <param name="asyncExecutor"></param>
         /// <param name="executor"></param>
-        public ActionDriver(IAsyncExecutor asyncExecutor, IExecutor executor)
+        public ActionDriver(IActionExecutor executor)
         {
-            _asyncExecutor = asyncExecutor ?? AsyncSimpleExecutor.Instance;
-            _executor = executor ?? SimpleExecutor.Instance;
+            _executor = executor ?? SimpleActionExecutor.Instance;
         }
 
         /// <summary>
         /// Create an action driver.
         /// </summary>
         public ActionDriver()
-            : this(null, null)
+            : this(null)
         {
         }
 
@@ -204,7 +201,7 @@ namespace AsyncFiberWorks.Procedures
                 {
                     try
                     {
-                        await _asyncExecutor.Execute(currentAction.FuncTask).ConfigureAwait(false);
+                        await _executor.Execute(currentAction.FuncTask).ConfigureAwait(false);
                     }
                     finally
                     {

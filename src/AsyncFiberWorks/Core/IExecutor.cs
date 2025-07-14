@@ -3,7 +3,7 @@ using System;
 namespace AsyncFiberWorks.Core
 {
     /// <summary>
-    /// Executes pending action.
+    /// Executes an action.
     /// </summary>
     public interface IExecutor
     {
