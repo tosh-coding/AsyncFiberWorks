@@ -158,15 +158,13 @@ Producer-Consumer pattern.  One or more threads become consumers and execute tas
  * _[ThreadPoolAdapter](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/ThreadPoolAdapter.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
 
 ## Procedures ##
-List of fiber and task/handler pairs.  Call all tasks in the order in which they were registered.  Can specify the fiber to be executed.  Wait for the calls to complete one by one before proceeding.
+These are mechanisms for sequential processing. Call all tasks in the order in which they were registered. Can specify the fiber to be executed. Wait for the calls to complete one by one before proceeding.
 
  * _[FiberAndTaskPairList](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/FiberAndTaskPairList.cs)_ - List of destination fiber and task pairs.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/FiberAndTaskPairListTests.cs).
  * _[FiberAndHandlerPairList{TMessage}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/FiberAndHandlerPairList.cs)_ - List of destination fiber and handler pairs.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/FiberAndTaskPairList.cs#L94).
 
 ## Channels ##
-This is a mechanism for parallel processing. If you do not need that much performance, `MessageDriver{T}` is recommended. It is easy to handle because it is serial.
-
-A channel is a messaging mechanism that abstracts the communication destination.  Fibers act as actors. Arrival messages are processed in parallel for each fiber. 
+This is a mechanism for parallel processing.  A channel is a messaging mechanism that abstracts the communication destination.  Fibers act as actors. Arrival messages are processed in parallel for each fiber. 
 
  * _[Channel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/Channel.cs)_ - Forward published messages to all subscribers.  One-way.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ChannelTests.cs).
 
