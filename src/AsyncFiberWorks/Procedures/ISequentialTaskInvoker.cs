@@ -4,14 +4,15 @@ using System.Threading.Tasks;
 namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
-    /// Action driver invoking interface.
+    /// Task invoke interface.
     /// </summary>
-    public interface IActionDriverInvoker
+    public interface ISequentialTaskInvoker
     {
         /// <summary>
-        /// Invoke all subscribers.
+        /// Invoke all tasks sequentially.
         /// </summary>
         /// <param name="defaultContext">Default context to be used if not specified.</param>
-        Task InvokeAsync(IFiber defaultContext);
+        /// <returns>A task that waits for tasks to be performed.</returns>
+        Task InvokeSequentialAsync(IFiber defaultContext);
     }
 }

@@ -19,12 +19,12 @@ namespace AsyncFiberWorks.Procedures
         private bool _reading;
 
         /// <summary>
-        /// Subscribe a driver.
+        /// Subscribe a task list.
         /// </summary>
-        /// <param name="subscribable"></param>
-        public AsyncRegister(IActionDriverSubscriber subscribable)
+        /// <param name="taskList"></param>
+        public AsyncRegister(ISequentialTaskListRegistry taskList)
         {
-            _subscription = subscribable.Subscribe(async () =>
+            _subscription = taskList.Add(async () =>
             {
                 await SetFlagAndWaitClearing().ConfigureAwait(false);
             });

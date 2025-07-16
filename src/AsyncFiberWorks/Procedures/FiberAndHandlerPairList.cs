@@ -1,62 +1,96 @@
-using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Executors;
-using AsyncFiberWorks.Fibers;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Fibers;
 
 namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
-    /// Invokes all of the subscriber's actions.
+    /// List of destination fiber and handler pairs.
+    /// Distribute messages to all registered handlers.
+    /// Can specify the fiber to be executed.
+    /// Call all handlers in the order in which they were registered.
+    /// Wait for the calls to complete one by one before proceeding.
     /// </summary>
-    public class ActionDriver : IActionDriverInvoker, IActionDriverSubscriber
+    /// <typeparam name="TMessage">Message type.</typeparam>
+    public class FiberAndHandlerPairList<TMessage> : ISequentialHandlerListRegistry<TMessage>, ISequentialPublisher<TMessage>
     {
-        private readonly object _lock = new object();
-        private readonly LinkedList<RegisteredAction> _actions = new LinkedList<RegisteredAction>();
-        private readonly List<RegisteredAction> _copiedActions = new List<RegisteredAction>();
-        private readonly IActionExecutor _executor;
+        private object _lock = new object();
+        private LinkedList<RegisteredHandler> _actions = new LinkedList<RegisteredHandler>();
+        private List<RegisteredHandler> _copiedActions = new List<RegisteredHandler>();
         bool _inInvoking = false;
 
         /// <summary>
-        /// Create an action driver.
+        /// Create a list.
         /// </summary>
-        /// <param name="executor"></param>
-        public ActionDriver(IActionExecutor executor)
-        {
-            _executor = executor ?? SimpleActionExecutor.Instance;
-        }
-
-        /// <summary>
-        /// Create an action driver.
-        /// </summary>
-        public ActionDriver()
-            : this(null)
+        public FiberAndHandlerPairList()
         {
         }
 
         /// <summary>
-        /// Subscribe an action driver.
+        /// Add a handler to the tail.
         /// </summary>
-        /// <param name="action">Subscriber.</param>
-        /// <param name="context">The context in which the action will execute. if null, the default is used.</param>
-        /// <returns>Unsubscriber.</returns>
-        public IDisposable Subscribe(Action action, IFiber context = null)
+        /// <param name="handler">Message handler.</param>
+        /// <param name="context">The context in which the handler will execute. if null, the default is used.</param>
+        /// <returns>Handle for canceling registration.</returns>
+        public IDisposable Add(Action<TMessage> handler, IFiber context = null)
         {
             var maskableFilter = new ToggleFilter();
-            Action safeAction = () =>
+            Action<TMessage> safeAction = (message) =>
             {
                 var enabled = maskableFilter.IsEnabled;
                 if (enabled)
                 {
-                    action();
+                    handler(message);
                 }
             };
-            var registeredAction = new RegisteredAction()
+            var registeredHandler = new RegisteredHandler()
             {
-                ActionType = ActionType.SimpleAction,
+                HandlerType = HandlerType.SimpleHandler,
                 Context = context,
-                SimpleAction = safeAction,
+                SimpleHandler = safeAction,
+            };
+
+            lock (_lock)
+            {
+                _actions.AddLast(registeredHandler);
+            }
+
+            var unsubscriber = new Unsubscriber(() =>
+            {
+                maskableFilter.IsEnabled = false;
+                lock (_lock)
+                {
+                    _actions.Remove(registeredHandler);
+                }
+            });
+
+            return unsubscriber;
+        }
+
+        /// <summary>
+        /// Add a handler to the tail.
+        /// </summary>
+        /// <param name="handler">Message handler.</param>
+        /// <param name="context">The context in which the handler will execute. if null, the default is used.</param>
+        /// <returns>Handle for canceling registration.</returns>
+        public IDisposable Add(Func<TMessage, Task> handler, IFiber context = null)
+        {
+            var maskableFilter = new ToggleFilter();
+            Func<TMessage, Task> safeAction = async (message) =>
+            {
+                var enabled = maskableFilter.IsEnabled;
+                if (enabled)
+                {
+                    await handler(message);
+                }
+            };
+            var registeredAction = new RegisteredHandler()
+            {
+                HandlerType = HandlerType.FuncTaskHandler,
+                Context = context,
+                FuncTaskHandler = safeAction,
             };
 
             lock (_lock)
@@ -77,52 +111,12 @@ namespace AsyncFiberWorks.Procedures
         }
 
         /// <summary>
-        /// Subscribe an action driver.
+        /// Distribute one message.
         /// </summary>
-        /// <param name="action">Subscriber.</param>
-        /// <param name="context">The context in which the action will execute. if null, the default is used.</param>
-        /// <returns>Unsubscriber.</returns>
-        public IDisposable Subscribe(Func<Task> action, IFiber context = null)
-        {
-            var maskableFilter = new ToggleFilter();
-            Func<Task> safeAction = async () =>
-            {
-                var enabled = maskableFilter.IsEnabled;
-                if (enabled)
-                {
-                    await action();
-                }
-            };
-            var registeredAction = new RegisteredAction()
-            {
-                ActionType = ActionType.FuncTask,
-                Context = context,
-                FuncTask = safeAction,
-            };
-
-            lock (_lock)
-            {
-                _actions.AddLast(registeredAction);
-            }
-
-            var unsubscriber = new Unsubscriber(() =>
-            {
-                maskableFilter.IsEnabled = false;
-                lock (_lock)
-                {
-                    _actions.Remove(registeredAction);
-                }
-            });
-
-            return unsubscriber;
-        }
-
-        /// <summary>
-        /// Invoke all subscribers.
-        /// </summary>
+        /// <param name="message">A message.</param>
         /// <param name="defaultContext">Default context to be used if not specified.</param>
         /// <returns>A task that waits for actions to be performed.</returns>
-        public async Task InvokeAsync(IFiber defaultContext)
+        public async Task PublishSequentialAsync(TMessage message, IFiber defaultContext)
         {
             lock (_lock)
             {
@@ -144,7 +138,7 @@ namespace AsyncFiberWorks.Procedures
             try
             {
                 int nextIndex = 0;
-                Func<RegisteredAction> getNextAction = () =>
+                Func<RegisteredHandler> getNextAction = () =>
                 {
                     if (nextIndex >= _copiedActions.Count)
                     {
@@ -156,8 +150,8 @@ namespace AsyncFiberWorks.Procedures
                 };
 
                 var tcs = new TaskCompletionSource<int>();
-                var executionOfSimpleActionArray = new Action<RegisteredAction>[1];
-                var executionOfFuncTaskArray = new Func<RegisteredAction, Task>[1];
+                var executionOfSimpleHandlerArray = new Action<RegisteredHandler, TMessage>[1];
+                var executionOfFuncTaskHandlerArray = new Func<RegisteredHandler, TMessage, Task>[1];
 
                 Action enqueueNextAction = () =>
                 {
@@ -169,46 +163,46 @@ namespace AsyncFiberWorks.Procedures
                     else
                     {
                         var nextContext = nextAction.Context ?? defaultContext;
-                        if (nextAction.ActionType == ActionType.SimpleAction)
+                        if (nextAction.HandlerType == HandlerType.SimpleHandler)
                         {
-                            nextContext.Enqueue(() => executionOfSimpleActionArray[0](nextAction));
+                            nextContext.Enqueue(() => executionOfSimpleHandlerArray[0](nextAction, message));
                         }
-                        else if (nextAction.ActionType == ActionType.FuncTask)
+                        else if (nextAction.HandlerType == HandlerType.FuncTaskHandler)
                         {
-                            nextContext.EnqueueTask(() => executionOfFuncTaskArray[0](nextAction));
+                            nextContext.EnqueueTask(() => executionOfFuncTaskHandlerArray[0](nextAction, message));
                         }
                         else
                         {
-                            throw new Exception($"Unknown ActionType found. ActionType={nextAction.ActionType}, nextIndex={nextIndex}.");
+                            throw new Exception($"Unknown HandlerType found. HandlerType={nextAction.HandlerType}, nextIndex={nextIndex}.");
                         }
                     }
                 };
 
-                Action<RegisteredAction> executionOfSimpleAction = (currentAction) =>
+                Action<RegisteredHandler, TMessage> executionOfSimpleHandler = (currentAction, m) =>
                 {
                     try
                     {
-                        _executor.Execute(currentAction.SimpleAction);
+                        currentAction.SimpleHandler(m);
                     }
                     finally
                     {
                         enqueueNextAction();
                     }
                 };
-                executionOfSimpleActionArray[0] = executionOfSimpleAction;
+                executionOfSimpleHandlerArray[0] = executionOfSimpleHandler;
 
-                Func<RegisteredAction, Task> executionOfFuncTask = async (currentAction) =>
+                Func<RegisteredHandler, TMessage, Task> executionOfFuncTaskHandler = async (currentAction, m) =>
                 {
                     try
                     {
-                        await _executor.Execute(currentAction.FuncTask).ConfigureAwait(false);
+                        await currentAction.FuncTaskHandler(m).ConfigureAwait(false);
                     }
                     finally
                     {
                         enqueueNextAction();
                     }
                 };
-                executionOfFuncTaskArray[0] = executionOfFuncTask;
+                executionOfFuncTaskHandlerArray[0] = executionOfFuncTaskHandler;
 
                 enqueueNextAction();
                 await tcs.Task.ConfigureAwait(false);
@@ -224,18 +218,18 @@ namespace AsyncFiberWorks.Procedures
             }
         }
 
-        internal class RegisteredAction
+        internal class RegisteredHandler
         {
-            public ActionType ActionType;
+            public HandlerType HandlerType;
             public IFiber Context;
-            public Action SimpleAction;
-            public Func<Task> FuncTask;
+            public Action<TMessage> SimpleHandler;
+            public Func<TMessage, Task> FuncTaskHandler;
         }
 
-        internal enum ActionType
+        internal enum HandlerType
         {
-            SimpleAction,
-            FuncTask,
+            SimpleHandler,
+            FuncTaskHandler,
         }
     }
 }

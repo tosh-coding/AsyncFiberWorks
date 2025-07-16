@@ -1,6 +1,5 @@
 ﻿using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.MessageFilters;
 using AsyncFiberWorks.Procedures;
 using AsyncFiberWorks.Threading;
 using NUnit.Framework;
@@ -10,7 +9,7 @@ using System.Threading.Tasks;
 namespace AsyncFiberWorksTests
 {
     [TestFixture]
-    public class ActionDriverTests
+    public class FiberAndTaskPairListTests
     {
         [Test]
         public void SubscribeSimpleActions()
@@ -19,7 +18,7 @@ namespace AsyncFiberWorksTests
             var mainLoop = new ThreadPoolAdapter();
             var fiber = mainLoop.CreateFiber();
 
-            var driver = new ActionDriver();
+            var taskList = new FiberAndTaskPairList();
             long counter = 0;
 
             Action action1 = () =>
@@ -34,12 +33,12 @@ namespace AsyncFiberWorksTests
                 counter += 1;
             };
 
-            var disposable1 = driver.Subscribe(action1);
-            var disposable2 = driver.Subscribe(action2);
+            var disposable1 = taskList.Add(action1);
+            var disposable2 = taskList.Add(action2);
 
             _ = Task.Run(async () =>
             {
-                await driver.InvokeAsync(fiber);
+                await taskList.InvokeSequentialAsync(fiber);
                 await fiber.EnqueueAsync(() =>
                 {
                     Assert.AreEqual(301, counter);
@@ -56,7 +55,7 @@ namespace AsyncFiberWorksTests
             var mainLoop = new ThreadPoolAdapter();
             var fiber = mainLoop.CreateFiber();
 
-            var driver = new ActionDriver();
+            var taskList = new FiberAndTaskPairList();
             long counter = 0;
 
             Func<Task> action1 = async () =>
@@ -73,12 +72,12 @@ namespace AsyncFiberWorksTests
                 counter += 1;
             };
 
-            var disposable1 = driver.Subscribe(action1);
-            var disposable2 = driver.Subscribe(action2);
+            var disposable1 = taskList.Add(action1);
+            var disposable2 = taskList.Add(action2);
 
             _ = Task.Run(async () =>
             {
-                await driver.InvokeAsync(fiber);
+                await taskList.InvokeSequentialAsync(fiber);
                 await fiber.EnqueueAsync(() =>
                 {
                     Assert.AreEqual(301, counter);
@@ -91,7 +90,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task AsyncInvokingWithArgument()
         {
-            var driver = new MessageDriver<int>();
+            var handlerList = new FiberAndHandlerPairList<int>();
 
             long counter = 0;
 
@@ -107,13 +106,13 @@ namespace AsyncFiberWorksTests
                 counter += value / 10;
             };
 
-            var disposable1 = driver.Subscribe(action1);
-            var disposable2 = driver.Subscribe(action2);
+            var disposable1 = handlerList.Add(action1);
+            var disposable2 = handlerList.Add(action2);
 
             var defaultFiber = new PoolFiber();
-            await driver.InvokeAsync(200, defaultFiber);
+            await handlerList.PublishSequentialAsync(200, defaultFiber);
             Assert.AreEqual(200 + 20, counter);
-            await driver.InvokeAsync(10, defaultFiber);
+            await handlerList.PublishSequentialAsync(10, defaultFiber);
             Assert.AreEqual(200 + 20 + 10 + 1, counter);
         }
 
@@ -124,7 +123,7 @@ namespace AsyncFiberWorksTests
             var mainLoop = new ThreadPoolAdapter();
             var fiber = mainLoop.CreateFiber();
 
-            var driver = new ActionDriver();
+            var taskList = new FiberAndTaskPairList();
             long counter = 0;
             var unsubscriber = new Unsubscriber();
 
@@ -134,14 +133,14 @@ namespace AsyncFiberWorksTests
                 unsubscriber.Dispose();
             };
 
-            var disposable1 = driver.Subscribe(action);
+            var disposable1 = taskList.Add(action);
             unsubscriber.AppendDisposable(disposable1);
-            var disposable2 = driver.Subscribe(action);
+            var disposable2 = taskList.Add(action);
             unsubscriber.AppendDisposable(disposable2);
 
             _ = Task.Run(async () =>
             {
-                await driver.InvokeAsync(fiber);
+                await taskList.InvokeSequentialAsync(fiber);
                 await fiber.EnqueueAsync(() =>
                 {
                     Assert.AreEqual(1, counter);

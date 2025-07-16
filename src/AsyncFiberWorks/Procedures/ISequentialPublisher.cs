@@ -1,20 +1,20 @@
 using AsyncFiberWorks.Fibers;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorks.MessageDrivers
+namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
-    /// Message driver distribution interface.
+    /// An interface for publishing messages sequentially.
     /// </summary>
     /// <typeparam name="TMessage">Message type.</typeparam>
-    public interface IMessageDriverDistributor<TMessage>
+    public interface ISequentialPublisher<TMessage>
     {
         /// <summary>
-        /// Distribute one message.
+        /// Publish one message to all registrants in sequence.
         /// </summary>
         /// <param name="message">A message.</param>
         /// <param name="defaultContext">Default context to be used if not specified.</param>
-        /// <returns>A task that waits for actions to be performed.</returns>
-        Task InvokeAsync(TMessage message, IFiber defaultContext);
+        /// <returns>Tasks awaiting publication completion.</returns>
+        Task PublishSequentialAsync(TMessage message, IFiber defaultContext);
     }
 }

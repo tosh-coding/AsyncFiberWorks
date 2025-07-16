@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncFiberWorks.MessageDrivers;
 
 namespace AsyncFiberWorks.Procedures
 {
@@ -22,12 +21,12 @@ namespace AsyncFiberWorks.Procedures
         private bool _reading;
 
         /// <summary>
-        /// Subscribe a driver.
+        /// Subscribe a handler list.
         /// </summary>
-        /// <param name="subscribable"></param>
-        public AsyncRegister(IMessageDriverSubscriber<T> subscribable)
+        /// <param name="handlerList"></param>
+        public AsyncRegister(ISequentialHandlerListRegistry<T> handlerList)
         {
-            _subscription = subscribable.Subscribe(async (arg) =>
+            _subscription = handlerList.Add(async (arg) =>
             {
                 await SetValueAndWaitClearing(arg).ConfigureAwait(false);
             });

@@ -1,10 +1,7 @@
-﻿using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.MessageFilters;
+﻿using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.Procedures;
 using NUnit.Framework;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorksTests
@@ -15,13 +12,13 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task WaitingOfAsyncRegister()
         {
-            var driver = new ActionDriver();
+            var taskList = new FiberAndTaskPairList();
             int resultCounter = 0;
             var lockObj = new object();
 
             Func<int, Task> func = async (maxCount) =>
             {
-                var reg = new AsyncRegister(driver);
+                var reg = new AsyncRegister(taskList);
                 try
                 {
                     int counter = 0;
@@ -47,7 +44,7 @@ namespace AsyncFiberWorksTests
             var fiber = new PoolFiber();
             for (int i = 0; i < 10; i++)
             {
-                await driver.InvokeAsync(fiber);
+                await taskList.InvokeSequentialAsync(fiber);
             }
 
             await Task.WhenAll(task1, task2);
@@ -57,13 +54,13 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task WaitingOfAsyncRegisterOfT()
         {
-            var driver = new MessageDriver<int>();
+            var handlerList = new FiberAndHandlerPairList<int>();
             int resultCounter = 0;
             var lockObj = new object();
 
             Func<int, Task> func = async (maxCount) =>
             {
-                var reg = new AsyncRegister<int>(driver);
+                var reg = new AsyncRegister<int>(handlerList);
                 try
                 {
                     int counter = 0;
@@ -89,7 +86,7 @@ namespace AsyncFiberWorksTests
             var defaultContext = new PoolFiber();
             for (int i = 0; i < 10; i++)
             {
-                await driver.InvokeAsync(i + 1, defaultContext);
+                await handlerList.PublishSequentialAsync(i + 1, defaultContext);
             }
 
             await Task.WhenAll(task1, task2);
