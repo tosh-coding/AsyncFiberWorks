@@ -10,7 +10,7 @@ namespace AsyncFiberWorks.Procedures
     /// <summary>
     /// Invokes all of the subscriber's actions.
     /// </summary>
-    public class ActionDriver : IActionDriver
+    public class ActionDriver : IActionDriverInvoker, IActionDriverSubscriber
     {
         private readonly object _lock = new object();
         private readonly LinkedList<RegisteredAction> _actions = new LinkedList<RegisteredAction>();
