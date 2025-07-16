@@ -15,7 +15,7 @@ namespace AsyncFiberWorks.Procedures
         private readonly object _lock = new object();
         private readonly LinkedList<RegisteredAction> _actions = new LinkedList<RegisteredAction>();
         private readonly List<RegisteredAction> _copiedActions = new List<RegisteredAction>();
-        IActionExecutor _executor;
+        private readonly IActionExecutor _executor;
         bool _inInvoking = false;
 
         /// <summary>
