@@ -18,7 +18,11 @@ namespace AsyncFiberWorks.Procedures
         private object _lock = new object();
         private LinkedList<RegisteredHandler> _actions = new LinkedList<RegisteredHandler>();
         private List<RegisteredHandler> _copiedActions = new List<RegisteredHandler>();
-        bool _inInvoking = false;
+        private bool _inInvoking = false;
+        private int _nextIndex = 0;
+        private TaskCompletionSource<int> _tcsEnd = null;
+        private IFiber _defaultContext = null;
+        private TMessage _message;
 
         /// <summary>
         /// Create a list.
@@ -126,7 +130,6 @@ namespace AsyncFiberWorks.Procedures
 
                 _copiedActions.Clear();
                 _copiedActions.AddRange(_actions);
-
                 if (_copiedActions.Count <= 0)
                 {
                     return;
@@ -134,85 +137,82 @@ namespace AsyncFiberWorks.Procedures
                 _inInvoking = true;
             }
 
+            _nextIndex = 0;
+            _tcsEnd = new TaskCompletionSource<int>();
+            _defaultContext = defaultContext;
+            _message = message;
+
             try
             {
-                int nextIndex = 0;
-                Func<RegisteredHandler> getNextAction = () =>
-                {
-                    if (nextIndex >= _copiedActions.Count)
-                    {
-                        return null;
-                    }
-                    var result = _copiedActions[nextIndex];
-                    nextIndex += 1;
-                    return result;
-                };
-
-                var tcs = new TaskCompletionSource<int>();
-                var executionOfSimpleHandlerArray = new Action<RegisteredHandler, TMessage>[1];
-                var executionOfFuncTaskHandlerArray = new Func<RegisteredHandler, TMessage, Task>[1];
-
-                Action enqueueNextAction = () =>
-                {
-                    var nextAction = getNextAction();
-                    if (nextAction == null)
-                    {
-                        defaultContext.Enqueue(() => { tcs.SetResult(0); });
-                    }
-                    else
-                    {
-                        var nextContext = nextAction.Context ?? defaultContext;
-                        if (nextAction.HandlerType == HandlerType.SimpleHandler)
-                        {
-                            nextContext.Enqueue(() => executionOfSimpleHandlerArray[0](nextAction, message));
-                        }
-                        else if (nextAction.HandlerType == HandlerType.FuncTaskHandler)
-                        {
-                            nextContext.EnqueueTask(() => executionOfFuncTaskHandlerArray[0](nextAction, message));
-                        }
-                        else
-                        {
-                            throw new Exception($"Unknown HandlerType found. HandlerType={nextAction.HandlerType}, nextIndex={nextIndex}.");
-                        }
-                    }
-                };
-
-                Action<RegisteredHandler, TMessage> executionOfSimpleHandler = (currentAction, m) =>
-                {
-                    try
-                    {
-                        currentAction.SimpleHandler(m);
-                    }
-                    finally
-                    {
-                        enqueueNextAction();
-                    }
-                };
-                executionOfSimpleHandlerArray[0] = executionOfSimpleHandler;
-
-                Func<RegisteredHandler, TMessage, Task> executionOfFuncTaskHandler = async (currentAction, m) =>
-                {
-                    try
-                    {
-                        await currentAction.FuncTaskHandler(m).ConfigureAwait(false);
-                    }
-                    finally
-                    {
-                        enqueueNextAction();
-                    }
-                };
-                executionOfFuncTaskHandlerArray[0] = executionOfFuncTaskHandler;
-
                 enqueueNextAction();
-                await tcs.Task.ConfigureAwait(false);
-                await Task.Yield();
+                await _tcsEnd.Task.ConfigureAwait(false);
             }
             finally
             {
                 _copiedActions.Clear();
+                _tcsEnd = null;
+                _defaultContext = null;
+                _message = default;
                 lock (_lock)
                 {
                     _inInvoking = false;
+                }
+                await Task.Yield();
+            }
+        }
+
+        RegisteredHandler getNextAction()
+        {
+            if (_nextIndex >= _copiedActions.Count)
+            {
+                return null;
+            }
+            var result = _copiedActions[_nextIndex];
+            _nextIndex += 1;
+            return result;
+        }
+
+        void enqueueNextAction()
+        {
+            var nextAction = getNextAction();
+            if (nextAction == null)
+            {
+                _defaultContext.Enqueue(() => { _tcsEnd.SetResult(0); });
+            }
+            else
+            {
+                var nextContext = nextAction.Context ?? _defaultContext;
+                if (nextAction.HandlerType == HandlerType.SimpleHandler)
+                {
+                    nextContext.Enqueue(() =>
+                    {
+                        try
+                        {
+                            nextAction.SimpleHandler(_message);
+                        }
+                        finally
+                        {
+                            enqueueNextAction();
+                        }
+                    });
+                }
+                else if (nextAction.HandlerType == HandlerType.FuncTaskHandler)
+                {
+                    nextContext.EnqueueTask(async () =>
+                    {
+                        try
+                        {
+                            await nextAction.FuncTaskHandler(_message).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            enqueueNextAction();
+                        }
+                    });
+                }
+                else
+                {
+                    throw new Exception($"Unknown HandlerType found. HandlerType={nextAction.HandlerType}, _copiedActionsIndex={_nextIndex}.");
                 }
             }
         }

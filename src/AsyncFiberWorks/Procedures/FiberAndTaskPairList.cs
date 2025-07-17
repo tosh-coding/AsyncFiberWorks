@@ -19,7 +19,10 @@ namespace AsyncFiberWorks.Procedures
         private readonly LinkedList<RegisteredAction> _actions = new LinkedList<RegisteredAction>();
         private readonly List<RegisteredAction> _copiedActions = new List<RegisteredAction>();
         private readonly IActionExecutor _executor;
-        bool _inInvoking = false;
+        private bool _inInvoking = false;
+        private int _nextIndex = 0;
+        private TaskCompletionSource<int> _tcsEnd = null;
+        private IFiber _defaultContext = null;
 
         /// <summary>
         /// Create a list with specified executer.
@@ -136,7 +139,6 @@ namespace AsyncFiberWorks.Procedures
 
                 _copiedActions.Clear();
                 _copiedActions.AddRange(_actions);
-
                 if (_copiedActions.Count <= 0)
                 {
                     return;
@@ -144,85 +146,80 @@ namespace AsyncFiberWorks.Procedures
                 _inInvoking = true;
             }
 
+            _nextIndex = 0;
+            _tcsEnd = new TaskCompletionSource<int>();
+            _defaultContext = defaultContext;
+
             try
             {
-                int nextIndex = 0;
-                Func<RegisteredAction> getNextAction = () =>
-                {
-                    if (nextIndex >= _copiedActions.Count)
-                    {
-                        return null;
-                    }
-                    var result = _copiedActions[nextIndex];
-                    nextIndex += 1;
-                    return result;
-                };
-
-                var tcs = new TaskCompletionSource<int>();
-                var executionOfSimpleActionArray = new Action<RegisteredAction>[1];
-                var executionOfFuncTaskArray = new Func<RegisteredAction, Task>[1];
-
-                Action enqueueNextAction = () =>
-                {
-                    var nextAction = getNextAction();
-                    if (nextAction == null)
-                    {
-                        defaultContext.Enqueue(() => { tcs.SetResult(0); });
-                    }
-                    else
-                    {
-                        var nextContext = nextAction.Context ?? defaultContext;
-                        if (nextAction.ActionType == ActionType.SimpleAction)
-                        {
-                            nextContext.Enqueue(() => executionOfSimpleActionArray[0](nextAction));
-                        }
-                        else if (nextAction.ActionType == ActionType.FuncTask)
-                        {
-                            nextContext.EnqueueTask(() => executionOfFuncTaskArray[0](nextAction));
-                        }
-                        else
-                        {
-                            throw new Exception($"Unknown ActionType found. ActionType={nextAction.ActionType}, nextIndex={nextIndex}.");
-                        }
-                    }
-                };
-
-                Action<RegisteredAction> executionOfSimpleAction = (currentAction) =>
-                {
-                    try
-                    {
-                        _executor.Execute(currentAction.SimpleAction);
-                    }
-                    finally
-                    {
-                        enqueueNextAction();
-                    }
-                };
-                executionOfSimpleActionArray[0] = executionOfSimpleAction;
-
-                Func<RegisteredAction, Task> executionOfFuncTask = async (currentAction) =>
-                {
-                    try
-                    {
-                        await _executor.Execute(currentAction.FuncTask).ConfigureAwait(false);
-                    }
-                    finally
-                    {
-                        enqueueNextAction();
-                    }
-                };
-                executionOfFuncTaskArray[0] = executionOfFuncTask;
-
                 enqueueNextAction();
-                await tcs.Task.ConfigureAwait(false);
-                await Task.Yield();
+                await _tcsEnd.Task.ConfigureAwait(false);
             }
             finally
             {
                 _copiedActions.Clear();
+                _tcsEnd = null;
+                _defaultContext = null;
                 lock (_lock)
                 {
                     _inInvoking = false;
+                }
+                await Task.Yield();
+            }
+        }
+
+        RegisteredAction getNextAction()
+        {
+            if (_nextIndex >= _copiedActions.Count)
+            {
+                return null;
+            }
+            var result = _copiedActions[_nextIndex];
+            _nextIndex += 1;
+            return result;
+        }
+
+        void enqueueNextAction()
+        {
+            var nextAction = getNextAction();
+            if (nextAction == null)
+            {
+                _defaultContext.Enqueue(() => { _tcsEnd.SetResult(0); });
+            }
+            else
+            {
+                var nextContext = nextAction.Context ?? _defaultContext;
+                if (nextAction.ActionType == ActionType.SimpleAction)
+                {
+                    nextContext.Enqueue(() =>
+                    {
+                        try
+                        {
+                            _executor.Execute(nextAction.SimpleAction);
+                        }
+                        finally
+                        {
+                            enqueueNextAction();
+                        }
+                    });
+                }
+                else if (nextAction.ActionType == ActionType.FuncTask)
+                {
+                    nextContext.EnqueueTask(async () =>
+                    {
+                        try
+                        {
+                            await _executor.Execute(nextAction.FuncTask).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            enqueueNextAction();
+                        }
+                    });
+                }
+                else
+                {
+                    throw new Exception($"Unknown ActionType found. ActionType={nextAction.ActionType}, nextIndex={_nextIndex}.");
                 }
             }
         }
