@@ -8,7 +8,6 @@ namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
     /// List of destination fiber and handler pairs.
-    /// Distribute messages to all registered handlers.
     /// Can specify the fiber to be executed.
     /// Call all handlers in the order in which they were registered.
     /// Wait for the calls to complete one by one before proceeding.
