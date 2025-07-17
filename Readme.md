@@ -161,7 +161,7 @@ Producer-Consumer pattern.  One or more threads become consumers and execute tas
 These are mechanisms for sequential processing. Call all tasks in the order in which they were registered. Can specify the fiber to be executed. Wait for the calls to complete one by one before proceeding.
 
  * _[FiberAndTaskPairList](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/FiberAndTaskPairList.cs)_ - List of destination fiber and task pairs.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/FiberAndTaskPairListTests.cs).
- * _[FiberAndHandlerPairList{TMessage}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/FiberAndHandlerPairList.cs)_ - List of destination fiber and handler pairs.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/FiberAndTaskPairList.cs#L94).
+ * _[FiberAndHandlerPairList{TMessage}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/FiberAndHandlerPairList.cs)_ - List of destination fiber and handler pairs. Can be used for event distribution. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/FiberAndTaskPairListTests.cs#L93).
 
 ## Channels ##
 This is a mechanism for parallel processing.  A channel is a messaging mechanism that abstracts the communication destination.  Fibers act as actors. Arrival messages are processed in parallel for each fiber. 
