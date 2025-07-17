@@ -145,7 +145,7 @@ See API Documentation here: https://tosh-coding.github.io/AsyncFiberWorks/api/
 [Unit tests](https://github.com/tosh-coding/AsyncFiberWorks/tree/main/src/AsyncFiberWorksTests) can also be used as a code sample.
 
 ## Fibers ##
-Fiber is a mechanism for sequential processing.  Actions added to a fiber are executed sequentially.
+Fiber is a mechanism for sequential processing.  Actions added to a fiber are executed sequentially.  `Action` and `Func<Task>` can be added.
 
   * _[PoolFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/PoolFiber.cs)_ - Fiber. ".NET ThreadPool" is used by default. User thread pools are also available.
 
@@ -158,7 +158,7 @@ Producer-Consumer pattern.  One or more threads become consumers and execute tas
  * _[ThreadPoolAdapter](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/ThreadPoolAdapter.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
 
 ## Procedures ##
-These are mechanisms for sequential processing. Call all tasks in the order in which they were registered. Can specify the fiber to be executed. Wait for the calls to complete one by one before proceeding.
+These are mechanisms for sequential processing. Call all tasks in the order in which they were registered. Wait for the calls to complete one by one before proceeding. Different fibers can be specified for each action. Can be performed repeatedly.
 
  * _[FiberAndTaskPairList](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/FiberAndTaskPairList.cs)_ - List of destination fiber and task pairs.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/FiberAndTaskPairListTests.cs).
  * _[FiberAndHandlerPairList{TMessage}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/FiberAndHandlerPairList.cs)_ - List of destination fiber and handler pairs. Can be used for event handling. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/FiberAndTaskPairListTests.cs#L93).
