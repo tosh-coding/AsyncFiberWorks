@@ -2,6 +2,7 @@
 using AsyncFiberWorks.Procedures;
 using NUnit.Framework;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorksTests
@@ -66,10 +67,10 @@ namespace AsyncFiberWorksTests
                     int counter = 0;
                     while (counter < maxCount)
                     {
-                        var value = await reg.WaitSetting();
+                        var e = await reg.WaitSetting();
                         lock (lockObj)
                         {
-                            resultCounter += value;
+                            resultCounter += e.Arg;
                         }
                         counter += 1;
                     }
@@ -96,6 +97,67 @@ namespace AsyncFiberWorksTests
         int Sigma(int n)
         {
             return n * (n + 1) / 2;
+        }
+
+        [Test]
+        public async Task WaitingOfProcessedFlagEventArgs()
+        {
+            var driver = new FiberAndHandlerPairList<int>();
+            int resultCounter = 0;
+            var lockObj = new object();
+
+            var cts = new CancellationTokenSource();
+            Func<int, Task> func = async (threshold) =>
+            {
+                var reg = new AsyncRegister<int>(driver);
+                try
+                {
+                    while (true)
+                    {
+                        var e = await reg.WaitSetting(cts.Token);
+                        if (e.Arg < threshold)
+                        {
+                            e.Processed = false;
+                        }
+                        else
+                        {
+                            lock (lockObj)
+                            {
+                                resultCounter += threshold;
+                            }
+                            e.Processed = true;
+                        }
+                    }
+                }
+                finally
+                {
+                    reg.Dispose();
+                }
+            };
+
+            var task1 = func(7);
+            var task2 = func(5);
+            var task3 = func(3);
+            var task4 = func(1);
+
+            var defaultContext = new PoolFiber();
+            for (int i = 0; i < 10; i++)
+            {
+                int eventArg = i + 1;
+                await driver.PublishSequentialAsync(eventArg, defaultContext);
+            }
+
+            cts.Cancel();
+            try
+            {
+                await Task.WhenAll(task1, task2, task3, task4);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            await Task.Delay(40);
+            int expectedValue = 1 + 1 + 3 + 3 + 5 + 5 + 7 + 7 + 7 + 7;
+            Assert.AreEqual(expectedValue, resultCounter);
         }
     }
 }

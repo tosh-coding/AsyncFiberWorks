@@ -11,6 +11,7 @@ namespace AsyncFiberWorks.Procedures
     /// Can specify the fiber to be executed.
     /// Call all handlers in the order in which they were registered.
     /// Wait for the calls to complete one by one before proceeding.
+    /// If it has not yet been processed, it proceeds to the next step. If already processed, exit at that point.
     /// </summary>
     /// <typeparam name="TMessage">Message type.</typeparam>
     public class FiberAndHandlerPairList<TMessage> : ISequentialHandlerListRegistry<TMessage>, ISequentialPublisher<TMessage>
@@ -34,19 +35,20 @@ namespace AsyncFiberWorks.Procedures
         /// <summary>
         /// Add a handler to the tail.
         /// </summary>
-        /// <param name="handler">Message handler.</param>
+        /// <param name="handler">Message handler. The return value is the processed flag. If this flag is true, subsequent handlers are not called.</param>
         /// <param name="context">The context in which the handler will execute. if null, the default is used.</param>
         /// <returns>Handle for canceling registration.</returns>
-        public IDisposable Add(Action<TMessage> handler, IFiber context = null)
+        public IDisposable Add(Func<TMessage, bool> handler, IFiber context = null)
         {
             var maskableFilter = new ToggleFilter();
-            Action<TMessage> safeAction = (message) =>
+            Func<TMessage, bool> safeAction = (message) =>
             {
                 var enabled = maskableFilter.IsEnabled;
                 if (enabled)
                 {
-                    handler(message);
+                    return handler(message);
                 }
+                return false;
             };
             var registeredHandler = new RegisteredHandler()
             {
@@ -75,19 +77,20 @@ namespace AsyncFiberWorks.Procedures
         /// <summary>
         /// Add a handler to the tail.
         /// </summary>
-        /// <param name="handler">Message handler.</param>
+        /// <param name="handler">Message handler. The return value is the processed flag. If this flag is true, subsequent handlers are not called.</param>
         /// <param name="context">The context in which the handler will execute. if null, the default is used.</param>
         /// <returns>Handle for canceling registration.</returns>
-        public IDisposable Add(Func<TMessage, Task> handler, IFiber context = null)
+        public IDisposable Add(Func<TMessage, Task<bool>> handler, IFiber context = null)
         {
             var maskableFilter = new ToggleFilter();
-            Func<TMessage, Task> safeAction = async (message) =>
+            Func<TMessage, Task<bool>> safeAction = async (message) =>
             {
                 var enabled = maskableFilter.IsEnabled;
                 if (enabled)
                 {
-                    await handler(message);
+                    return await handler(message);
                 }
+                return false;
             };
             var registeredAction = new RegisteredHandler()
             {
@@ -177,7 +180,7 @@ namespace AsyncFiberWorks.Procedures
             var nextAction = getNextAction();
             if (nextAction == null)
             {
-                _defaultContext.Enqueue(() => { _tcsEnd.SetResult(0); });
+                enqueueEndAction();
             }
             else
             {
@@ -186,13 +189,21 @@ namespace AsyncFiberWorks.Procedures
                 {
                     nextContext.Enqueue(() =>
                     {
+                        bool isProcessed = false;
                         try
                         {
-                            nextAction.SimpleHandler(_message);
+                            isProcessed = nextAction.SimpleHandler(_message);
                         }
                         finally
                         {
-                            enqueueNextAction();
+                            if (!isProcessed)
+                            {
+                                enqueueNextAction();
+                            }
+                            else
+                            {
+                                enqueueEndAction();
+                            }
                         }
                     });
                 }
@@ -200,13 +211,21 @@ namespace AsyncFiberWorks.Procedures
                 {
                     nextContext.EnqueueTask(async () =>
                     {
+                        bool isProcessed = false;
                         try
                         {
-                            await nextAction.FuncTaskHandler(_message).ConfigureAwait(false);
+                            isProcessed = await nextAction.FuncTaskHandler(_message).ConfigureAwait(false);
                         }
                         finally
                         {
-                            enqueueNextAction();
+                            if (!isProcessed)
+                            {
+                                enqueueNextAction();
+                            }
+                            else
+                            {
+                                enqueueEndAction();
+                            }
                         }
                     });
                 }
@@ -215,14 +234,20 @@ namespace AsyncFiberWorks.Procedures
                     throw new Exception($"Unknown HandlerType found. HandlerType={nextAction.HandlerType}, _copiedActionsIndex={_nextIndex}.");
                 }
             }
+
+            void enqueueEndAction()
+            {
+                _defaultContext.Enqueue(() => { _tcsEnd.SetResult(0); });
+            }
+
         }
 
         internal class RegisteredHandler
         {
             public HandlerType HandlerType;
             public IFiber Context;
-            public Action<TMessage> SimpleHandler;
-            public Func<TMessage, Task> FuncTaskHandler;
+            public Func<TMessage, bool> SimpleHandler;
+            public Func<TMessage, Task<bool>> FuncTaskHandler;
         }
 
         internal enum HandlerType

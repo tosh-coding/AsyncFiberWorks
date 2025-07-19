@@ -4,6 +4,7 @@ using AsyncFiberWorks.Procedures;
 using AsyncFiberWorks.Threading;
 using NUnit.Framework;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorksTests
@@ -94,16 +95,18 @@ namespace AsyncFiberWorksTests
 
             long counter = 0;
 
-            Func<int, Task> action1 = async (value) =>
+            Func<int, Task<bool>> action1 = async (value) =>
             {
                 await Task.Delay(100).ConfigureAwait(false);
                 counter += value;
+                return false;
             };
 
-            Func<int, Task> action2 = async (value) =>
+            Func<int, Task<bool>> action2 = async (value) =>
             {
                 await Task.Yield();
                 counter += value / 10;
+                return false;
             };
 
             var disposable1 = handlerList.Add(action1);
@@ -148,6 +151,73 @@ namespace AsyncFiberWorksTests
                 mainLoop.Stop();
             });
             mainLoop.Run();
+        }
+
+        [Test]
+        public async Task ForwardOrder()
+        {
+            var driver = new FiberAndHandlerPairList<int>();
+
+            long counter = 0;
+
+            var fiber1 = new PoolFiber();
+            Func<int, Task<bool>> receiverFunc1 = async (int e) =>
+            {
+                await fiber1.SwitchTo();
+                Assert.AreEqual(123, e);
+                await Task.Delay(100);
+                counter = 300;
+                return false;
+            };
+
+            var fiber2 = new PoolFiber();
+            Func<int, Task<bool>> receiverFunc2 = async (int e) =>
+            {
+                await fiber2.SwitchTo();
+                Assert.AreEqual(123, e);
+                counter += 1;
+                return false;
+            };
+
+            var disposable1 = driver.Add(receiverFunc1);
+            var disposable2 = driver.Add(receiverFunc2);
+
+            var defaultContext = new PoolFiber();
+            int eventArg = 123;
+            await driver.PublishSequentialAsync(eventArg, defaultContext);
+            Thread.Sleep(50);
+            Assert.AreEqual(301, counter);
+        }
+
+        [Test]
+        public async Task DiscontinuedDuringInvoking()
+        {
+            var driver = new FiberAndHandlerPairList<int>();
+
+            long counter = 0;
+
+            Func<int, Task<bool>> receiverFunc1 = async (int e) =>
+            {
+                counter = 300;
+                await Task.CompletedTask;
+                return true;
+            };
+
+            Func<int, Task<bool>> receiverFunc2 = async (int e) =>
+            {
+                counter += 1;
+                await Task.CompletedTask;
+                return false;
+            };
+
+            var disposable1 = driver.Add(receiverFunc1);
+            var disposable2 = driver.Add(receiverFunc2);
+
+            var defaultContext = new PoolFiber();
+            int eventArg = 123;
+            await driver.PublishSequentialAsync(eventArg, defaultContext);
+            Thread.Sleep(50);
+            Assert.AreEqual(300, counter);
         }
     }
 }

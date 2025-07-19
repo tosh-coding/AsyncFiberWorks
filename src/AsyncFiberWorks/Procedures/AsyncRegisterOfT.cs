@@ -12,8 +12,8 @@ namespace AsyncFiberWorks.Procedures
     public class AsyncRegister<T> : IDisposable
     {
         private readonly object _lockObj = new object();
-        private IDisposable _subscription;
-        private T _currentValue;
+        private readonly IDisposable _subscription;
+        private readonly ProcessedFlagEventArgs<T> _currentValue = new ProcessedFlagEventArgs<T>();
         private bool _hasValue;
         private bool _isDisposed;
         private readonly SemaphoreSlim _notifierSet = new SemaphoreSlim(0);
@@ -26,10 +26,7 @@ namespace AsyncFiberWorks.Procedures
         /// <param name="handlerList"></param>
         public AsyncRegister(ISequentialHandlerListRegistry<T> handlerList)
         {
-            _subscription = handlerList.Add(async (arg) =>
-            {
-                await SetValueAndWaitClearing(arg).ConfigureAwait(false);
-            });
+            _subscription = handlerList.Add((arg) => SetValueAndWaitClearing(arg));
         }
 
         /// <summary>
@@ -38,13 +35,13 @@ namespace AsyncFiberWorks.Procedures
         /// <param name="newValue"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task SetValueAndWaitClearing(T newValue)
+        async Task<bool> SetValueAndWaitClearing(T newValue)
         {
             lock (_lockObj)
             {
                 if (_isDisposed)
                 {
-                    return;
+                    return false;
                 }
                 if (_hasValue)
                 {
@@ -59,12 +56,14 @@ namespace AsyncFiberWorks.Procedures
                     throw new InvalidOperationException();
                 }
 
-                _currentValue = newValue;
+                _currentValue.Processed = false;
+                _currentValue.Arg = newValue;
                 _hasValue = true;
                 _notifierSet.Release(1);
             }
 
             await _notifierClear.WaitAsync().ConfigureAwait(false);
+            return _currentValue.Processed;
         }
 
         /// <summary>
@@ -74,7 +73,7 @@ namespace AsyncFiberWorks.Procedures
         /// <returns></returns>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="OperationCanceledException"></exception>
-        public async Task<T> WaitSetting(CancellationToken token = default)
+        public async Task<ProcessedFlagEventArgs<T>> WaitSetting(CancellationToken token = default)
         {
             lock (_lockObj)
             {
@@ -84,7 +83,7 @@ namespace AsyncFiberWorks.Procedures
                 }
                 if (_hasValue && _reading)
                 {
-                    _currentValue = default;
+                    _currentValue.Arg = default;
                     _hasValue = false;
                     _reading = false;
                     _notifierClear.Release(1);
@@ -112,7 +111,7 @@ namespace AsyncFiberWorks.Procedures
                     return;
                 }
                 _isDisposed = true;
-                _currentValue = default;
+                _currentValue.Arg = default;
                 _hasValue = false;
                 _reading = false;
                 _notifierClear.Release(1);
