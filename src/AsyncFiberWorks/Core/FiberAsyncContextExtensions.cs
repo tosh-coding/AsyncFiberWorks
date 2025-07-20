@@ -48,7 +48,7 @@ namespace AsyncFiberWorks.Core
         /// </summary>
         /// <param name="e">Fiber pause operation interface.</param>
         /// <param name="runningTask">A function that returns a task.</param>
-        public static void PauseWhileRunning(this FiberExecutionEventArgs e, Func<Task> runningTask)
+        public static void PauseWhileRunning(this IFiberExecutionEventArgs e, Func<Task> runningTask)
         {
             e.Pause();
             Task.Run(async () =>
@@ -70,7 +70,7 @@ namespace AsyncFiberWorks.Core
         /// <param name="e">Fiber pause operation interface.</param>
         /// <param name="action">Enqueued action.</param>
         /// <returns>A task that waits for enqueued actions to complete.</returns>
-        public static Task EnqueueToOriginThreadAsync(this FiberExecutionEventArgs e, Action action)
+        public static Task EnqueueToOriginThreadAsync(this IFiberExecutionEventArgs e, Action action)
         {
             var tcs = new TaskCompletionSource<byte>(TaskCreationOptions.RunContinuationsAsynchronously);
             e.EnqueueToOriginThread(() =>

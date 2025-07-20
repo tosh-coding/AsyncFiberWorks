@@ -212,7 +212,7 @@ namespace AsyncFiberWorks.Fibers
         /// Enqueue a single action. It is executed sequentially.
         /// </summary>
         /// <param name="action">Action to be executed.</param>
-        public void Enqueue(Action<FiberExecutionEventArgs> action)
+        public void Enqueue(Action<IFiberExecutionEventArgs> action)
         {
             this.Enqueue(() =>
             {

@@ -1,13 +1,12 @@
 ﻿using AsyncFiberWorks.Threading;
 using System;
-using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Core
 {
     /// <summary>
     /// Fiber execution notification handler arguments.
     /// </summary>
-    public class FiberExecutionEventArgs : EventArgs
+    public class FiberExecutionEventArgs : EventArgs, IFiberExecutionEventArgs
     {
         private Action _pause;
         private Action _resume;

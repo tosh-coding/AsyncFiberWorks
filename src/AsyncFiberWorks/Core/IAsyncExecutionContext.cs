@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Core
 {
@@ -12,6 +11,6 @@ namespace AsyncFiberWorks.Core
         /// Enqueue a single action. It is executed sequentially.
         /// </summary>
         /// <param name="action">Action to be executed.</param>
-        void Enqueue(Action<FiberExecutionEventArgs> action);
+        void Enqueue(Action<IFiberExecutionEventArgs> action);
     }
 }
