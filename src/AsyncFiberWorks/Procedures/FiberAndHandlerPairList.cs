@@ -1,8 +1,9 @@
+using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Executors;
+using AsyncFiberWorks.Fibers;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Fibers;
 
 namespace AsyncFiberWorks.Procedures
 {
@@ -19,6 +20,7 @@ namespace AsyncFiberWorks.Procedures
         private readonly object _lock = new object();
         private readonly LinkedList<RegisteredHandler> _actions = new LinkedList<RegisteredHandler>();
         private readonly List<RegisteredHandler> _copiedActions = new List<RegisteredHandler>();
+        private readonly IActionExecutor _executor;
         private readonly ProcessedFlagEventArgs<TMessage> _processedEventArg = new ProcessedFlagEventArgs<TMessage>();
         private bool _inInvoking = false;
         private int _nextIndex = 0;
@@ -26,9 +28,19 @@ namespace AsyncFiberWorks.Procedures
         private IFiber _defaultContext = null;
 
         /// <summary>
+        /// Create a list with specified executer.
+        /// </summary>
+        /// <param name="executor"></param>
+        public FiberAndHandlerPairList(IActionExecutor executor)
+        {
+            _executor = executor ?? SimpleExecutor.Instance;
+        }
+
+        /// <summary>
         /// Create a list.
         /// </summary>
         public FiberAndHandlerPairList()
+            : this(null)
         {
         }
 
@@ -192,7 +204,10 @@ namespace AsyncFiberWorks.Procedures
                         bool isProcessed = false;
                         try
                         {
-                            isProcessed = nextAction.SimpleHandler(_processedEventArg.Arg);
+                            _executor.Execute(() =>
+                            {
+                                isProcessed = nextAction.SimpleHandler(_processedEventArg.Arg);
+                            });
                         }
                         finally
                         {
@@ -211,25 +226,28 @@ namespace AsyncFiberWorks.Procedures
                 {
                     nextContext.Enqueue((e) =>
                     {
-                        var eventArgs = new FiberAndTaskPairList.EnqueueNextActionEventArgs(e, () =>
+                        _executor.Execute(e, (arg) =>
                         {
-                            if (!_processedEventArg.Processed)
+                            var eventArgs = new FiberAndTaskPairList.EnqueueNextActionEventArgs(e, () =>
                             {
-                                enqueueNextAction();
+                                if (!_processedEventArg.Processed)
+                                {
+                                    enqueueNextAction();
+                                }
+                                else
+                                {
+                                    enqueueEndAction();
+                                }
+                            });
+                            try
+                            {
+                                nextAction.EventArgHandler(eventArgs, _processedEventArg);
                             }
-                            else
+                            finally
                             {
-                                enqueueEndAction();
+                                eventArgs.CheckAndEnqueue();
                             }
                         });
-                        try
-                        {
-                            nextAction.EventArgHandler(eventArgs, _processedEventArg);
-                        }
-                        finally
-                        {
-                            eventArgs.CheckAndEnqueue();
-                        }
                     });
                 }
                 else
