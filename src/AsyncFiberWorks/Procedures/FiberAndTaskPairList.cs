@@ -88,22 +88,22 @@ namespace AsyncFiberWorks.Procedures
         /// <param name="task">Task to be performed.</param>
         /// <param name="context">The context in which the task will execute. if null, the default is used.</param>
         /// <returns>Handle for canceling registration.</returns>
-        public IDisposable Add(Func<Task> task, IFiber context = null)
+        public IDisposable Add(Action<IFiberExecutionEventArgs> task, IFiber context = null)
         {
             var maskableFilter = new ToggleFilter();
-            Func<Task> safeAction = async () =>
+            Action<IFiberExecutionEventArgs> safeAction = (e) =>
             {
                 var enabled = maskableFilter.IsEnabled;
                 if (enabled)
                 {
-                    await task();
+                    task(e);
                 }
             };
             var registeredAction = new RegisteredAction()
             {
-                ActionType = ActionType.FuncTask,
+                ActionType = ActionType.ActionFiberExecutionEventArgs,
                 Context = context,
-                FuncTask = safeAction,
+                ActionFiberExecutionEventArgs = safeAction,
             };
 
             lock (_lock)
@@ -203,17 +203,18 @@ namespace AsyncFiberWorks.Procedures
                         }
                     });
                 }
-                else if (nextAction.ActionType == ActionType.FuncTask)
+                else if (nextAction.ActionType == ActionType.ActionFiberExecutionEventArgs)
                 {
-                    nextContext.EnqueueTask(async () =>
+                    nextContext.Enqueue((e) =>
                     {
+                        var eventArgs = new EnqueueNextActionEventArgs(e, enqueueNextAction);
                         try
                         {
-                            await _executor.Execute(nextAction.FuncTask).ConfigureAwait(false);
+                            nextAction.ActionFiberExecutionEventArgs(eventArgs);
                         }
                         finally
                         {
-                            enqueueNextAction();
+                            eventArgs.CheckAndEnqueue();
                         }
                     });
                 }
@@ -229,13 +230,102 @@ namespace AsyncFiberWorks.Procedures
             public ActionType ActionType;
             public IFiber Context;
             public Action SimpleAction;
-            public Func<Task> FuncTask;
+            public Action<IFiberExecutionEventArgs> ActionFiberExecutionEventArgs;
         }
 
         internal enum ActionType
         {
             SimpleAction,
-            FuncTask,
+            ActionFiberExecutionEventArgs,
+        }
+
+        /// <summary>
+        /// Calling enqueueNextAction.
+        /// </summary>
+        internal class EnqueueNextActionEventArgs : IFiberExecutionEventArgs
+        {
+            private readonly object _lock = new object();
+            private readonly IFiberExecutionEventArgs _originEventArgs;
+            private readonly Action _enqueueNextAction;
+            private bool _enqueuedNextAction = false;
+            private bool _paused = false;
+
+            /// <summary>
+            /// Create a instance.
+            /// </summary>
+            /// <param name="originEventArgs"></param>
+            /// <param name="enqueueNextAction"></param>
+            public EnqueueNextActionEventArgs(IFiberExecutionEventArgs originEventArgs, Action enqueueNextAction)
+            {
+                _originEventArgs = originEventArgs;
+                _enqueueNextAction = enqueueNextAction;
+            }
+
+            /// <summary>
+            /// Pauses the consumption of the task queue.
+            /// This is only called during an Execute in the fiber.
+            /// </summary>
+            public void Pause()
+            {
+                _originEventArgs.Pause();
+                lock (_lock)
+                {
+                    if (!_enqueuedNextAction)
+                    {
+                        _paused = true;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Enqueue to the threads on the back side of the fiber.
+            /// </summary>
+            /// <param name="action">Enqueued action.</param>
+            public void EnqueueToOriginThread(Action action)
+            {
+                _originEventArgs.EnqueueToOriginThread(action);
+            }
+
+            /// <summary>
+            /// Resumes consumption of a paused task queue.
+            /// </summary>
+            public void Resume()
+            {
+                _originEventArgs.Resume();
+                bool needEnqueue = false;
+                lock (_lock)
+                {
+                    if (!_enqueuedNextAction)
+                    {
+                        _enqueuedNextAction = true;
+                        needEnqueue = true;
+                    }
+                }
+                if (needEnqueue)
+                {
+                    _enqueueNextAction();
+                }
+            }
+
+            /// <summary>
+            /// Enqueue if not Pause.
+            /// </summary>
+            public void CheckAndEnqueue()
+            {
+                bool needEnqueue = false;
+                lock (_lock)
+                {
+                    if ((!_enqueuedNextAction) && (!_paused))
+                    {
+                        _enqueuedNextAction = true;
+                        needEnqueue = true;
+                    }
+                }
+                if (needEnqueue)
+                {
+                    _enqueueNextAction();
+                }
+            }
         }
     }
 }

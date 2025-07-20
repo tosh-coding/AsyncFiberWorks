@@ -1,6 +1,6 @@
-﻿using AsyncFiberWorks.Fibers;
+﻿using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Fibers;
 using System;
-using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Procedures
 {
@@ -23,6 +23,6 @@ namespace AsyncFiberWorks.Procedures
         /// <param name="task">Task to be performed.</param>
         /// <param name="context">The context in which the task will execute. if null, the default is used.</param>
         /// <returns>Handle for canceling registration.</returns>
-        IDisposable Add(Func<Task> task, IFiber context = null);
+        IDisposable Add(Action<IFiberExecutionEventArgs> task, IFiber context = null);
     }
 }
