@@ -99,7 +99,7 @@ namespace AsyncFiberWorks.FiberSchedulers
         /// <returns>A task that is completed after a specified amount of time.</returns>
         public static Task ScheduleAsync(this IOneshotTimer timer, int millisecondsDelay, CancellationToken token = default)
         {
-            var tcs = new TaskCompletionSource<int>();
+            var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
             timer.InternalSchedule((state) =>
             {
                 ((TaskCompletionSource<int>)state).SetResult(0);

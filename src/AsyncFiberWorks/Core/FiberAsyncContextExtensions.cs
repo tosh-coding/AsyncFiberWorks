@@ -26,7 +26,7 @@ namespace AsyncFiberWorks.Core
         /// <returns>A task that waits until a given task is finished.</returns>
         public static async Task EnqueueTaskAsync(this IAsyncExecutionContext fiber, Func<Task> func)
         {
-            var tcs = new TaskCompletionSource<byte>();
+            var tcs = new TaskCompletionSource<byte>(TaskCreationOptions.RunContinuationsAsynchronously);
             fiber.Enqueue((e) => e.PauseWhileRunning(async () =>
             {
                 try

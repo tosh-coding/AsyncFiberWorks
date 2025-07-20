@@ -147,7 +147,7 @@ namespace AsyncFiberWorks.Procedures
             }
 
             _nextIndex = 0;
-            _tcsEnd = new TaskCompletionSource<int>();
+            _tcsEnd = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
             _defaultContext = defaultContext;
 
             try
