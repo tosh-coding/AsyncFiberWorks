@@ -65,6 +65,29 @@ namespace AsyncFiberWorks.Core
         }
 
         /// <summary>
+        /// Enqueue to the threads on the back side of the fiber.
+        /// </summary>
+        /// <param name="e">Fiber pause operation interface.</param>
+        /// <param name="action">Enqueued action.</param>
+        /// <returns>A task that waits for enqueued actions to complete.</returns>
+        public static Task EnqueueToOriginThreadAsync(this FiberExecutionEventArgs e, Action action)
+        {
+            var tcs = new TaskCompletionSource<byte>(TaskCreationOptions.RunContinuationsAsynchronously);
+            e.EnqueueToOriginThread(() =>
+            {
+                try
+                {
+                    action();
+                }
+                finally
+                {
+                    tcs.TrySetResult(0);
+                }
+            });
+            return tcs.Task;
+        }
+
+        /// <summary>
         /// Enqueue an action. Then returns a task to wait for the completion of the action.
         /// </summary>
         /// <param name="fiber">A fiber.</param>
