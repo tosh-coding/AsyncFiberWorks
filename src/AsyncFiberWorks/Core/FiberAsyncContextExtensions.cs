@@ -51,7 +51,7 @@ namespace AsyncFiberWorks.Core
         public static void PauseWhileRunning(this IFiberExecutionEventArgs e, Func<Task> runningTask)
         {
             e.Pause();
-            Task.Run(async () =>
+            e.EnqueueToOriginThread(async () =>
             {
                 try
                 {
