@@ -13,7 +13,7 @@ namespace AsyncFiberWorks.Fibers
     {
         private readonly object _lock = new object();
         private readonly IThreadPool _pool;
-        private readonly IExecutor _executor;
+        private readonly IActionExecutor _executor;
         private readonly FiberExecutionEventArgs _eventArgs;
 
         private Queue<Action> _queue = new Queue<Action>();
@@ -30,7 +30,7 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         /// <param name="pool"></param>
         /// <param name="executor"></param>
-        public PoolFiber(IThreadPool pool, IExecutor executor)
+        public PoolFiber(IThreadPool pool, IActionExecutor executor)
         {
             if (pool == null)
             {
@@ -44,7 +44,7 @@ namespace AsyncFiberWorks.Fibers
         /// <summary>
         /// Create a pool fiber with the default thread pool.
         /// </summary>
-        public PoolFiber(IExecutor executor) 
+        public PoolFiber(IActionExecutor executor) 
             : this(DefaultThreadPool.Instance, executor)
         {
         }
@@ -74,7 +74,7 @@ namespace AsyncFiberWorks.Fibers
         {
             lock (_lock)
             {
-                _queue.Enqueue(action);
+                _queue.Enqueue(() => _executor.Execute(action));
                 if (!_flushPending)
                 {
                     _pool.Queue(Flush);
@@ -98,7 +98,7 @@ namespace AsyncFiberWorks.Fibers
                         }
                     }
                     Action action = toExecute.Dequeue();
-                    _executor.Execute(action);
+                    action();
                 }
                 lock (_lock)
                 {
@@ -220,7 +220,7 @@ namespace AsyncFiberWorks.Fibers
                 {
                     _enabledPause = true;
                 }
-                action(_eventArgs);
+                _executor.Execute(_eventArgs, action);
                 lock (_lock)
                 {
                     _enabledPause = false;

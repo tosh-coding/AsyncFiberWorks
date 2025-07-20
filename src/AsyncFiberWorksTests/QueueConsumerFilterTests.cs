@@ -113,7 +113,7 @@ namespace AsyncFiberWorksTests
         }
     }
 
-    public class StubExecutor : IExecutor
+    public class StubExecutor : IActionExecutor
     {
         public List<Exception> failed = new List<Exception>();
 
@@ -127,6 +127,11 @@ namespace AsyncFiberWorksTests
             {
                 failed.Add(e);
             }
+        }
+
+        public void Execute(IFiberExecutionEventArgs e, Action<IFiberExecutionEventArgs> action)
+        {
+            throw new NotImplementedException();
         }
     }
 }

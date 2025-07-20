@@ -15,7 +15,7 @@ namespace WpfExample
         /// <param name="invoker"></param>
         /// <param name="executor"></param>
         /// <returns></returns>
-        public static IFiber Create(ISynchronizeInvoke invoker, IExecutor executor)
+        public static IFiber Create(ISynchronizeInvoke invoker, IActionExecutor executor = null)
         {
             return new PoolFiber(new FormAdapter(invoker), executor);
         }

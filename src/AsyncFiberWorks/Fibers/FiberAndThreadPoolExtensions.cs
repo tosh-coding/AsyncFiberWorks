@@ -14,7 +14,7 @@ namespace AsyncFiberWorks.Fibers
         /// <param name="threadPool"></param>
         /// <param name="executor"></param>
         /// <returns>Created fiber.</returns>
-        public static PoolFiber CreateFiber(this IThreadPool threadPool, IExecutor executor = null)
+        public static PoolFiber CreateFiber(this IThreadPool threadPool, IActionExecutor executor = null)
         {
             return new PoolFiber(threadPool, executor);
         }
