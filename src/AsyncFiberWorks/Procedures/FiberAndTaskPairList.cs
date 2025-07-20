@@ -30,7 +30,7 @@ namespace AsyncFiberWorks.Procedures
         /// <param name="executor"></param>
         public FiberAndTaskPairList(IActionExecutor executor)
         {
-            _executor = executor ?? SimpleActionExecutor.Instance;
+            _executor = executor ?? SimpleExecutor.Instance;
         }
 
         /// <summary>
