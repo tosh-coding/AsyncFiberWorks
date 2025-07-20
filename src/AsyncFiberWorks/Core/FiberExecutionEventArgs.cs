@@ -67,25 +67,5 @@ namespace AsyncFiberWorks.Core
         {
             _resume();
         }
-
-        /// <summary>
-        /// Pause the fiber while the task is running.
-        /// </summary>
-        /// <param name="runningTask"></param>
-        public void PauseWhileRunning(Func<Task> runningTask)
-        {
-            this.Pause();
-            Task.Run(async () =>
-            {
-                try
-                {
-                    await runningTask.Invoke().ConfigureAwait(false);
-                }
-                finally
-                {
-                    this.Resume();
-                }
-            });
-        }
     }
 }

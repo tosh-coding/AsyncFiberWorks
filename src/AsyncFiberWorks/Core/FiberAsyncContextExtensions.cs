@@ -44,6 +44,27 @@ namespace AsyncFiberWorks.Core
         }
 
         /// <summary>
+        /// Pause the fiber while the task is running.
+        /// </summary>
+        /// <param name="e">Fiber pause operation interface.</param>
+        /// <param name="runningTask">A function that returns a task.</param>
+        public static void PauseWhileRunning(this FiberExecutionEventArgs e, Func<Task> runningTask)
+        {
+            e.Pause();
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await runningTask.Invoke().ConfigureAwait(false);
+                }
+                finally
+                {
+                    e.Resume();
+                }
+            });
+        }
+
+        /// <summary>
         /// Enqueue an action. Then returns a task to wait for the completion of the action.
         /// </summary>
         /// <param name="fiber">A fiber.</param>
