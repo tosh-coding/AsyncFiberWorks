@@ -27,11 +27,11 @@ namespace AsyncFiberWorks.Executors
         /// <summary>
         /// Executes a task.
         /// </summary>
-        /// <param name="func"></param>
-        /// <returns></returns>
-        public async Task Execute(Func<Task> func)
+        /// <param name="e">Fiber pause operation interface.</param>
+        /// <param name="action">Action. Support pause.</param>
+        public void Execute(IFiberExecutionEventArgs e, Action<IFiberExecutionEventArgs> action)
         {
-            await func().ConfigureAwait(false);
+            action(e);
         }
     }
 }

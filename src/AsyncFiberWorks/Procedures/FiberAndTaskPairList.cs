@@ -207,15 +207,18 @@ namespace AsyncFiberWorks.Procedures
                 {
                     nextContext.Enqueue((e) =>
                     {
-                        var eventArgs = new EnqueueNextActionEventArgs(e, enqueueNextAction);
-                        try
+                        _executor.Execute(e, (arg) =>
                         {
-                            nextAction.ActionFiberExecutionEventArgs(eventArgs);
-                        }
-                        finally
-                        {
-                            eventArgs.CheckAndEnqueue();
-                        }
+                            var eventArgs = new EnqueueNextActionEventArgs(arg, enqueueNextAction);
+                            try
+                            {
+                                nextAction.ActionFiberExecutionEventArgs(eventArgs);
+                            }
+                            finally
+                            {
+                                eventArgs.CheckAndEnqueue();
+                            }
+                        });
                     });
                 }
                 else
