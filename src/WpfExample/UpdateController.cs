@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Windows;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.FiberSchedulers;
+using AsyncFiberWorks.Timers;
 using AsyncFiberWorks.Threading;
 
 namespace WpfExample

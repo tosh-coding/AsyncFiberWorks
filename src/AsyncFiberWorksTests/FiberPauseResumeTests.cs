@@ -3,7 +3,7 @@ using AsyncFiberWorks.Fibers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncFiberWorks.FiberSchedulers;
+using AsyncFiberWorks.Timers;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Threading;
 

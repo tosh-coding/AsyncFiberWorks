@@ -1,33 +1,32 @@
-using AsyncFiberWorks.Core;
 using System;
-using System.Threading.Tasks;
+using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.FiberSchedulers
+namespace AsyncFiberWorks.Timers
 {
     /// <summary>
     /// The same instance of this class will not be executed concurrently.
     /// The one executed later is skipped.
     /// </summary>
-    public class AsyncNonReentrantFiberScheduler
+    public class NonReentrantFiberScheduler
     {
         private readonly object _lockObj = new object();
-        private readonly IAsyncExecutionContext _fiber;
+        private readonly IExecutionContext _fiber;
         private bool _executing = false;
 
         /// <summary>
         /// Create a scheduler.
         /// </summary>
         /// <param name="fiber"></param>
-        public AsyncNonReentrantFiberScheduler(IAsyncExecutionContext fiber)
+        public NonReentrantFiberScheduler(IExecutionContext fiber)
         {
             _fiber = fiber;
         }
 
         /// <summary>
-        /// Enqueue a task.
+        /// Enqueue an action.
         /// </summary>
-        /// <param name="func">A function that returns a task.</param>
-        public void Schedule(Func<Task> func)
+        /// <param name="action">Action to be executed.</param>
+        public void Schedule(Action action)
         {
             lock (_lockObj)
             {
@@ -38,11 +37,11 @@ namespace AsyncFiberWorks.FiberSchedulers
                 _executing = true;
             }
 
-            _fiber.EnqueueTask(async () =>
+            _fiber.Enqueue(() =>
             {
                 try
                 {
-                    await func().ConfigureAwait(false);
+                    action();
                 }
                 finally
                 {

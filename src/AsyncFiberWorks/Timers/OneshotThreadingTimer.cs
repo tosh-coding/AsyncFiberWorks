@@ -1,7 +1,8 @@
-﻿using System;
+﻿using AsyncFiberWorks.Core;
+using System;
 using System.Threading;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.Timers
 {
     /// <summary>
     /// Wrapper class for System.Threading.Timer.

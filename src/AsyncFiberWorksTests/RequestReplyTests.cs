@@ -8,7 +8,7 @@ using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.Threading;
-using AsyncFiberWorks.FiberSchedulers;
+using AsyncFiberWorks.Timers;
 
 namespace AsyncFiberWorksTests
 {

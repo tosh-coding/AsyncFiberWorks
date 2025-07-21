@@ -1,5 +1,5 @@
 ﻿using AsyncFiberWorks.Core;
-using AsyncFiberWorks.FiberSchedulers;
+using AsyncFiberWorks.Timers;
 using System;
 using System.Runtime.CompilerServices;
 

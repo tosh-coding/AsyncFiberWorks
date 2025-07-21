@@ -1,6 +1,7 @@
 using System;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Timers;
 
 namespace AsyncFiberWorks.Channels
 {

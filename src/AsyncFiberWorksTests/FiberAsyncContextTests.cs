@@ -1,6 +1,6 @@
 ﻿using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.FiberSchedulers;
+using AsyncFiberWorks.Timers;
 using AsyncFiberWorks.Threading;
 using NUnit.Framework;
 using System;

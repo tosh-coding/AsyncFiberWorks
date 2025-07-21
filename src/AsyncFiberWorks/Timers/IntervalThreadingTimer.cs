@@ -1,7 +1,8 @@
-﻿using System;
+﻿using AsyncFiberWorks.Core;
+using System;
 using System.Threading;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.Timers
 {
     /// <summary>
     /// Wrapper class for System.Threading.Timer.
@@ -86,7 +87,7 @@ namespace AsyncFiberWorks.Core
         {
             lock (_lockObj)
             {
-                if ((!_scheduled) || _disposed)
+                if (!_scheduled || _disposed)
                 {
                     return;
                 }

@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.FiberSchedulers
+namespace AsyncFiberWorks.Timers
 {
     /// <summary>
     /// Methods for scheduling actions that will be executed in the future.

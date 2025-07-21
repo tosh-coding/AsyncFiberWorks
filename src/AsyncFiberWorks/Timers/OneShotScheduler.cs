@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AsyncFiberWorks.FiberSchedulers
+namespace AsyncFiberWorks.Timers
 {
     /// <summary>
     /// One shot scheduler. It is executed only once the first time.

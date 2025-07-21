@@ -1,9 +1,9 @@
 using System;
 using System.Threading;
 
-namespace AsyncFiberWorks.Core
+namespace AsyncFiberWorks.Timers
 {
-    internal sealed class OneshotTimerAction : IDisposable
+    internal sealed class IntervalTimerAction : IDisposable
     {
         private readonly object _lock = new object();
         private readonly Action _action;
@@ -11,22 +11,26 @@ namespace AsyncFiberWorks.Core
         private Timer _timer = null;
         private bool _canceled = false;
 
-        private OneshotTimerAction(Action action, long firstIntervalInMs)
+        private IntervalTimerAction(Action action, long firstIntervalInMs, long intervalInMs)
         {
             if (firstIntervalInMs < 0)
             {
                 firstIntervalInMs = 0;
             }
+            if (intervalInMs <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(intervalInMs));
+            }
             _action = action;
-            _timer = new Timer(ExecuteOnTimerThread, null, firstIntervalInMs, Timeout.Infinite);
+            _timer = new Timer(x => ExecuteOnTimerThread(), null, firstIntervalInMs, intervalInMs);
         }
 
-        public static IDisposable StartNew(Action action, long firstIntervalInMs)
+        public static IDisposable StartNew(Action action, long firstIntervalInMs, long intervalInMs)
         {
-            return new OneshotTimerAction(action, firstIntervalInMs);
+            return new IntervalTimerAction(action, firstIntervalInMs, intervalInMs);
         }
 
-        private void ExecuteOnTimerThread(object state)
+        private void ExecuteOnTimerThread()
         {
             lock (_lock)
             {
@@ -37,7 +41,6 @@ namespace AsyncFiberWorks.Core
             }
 
             _action();
-            this.Dispose();
         }
 
         public void Dispose()
