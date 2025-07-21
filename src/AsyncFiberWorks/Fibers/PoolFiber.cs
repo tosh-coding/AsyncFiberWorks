@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Executors;
 using AsyncFiberWorks.Threading;
 
 namespace AsyncFiberWorks.Fibers

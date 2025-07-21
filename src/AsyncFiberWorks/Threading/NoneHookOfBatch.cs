@@ -1,6 +1,6 @@
 ﻿using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Executors
+namespace AsyncFiberWorks.Threading
 {
     /// <summary>
     /// Placeholder class that does nothing.

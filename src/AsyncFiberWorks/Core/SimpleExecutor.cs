@@ -1,7 +1,6 @@
 ﻿using System;
-using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Executors
+namespace AsyncFiberWorks.Core
 {
     /// <summary>
     /// Just simply execute an action.
