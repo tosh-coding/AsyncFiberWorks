@@ -19,8 +19,7 @@ namespace AsyncFiberWorksTests
 
             Func<int, Task> func = async (maxCount) =>
             {
-                var reg = new AsyncRegister(taskList);
-                try
+                using (var reg = new AsyncRegister(taskList))
                 {
                     int counter = 0;
                     while (counter < maxCount)
@@ -32,10 +31,6 @@ namespace AsyncFiberWorksTests
                         }
                         counter += 1;
                     }
-                }
-                finally
-                {
-                    reg.Dispose();
                 }
             };
 
@@ -53,6 +48,51 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
+        public async Task CancellationOfAsyncRegister()
+        {
+            var taskList = new FiberAndTaskPairList();
+            int resultCounter = 0;
+            int exceptionCounter = 0;
+            var lockObj = new object();
+            var cts = new CancellationTokenSource();
+            var cancellationToken = cts.Token;
+
+            var func = new Func<Task>(async () =>
+            {
+                using (var reg = new AsyncRegister(taskList, cancellationToken))
+                {
+                    try
+                    {
+                        while (true)
+                        {
+                            await reg.WaitSetting();
+                            lock (lockObj)
+                            {
+                                resultCounter += 1;
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        exceptionCounter += 1;
+                    }
+                }
+            });
+
+            var task1 = func();
+
+            var fiber = new PoolFiber();
+            await taskList.InvokeSequentialAsync(fiber);
+            await taskList.InvokeSequentialAsync(fiber);
+            await taskList.InvokeSequentialAsync(fiber);
+            cts.Cancel();
+
+            await task1;
+            Assert.AreEqual(3, resultCounter);
+            Assert.AreEqual(1, exceptionCounter);
+        }
+
+        [Test]
         public async Task WaitingOfAsyncRegisterOfT()
         {
             var handlerList = new FiberAndHandlerPairList<int>();
@@ -61,8 +101,7 @@ namespace AsyncFiberWorksTests
 
             Func<int, Task> func = async (maxCount) =>
             {
-                var reg = new AsyncRegister<int>(handlerList);
-                try
+                using (var reg = new AsyncRegister<int>(handlerList))
                 {
                     int counter = 0;
                     while (counter < maxCount)
@@ -74,10 +113,6 @@ namespace AsyncFiberWorksTests
                         }
                         counter += 1;
                     }
-                }
-                finally
-                {
-                    reg.Dispose();
                 }
             };
 
@@ -100,6 +135,54 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
+        public async Task CancellationOfAsyncRegisterOfT()
+        {
+            var handlerList = new FiberAndHandlerPairList<int>();
+            int resultCounter = 0;
+            int exceptionCounter = 0;
+            int totalCounter = 0;
+            var lockObj = new object();
+            var cts = new CancellationTokenSource();
+            var cancellationToken = cts.Token;
+
+            var func = new Func<Task>(async () =>
+            {
+                using (var reg = new AsyncRegister<int>(handlerList, cancellationToken))
+                {
+                    try
+                    {
+                        while (true)
+                        {
+                            var ret = await reg.WaitSetting();
+                            lock (lockObj)
+                            {
+                                totalCounter += ret.Arg;
+                                resultCounter += 1;
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        exceptionCounter += 1;
+                    }
+                }
+            });
+
+            var task1 = func();
+
+            var fiber = new PoolFiber();
+            await handlerList.PublishSequentialAsync(1, fiber);
+            await handlerList.PublishSequentialAsync(2, fiber);
+            await handlerList.PublishSequentialAsync(3, fiber);
+            cts.Cancel();
+
+            await task1;
+            Assert.AreEqual(3, resultCounter);
+            Assert.AreEqual(6, totalCounter);
+            Assert.AreEqual(1, exceptionCounter);
+        }
+
+        [Test]
         public async Task WaitingOfProcessedFlagEventArgs()
         {
             var driver = new FiberAndHandlerPairList<int>();
@@ -109,12 +192,11 @@ namespace AsyncFiberWorksTests
             var cts = new CancellationTokenSource();
             Func<int, Task> func = async (threshold) =>
             {
-                var reg = new AsyncRegister<int>(driver);
-                try
+                using (var reg = new AsyncRegister<int>(driver, cts.Token))
                 {
                     while (true)
                     {
-                        var e = await reg.WaitSetting(cts.Token);
+                        var e = await reg.WaitSetting();
                         if (e.Arg < threshold)
                         {
                             e.Processed = false;
@@ -128,10 +210,6 @@ namespace AsyncFiberWorksTests
                             e.Processed = true;
                         }
                     }
-                }
-                finally
-                {
-                    reg.Dispose();
                 }
             };
 

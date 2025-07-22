@@ -19,13 +19,16 @@ namespace AsyncFiberWorks.Procedures
         private readonly SemaphoreSlim _notifierSet = new SemaphoreSlim(0);
         private readonly SemaphoreSlim _notifierClear = new SemaphoreSlim(0);
         private bool _reading;
+        private CancellationToken _cancellationToken;
 
         /// <summary>
         /// Subscribe a handler list.
         /// </summary>
         /// <param name="handlerList"></param>
-        public AsyncRegister(ISequentialHandlerListRegistry<T> handlerList)
+        /// <param name="cancellationToken"></param>
+        public AsyncRegister(ISequentialHandlerListRegistry<T> handlerList, CancellationToken cancellationToken = default)
         {
+            _cancellationToken = cancellationToken;
             _subscription = handlerList.Add((arg) => SetValueAndWaitClearing(arg));
         }
 
@@ -40,6 +43,10 @@ namespace AsyncFiberWorks.Procedures
             lock (_lockObj)
             {
                 if (_isDisposed)
+                {
+                    return false;
+                }
+                if (_cancellationToken.IsCancellationRequested)
                 {
                     return false;
                 }
@@ -62,24 +69,34 @@ namespace AsyncFiberWorks.Procedures
                 _notifierSet.Release(1);
             }
 
-            await _notifierClear.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                await _notifierClear.WaitAsync(_cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
             return _currentValue.Processed;
         }
 
         /// <summary>
         /// Wait for the value to be set.
         /// </summary>
-        /// <param name="token"></param>
         /// <returns></returns>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="OperationCanceledException"></exception>
-        public async Task<ProcessedFlagEventArgs<T>> WaitSetting(CancellationToken token = default)
+        public async Task<ProcessedFlagEventArgs<T>> WaitSetting()
         {
             lock (_lockObj)
             {
                 if (_isDisposed)
                 {
                     throw new ObjectDisposedException(GetType().FullName);
+                }
+                if (_cancellationToken.IsCancellationRequested)
+                {
+                    throw new OperationCanceledException();
                 }
                 if (_hasValue && _reading)
                 {
@@ -90,7 +107,7 @@ namespace AsyncFiberWorks.Procedures
                 }
             }
 
-            await _notifierSet.WaitAsync(token).ConfigureAwait(false);
+            await _notifierSet.WaitAsync(_cancellationToken).ConfigureAwait(false);
 
             lock (_lockObj)
             {
