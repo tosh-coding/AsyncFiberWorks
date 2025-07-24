@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfExample", "WpfExample\Wp
 		{65ABCF4F-88F0-46EF-A6CF-71850019262E} = {65ABCF4F-88F0-46EF-A6CF-71850019262E}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncFiberWorks.Windows", "AsyncFiberWorks.Windows\AsyncFiberWorks.Windows.csproj", "{929929FF-80F3-41C0-A327-4F7E6CB239E8}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimerPrecisionTests", "TimerPrecisionTests\TimerPrecisionTests.csproj", "{308612EB-4173-44ED-8A40-1A0E2362A6D5}"
 EndProject
 Global
@@ -33,10 +31,6 @@ Global
 		{CE9C1F57-B826-4C98-98EE-AF1B55B4D5BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE9C1F57-B826-4C98-98EE-AF1B55B4D5BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE9C1F57-B826-4C98-98EE-AF1B55B4D5BE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{929929FF-80F3-41C0-A327-4F7E6CB239E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{929929FF-80F3-41C0-A327-4F7E6CB239E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{929929FF-80F3-41C0-A327-4F7E6CB239E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{929929FF-80F3-41C0-A327-4F7E6CB239E8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{308612EB-4173-44ED-8A40-1A0E2362A6D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{308612EB-4173-44ED-8A40-1A0E2362A6D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{308612EB-4173-44ED-8A40-1A0E2362A6D5}.Release|Any CPU.ActiveCfg = Release|Any CPU

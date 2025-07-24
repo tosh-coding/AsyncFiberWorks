@@ -84,7 +84,6 @@
     </AssemblyAttribute>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AsyncFiberWorks.Windows\AsyncFiberWorks.Windows.csproj" />
     <ProjectReference Include="..\AsyncFiberWorks\AsyncFiberWorks.csproj" />
   </ItemGroup>
 </Project>

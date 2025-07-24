@@ -1,11 +1,10 @@
 using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.Windows.Timers;
 using NUnit.Framework;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AsyncFiberWorksTests
+namespace TimerPrecisionTests
 {
     [TestFixture]
     public class TimerActionTests

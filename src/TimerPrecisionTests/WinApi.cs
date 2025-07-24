@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace AsyncFiberWorks.Windows
+namespace TimerPrecisionTests
 {
     /// <summary>
     /// Windows APIs.

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace AsyncFiberWorks.Windows.Timers
+namespace TimerPrecisionTests
 {
     /// <summary>
     /// Wrapper class for System.Threading.Timer.
