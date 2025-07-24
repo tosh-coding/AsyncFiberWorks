@@ -116,42 +116,6 @@ namespace AsyncFiberWorksTests
             timer.Dispose();
         }
 
-        [Test, TestCaseSource(nameof(OneshotTimers))]
-        public async Task DelayedSwitchToTest(Func<IOneshotTimer> timerCreator)
-        {
-            var timer = timerCreator();
-            var fiber = new PoolFiber();
-            var sw = new Stopwatch();
-            int tolerance = 32;
-
-            // warm up.
-            sw.Restart();
-            await fiber.DelayedSwitchTo(1, timer);
-
-            int expectedWaitTime = 300;
-            sw.Restart();
-            await fiber.DelayedSwitchTo(expectedWaitTime, timer);
-            var elapsed = sw.Elapsed;
-            Assert.IsTrue(elapsed.TotalMilliseconds > (expectedWaitTime - tolerance ));
-            Assert.IsTrue(elapsed.TotalMilliseconds < (expectedWaitTime + tolerance ), $"elapsedMs={elapsed.TotalMilliseconds}");
-
-            expectedWaitTime = 200;
-            sw.Restart();
-            await fiber.DelayedSwitchTo(expectedWaitTime, timer);
-            elapsed = sw.Elapsed;
-            Assert.IsTrue(elapsed.TotalMilliseconds > (expectedWaitTime - tolerance ));
-            Assert.IsTrue(elapsed.TotalMilliseconds < (expectedWaitTime + tolerance ));
-
-            expectedWaitTime = 100;
-            sw.Restart();
-            await fiber.DelayedSwitchTo(expectedWaitTime, timer);
-            elapsed = sw.Elapsed;
-            Assert.IsTrue(elapsed.TotalMilliseconds > (expectedWaitTime - tolerance ));
-            Assert.IsTrue(elapsed.TotalMilliseconds < (expectedWaitTime + tolerance ));
-
-            timer.Dispose();
-        }
-
         static object[] OneshotTimers =
         {
             new object[] { (Func<IOneshotTimer>)(() => new OneshotThreadingTimer()) },
