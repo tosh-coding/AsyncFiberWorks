@@ -1,5 +1,4 @@
-﻿using AsyncFiberWorks.Threading;
-using System;
+﻿using System;
 
 namespace AsyncFiberWorks.Core
 {

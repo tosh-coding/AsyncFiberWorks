@@ -1,4 +1,6 @@
-﻿namespace AsyncFiberWorks.Threading
+﻿using AsyncFiberWorks.Core;
+
+namespace AsyncFiberWorks.Threading
 {
     /// <summary>
     /// Context switcher for IThreadPool.

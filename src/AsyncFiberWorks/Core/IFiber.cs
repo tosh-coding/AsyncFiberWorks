@@ -1,6 +1,4 @@
-using AsyncFiberWorks.Core;
-
-namespace AsyncFiberWorks.Fibers
+namespace AsyncFiberWorks.Core
 {
     /// <summary>
     /// Sequential executor of actions.

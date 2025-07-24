@@ -1,6 +1,6 @@
 using System.Threading;
 
-namespace AsyncFiberWorks.Threading
+namespace AsyncFiberWorks.Core
 {
     /// <summary>
     /// A thread pool for executing asynchronous actions.

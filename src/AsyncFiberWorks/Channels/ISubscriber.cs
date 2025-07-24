@@ -1,5 +1,4 @@
 using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Fibers;
 using System;
 
 namespace AsyncFiberWorks.Channels

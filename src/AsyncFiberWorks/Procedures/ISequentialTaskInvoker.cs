@@ -1,4 +1,4 @@
-using AsyncFiberWorks.Fibers;
+using AsyncFiberWorks.Core;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Procedures
