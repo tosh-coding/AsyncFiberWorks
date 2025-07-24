@@ -1,9 +1,8 @@
 ﻿using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.Timers;
 using AsyncFiberWorks.Threading;
 using AsyncFiberWorks.Windows;
-using AsyncFiberWorks.Windows.Timer;
+using AsyncFiberWorks.Windows.Timers;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -64,7 +63,7 @@ namespace TimerPrecisionTests
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
                 var timer = new IntervalThreadingTimer();
-                timer.ScheduleOnInterval(fiber, action, 0, 1);
+                timer.ScheduleOnInterval(() => fiber.Enqueue(action), 0, 1);
                 return timer;
             });
         }
@@ -76,7 +75,7 @@ namespace TimerPrecisionTests
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
                 var timer = new IntervalThreadingTimer();
-                timer.ScheduleOnInterval(fiber, action, 0, 1);
+                timer.ScheduleOnInterval(() => fiber.Enqueue(action), 0, 1);
                 return timer;
             });
             WinApi.timeEndPeriod(1);

@@ -1,10 +1,11 @@
-﻿using System;
-using System.ComponentModel;
-using System.Windows;
-using AsyncFiberWorks.Core;
+﻿using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.Timers;
 using AsyncFiberWorks.Threading;
+using System;
+using System.ComponentModel;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace WpfExample
 {
@@ -13,7 +14,8 @@ namespace WpfExample
         private readonly IFiber _fiber;
         private readonly Subscriptions _subscriptions;
         private readonly WindowChannels _channels;
-        private IDisposable _timer;
+        private bool _timerIsValid = false;
+        private CancellationTokenSource _timerCancellation;
 
         public UpdateController(WindowChannels winChannels)
         {
@@ -34,17 +36,27 @@ namespace WpfExample
 
         private void OnStart(RoutedEventArgs msg)
         {
-            if (_timer != null)
+            if (_timerIsValid)
             {
-                _timer.Dispose();
-                _timer = null;
+                _timerCancellation.Cancel();
+                _timerCancellation.Dispose();
+                _timerIsValid = false;
             }
             else
             {
                 var subscriptionFiber = _subscriptions.BeginSubscription();
-                var timer = new IntervalThreadingTimer();
-                timer.ScheduleOnInterval(_fiber, OnTimer, 1000, 1000);
-                _timer = timer;
+                _timerCancellation = new CancellationTokenSource();
+                var token = _timerCancellation.Token;
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(1000, token);
+                    while (!token.IsCancellationRequested)
+                    {
+                        _fiber.Enqueue(OnTimer);
+                        await Task.Delay(1000, token);
+                    }
+                });
+                _timerIsValid = true;
             }
         }
 

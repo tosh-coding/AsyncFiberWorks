@@ -47,7 +47,6 @@ namespace AsyncFiberWorksTests
             var subscriptions = new Subscriptions();
             var queue = new ConcurrentQueueActionQueue();
             var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
-            var timer2 = new IntervalThreadingTimer();
 
             var scheduleFired = 0;
             var scheduleOnIntervalFired = 0;
@@ -60,7 +59,16 @@ namespace AsyncFiberWorksTests
             });
             var subscriptionFiber = subscriptions.BeginSubscription();
             var cancellation = new CancellationTokenSource();
-            timer2.ScheduleOnInterval(fiber, () => scheduleOnIntervalFired++, 100, 500, cancellation.Token);
+            var token = cancellation.Token;
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(100, token);
+                while (!cancellation.Token.IsCancellationRequested)
+                {
+                    fiber.Enqueue(() => scheduleOnIntervalFired++);
+                    await Task.Delay(500, token);
+                }
+            });
             subscriptionFiber.AppendDisposable(cancellation);
 
             // add to the pending list.
@@ -79,7 +87,6 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(2, scheduleOnIntervalFired);
 
             subscriptionFiber.Dispose();
-            timer2.Dispose();
 
             // The regularInMs has passed after dispose.
             Thread.Sleep(500);

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace AsyncFiberWorks.Windows.Timer
+namespace AsyncFiberWorks.Windows.Timers
 {
     /// <summary>
     /// Sleep implements using WaitableTimerEx in Windows.

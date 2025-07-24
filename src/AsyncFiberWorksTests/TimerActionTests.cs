@@ -1,7 +1,5 @@
-using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.Timers;
-using AsyncFiberWorks.Windows.Timer;
+using AsyncFiberWorks.Windows.Timers;
 using NUnit.Framework;
 using System;
 using System.Threading;
@@ -12,10 +10,10 @@ namespace AsyncFiberWorksTests
     [TestFixture]
     public class TimerActionTests
     {
-        [Test, TestCaseSource(nameof(IntervalTimers))]
-        public void CallbackFromIntervalTimerWithCancel(Func<IIntervalTimer> timerCreator)
+        [Test]
+        public void CallbackFromIntervalTimerWithCancel()
         {
-            var timer = timerCreator();
+            var timer = new IntervalThreadingTimer();
             var fiber = new PoolFiber();
             long counterOnTimer = 0;
             Action actionOnTimer = () => { counterOnTimer++; };
@@ -42,14 +40,6 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(6, counterOnTimer);
             timer.Dispose();
         }
-
-        static object[] IntervalTimers =
-        {
-            new object[] { (Func<IIntervalTimer>)(() => new IntervalThreadingTimer()) },
-#if NETFRAMEWORK || WINDOWS
-            new object[] { (Func<IIntervalTimer>)(() => new IntervalWaitableTimerEx()) },
-#endif
-        };
 
 #if NETFRAMEWORK || WINDOWS
         [Test]

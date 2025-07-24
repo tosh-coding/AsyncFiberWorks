@@ -1,13 +1,12 @@
-﻿using AsyncFiberWorks.Core;
-using System;
+﻿using System;
 using System.Threading;
 
-namespace AsyncFiberWorks.Timers
+namespace AsyncFiberWorks.Windows.Timers
 {
     /// <summary>
     /// Wrapper class for System.Threading.Timer.
     /// </summary>
-    public class IntervalThreadingTimer : IIntervalTimer, IDisposable
+    public class IntervalThreadingTimer : IDisposable
     {
         readonly object _lockObj = new object();
         readonly Timer _timer;

@@ -78,39 +78,6 @@ namespace AsyncFiberWorksTests
 
         [Test]
         [TestCaseSource(typeof(MyDataClass), nameof(MyDataClass.AllFibers))]
-        public async Task RepeatingTimer(Func<IFiber> fiberCreator)
-        {
-            var fiber = fiberCreator();
-            var timer = new IntervalThreadingTimer();
-
-            var sw = Stopwatch.StartNew();
-            int counter = 0;
-            timer.ScheduleOnInterval(fiber, async () =>
-            {
-                await Task.Yield();
-                counter += 1;
-                Console.WriteLine($"cb{sw.Elapsed}");
-            }, 250, 500);
-            Console.WriteLine($"as{sw.Elapsed}");
-            Assert.AreEqual(0, counter);
-            await Task.Delay(500).ConfigureAwait(false);
-            Console.WriteLine($"as{sw.Elapsed}");
-            Assert.AreEqual(1, counter);
-            await Task.Delay(500).ConfigureAwait(false);
-            Console.WriteLine($"as{sw.Elapsed}");
-            Assert.AreEqual(2, counter);
-            await Task.Delay(500).ConfigureAwait(false);
-            Console.WriteLine($"as{sw.Elapsed}");
-            Assert.AreEqual(3, counter);
-            timer.Dispose();
-            await Task.Delay(500).ConfigureAwait(false);
-            Console.WriteLine($"as{sw.Elapsed}");
-            Assert.AreEqual(3, counter);
-            timer.Dispose();
-        }
-
-        [Test]
-        [TestCaseSource(typeof(MyDataClass), nameof(MyDataClass.AllFibers))]
         public async Task EnqueueTaskAsyncTest(Func<IFiber> fiberCreator)
         {
             var fiber = fiberCreator();

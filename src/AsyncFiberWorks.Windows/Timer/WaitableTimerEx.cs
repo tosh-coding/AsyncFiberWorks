@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace AsyncFiberWorks.Windows.Timer
+namespace AsyncFiberWorks.Windows.Timers
 {
     /// <summary>
     /// Waitable timer with CREATE_WAITABLE_TIMER_HIGH_RESOLUTION.
