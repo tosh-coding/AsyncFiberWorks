@@ -1,12 +1,10 @@
-﻿/src/AsyncFiberWorks/obj/
-/src/.vs/
-/src/WpfExample/obj/
+﻿/src/.vs/
 /src/AsyncFiberWorks/bin/
-/src/WpfExample/bin/
+/src/AsyncFiberWorks/obj/
 /src/AsyncFiberWorksTests/bin/
 /src/AsyncFiberWorksTests/obj/
 /src/packages
-/src/AsyncFiberWorks.Windows/bin
-/src/AsyncFiberWorks.Windows/obj
 /src/TimerPrecisionTests/bin
 /src/TimerPrecisionTests/obj
+/src/WpfExample/bin/
+/src/WpfExample/obj/
