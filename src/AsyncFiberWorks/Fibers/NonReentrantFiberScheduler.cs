@@ -1,7 +1,7 @@
 using System;
 using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Timers
+namespace AsyncFiberWorks.Fibers
 {
     /// <summary>
     /// The same instance of this class will not be executed concurrently.

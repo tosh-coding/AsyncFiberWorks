@@ -1,7 +1,7 @@
 ﻿using AsyncFiberWorks.Core;
 using System;
 
-namespace AsyncFiberWorks.Timers
+namespace AsyncFiberWorks.Channels
 {
     /// <summary>
     /// It is executed only once the first time.

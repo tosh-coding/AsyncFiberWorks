@@ -5,7 +5,6 @@ using NUnit.Framework;
 using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.Timers;
 using AsyncFiberWorks.Threading;
 using System.Threading.Tasks;
 
