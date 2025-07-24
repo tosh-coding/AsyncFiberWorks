@@ -78,46 +78,6 @@ namespace AsyncFiberWorksTests
 
         [Test]
         [TestCaseSource(typeof(MyDataClass), nameof(MyDataClass.AllFibers))]
-        public async Task OneshotTimerTest(Func<IFiber> fiberCreator)
-        {
-            var fiber = fiberCreator();
-            var timer = new OneshotThreadingTimer();
-
-            int counter = 0;
-            timer.Schedule(fiber, async () =>
-            {
-                await Task.Yield();
-                counter += 1;
-            }, 5);
-            Assert.AreEqual(0, counter);
-            await Task.Delay(40).ConfigureAwait(false);
-            Assert.AreEqual(1, counter);
-            timer.Dispose();
-        }
-
-        [Test]
-        [TestCaseSource(typeof(MyDataClass), nameof(MyDataClass.AllFibers))]
-        public async Task OneshotTimerCancallationTest(Func<IFiber> fiberCreator)
-        {
-            var fiber = fiberCreator();
-            var timer = new OneshotThreadingTimer();
-
-            int counter = 0;
-            var cancellation = new CancellationTokenSource();
-            timer.Schedule(fiber, async () =>
-            {
-                await Task.Yield();
-                counter += 1;
-            }, 50, cancellation.Token);
-            Assert.AreEqual(0, counter);
-            cancellation.Cancel();
-            await Task.Delay(100).ConfigureAwait(false);
-            Assert.AreEqual(0, counter);
-            timer.Dispose();
-        }
-
-        [Test]
-        [TestCaseSource(typeof(MyDataClass), nameof(MyDataClass.AllFibers))]
         public async Task RepeatingTimer(Func<IFiber> fiberCreator)
         {
             var fiber = fiberCreator();

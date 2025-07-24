@@ -1,22 +1,16 @@
-﻿using AsyncFiberWorks.Core;
-using AsyncFiberWorks.Threading;
-using System;
+﻿using System;
 using System.Threading;
 
 namespace AsyncFiberWorks.Windows.Timer
 {
     /// <summary>
-    /// Timer using WaitableTimerEx in Windows.
-    /// This timer starts a dedicated thread.
+    /// Sleep implements using WaitableTimerEx in Windows.
     /// </summary>
-    public class OneshotWaitableTimerEx : IOneshotTimer, IDisposable
+    public class WaitableTimerSleeper : IDisposable
     {
-        readonly ConsumerThread _thread;
         readonly WaitableTimerEx _waitableTimer;
         readonly ManualResetEventSlim _resetEvent = new ManualResetEventSlim();
         WaitHandle[] _waitHandles = null;
-        Action<object> _copiedAction;
-        object _state;
         int _scheduled = 0;
         bool _disposed = false;
 
@@ -25,20 +19,17 @@ namespace AsyncFiberWorks.Windows.Timer
         /// <summary>
         /// Create a timer.
         /// </summary>
-        public OneshotWaitableTimerEx()
+        public WaitableTimerSleeper()
         {
-            _thread = ConsumerThread.StartNew();
             _waitableTimer = new WaitableTimerEx(manualReset: false);
         }
 
         /// <summary>
-        /// Start a timer.
+        /// Sleep.
         /// </summary>
-        /// <param name="action">The process to be called when the timer expires.</param>
-        /// <param name="state">Arguments passed when that callback is invoked.</param>
         /// <param name="firstIntervalMs">Timer wait time. Must be greater than or equal to 0.</param>
         /// <param name="token">A handle to cancel the timer.</param>
-        public void InternalSchedule(Action<object> action, object state, int firstIntervalMs, CancellationToken token = default)
+        public void Sleep(int firstIntervalMs, CancellationToken token = default)
         {
             if (firstIntervalMs < 0)
             {
@@ -53,48 +44,29 @@ namespace AsyncFiberWorks.Windows.Timer
                 }
                 if (_scheduled > 0)
                 {
-                    _resetEvent.Set();
+                    throw new InvalidOperationException($"Already called.");
                 }
                 _scheduled += 1;
-                _copiedAction = action;
-                _state = state;
+                _resetEvent.Reset();
+                SetWaitHandles(token);
+            }
 
-                _thread.Enqueue(() =>
+            _waitableTimer.Set(firstIntervalMs * -10000L);
+            int index = WaitHandle.WaitAny(_waitHandles);
+            if (index == 0)
+            {
+                lock (_lockObj)
                 {
-                    lock (_lockObj)
-                    {
-                        if (_scheduled > 1)
-                        {
-                            _scheduled -= 1;
-                            return;
-                        }
-                        if (_disposed)
-                        {
-                            return;
-                        }
-                        _resetEvent.Reset();
-                        SetWaitHandles(token);
-                    }
-
-                    _waitableTimer.Set(firstIntervalMs * -10000L);
-                    int index = WaitHandle.WaitAny(_waitHandles);
-                    if (index == 0)
-                    {
-                        lock (_lockObj)
-                        {
-                            _scheduled -= 1;
-                            _copiedAction(_state);
-                        }
-                    }
-                    else
-                    {
-                        _waitableTimer.Cancel();
-                        lock (_lockObj)
-                        {
-                            _scheduled -= 1;
-                        }
-                    }
-                });
+                    _scheduled -= 1;
+                }
+            }
+            else
+            {
+                _waitableTimer.Cancel();
+                lock (_lockObj)
+                {
+                    _scheduled -= 1;
+                }
             }
         }
 
@@ -127,7 +99,6 @@ namespace AsyncFiberWorks.Windows.Timer
         {
             _waitableTimer.Dispose();
             _resetEvent.Dispose();
-            _thread.Dispose();
             _waitHandles = null;
         }
 
@@ -144,8 +115,8 @@ namespace AsyncFiberWorks.Windows.Timer
                 }
                 _disposed = true;
                 _resetEvent.Set();
-                _thread.Enqueue(DisposeResources);
             }
+            DisposeResources();
         }
     }
 }

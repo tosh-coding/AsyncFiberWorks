@@ -1,12 +1,12 @@
 ﻿using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.Timers;
 using AsyncFiberWorks.Threading;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace AsyncFiberWorksTests
 {
@@ -71,8 +71,6 @@ namespace AsyncFiberWorksTests
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
                 });
-                var timer1 = new OneshotThreadingTimer();
-                var timer2 = new OneshotThreadingTimer();
                 IDisposable handleReceiveReply = null;
                 bool handleReceiveDisposed = false;
                 IDisposable handleReceiveDisposableOfReceiver = null;
@@ -102,8 +100,11 @@ namespace AsyncFiberWorksTests
                             updatesChannel.Publish(currentValue);
                         }
 
-                        timer1.Schedule(fiberRequest, () =>
+                        _ = Task.Run(async () =>
                         {
+                            await Task.Delay(200);
+                            await fiberRequest.SwitchTo();
+
                             // Finish.
 
                             int[] expectedReceiveValues = new int[]
@@ -119,13 +120,15 @@ namespace AsyncFiberWorksTests
                             }
 
                             requesterThread.Stop();
-                        }, 200);
+                        });
                     });
                 });
                 requestChannel.Publish(new RequestReplyChannelRequest<Channel<int>, IDisposable>(receiveChannel, replyChannel));
                 var cancellation = new CancellationTokenSource();
-                timer2.Schedule(fiberRequest, () =>
+                _ = Task.Run(async () =>
                 {
+                    await Task.Delay(5000, cancellation.Token);
+                    await fiberRequest.SwitchTo();
                     if (!handleReceiveDisposed)
                     {
                         handleReceiveDisposed = true;
@@ -141,7 +144,7 @@ namespace AsyncFiberWorksTests
                         }
                     }
                     Assert.Fail("SnapshotRequestControlEvent.Timeout");
-                }, 5000, cancellation.Token);
+                });
                 timeoutTimerCancellation.Append(cancellation);
 
                 requesterThread.Run();
@@ -161,8 +164,6 @@ namespace AsyncFiberWorksTests
                 }
                 timeoutTimerCancellation.Dispose();
                 disposableReceive.Dispose();
-                timer1.Dispose();
-                timer2.Dispose();
             }
         }
     }

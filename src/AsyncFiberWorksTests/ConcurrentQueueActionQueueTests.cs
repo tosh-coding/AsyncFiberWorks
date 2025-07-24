@@ -7,6 +7,7 @@ using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.Timers;
 using AsyncFiberWorks.Threading;
+using System.Threading.Tasks;
 
 namespace AsyncFiberWorksTests
 {
@@ -46,13 +47,17 @@ namespace AsyncFiberWorksTests
             var subscriptions = new Subscriptions();
             var queue = new ConcurrentQueueActionQueue();
             var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
-            var timer1 = new OneshotThreadingTimer();
             var timer2 = new IntervalThreadingTimer();
 
             var scheduleFired = 0;
             var scheduleOnIntervalFired = 0;
 
-            timer1.Schedule(fiber , () => scheduleFired++, 100);
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(100);
+                await fiber.SwitchTo();
+                scheduleFired++;
+            });
             var subscriptionFiber = subscriptions.BeginSubscription();
             var cancellation = new CancellationTokenSource();
             timer2.ScheduleOnInterval(fiber, () => scheduleOnIntervalFired++, 100, 500, cancellation.Token);
@@ -74,7 +79,6 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(2, scheduleOnIntervalFired);
 
             subscriptionFiber.Dispose();
-            timer1.Dispose();
             timer2.Dispose();
 
             // The regularInMs has passed after dispose.
@@ -122,11 +126,14 @@ namespace AsyncFiberWorksTests
             var queue = new ConcurrentQueueActionQueue();
             var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
             var channel = new Channel<int>();
-            var timer = new OneshotThreadingTimer();
 
             var subscriptionFiber1 = subscriptions.BeginSubscription();
             var cancellation = new CancellationTokenSource();
-            timer.Schedule(fiber, () => { }, 1000, cancellation.Token);
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(1000, cancellation.Token);
+                await fiber.SwitchTo();
+            });
             subscriptionFiber1.AppendDisposable(cancellation);
             queue.ExecuteOnlyPendingNow();
             
@@ -140,7 +147,6 @@ namespace AsyncFiberWorksTests
             subscriptions.Dispose();
 
             Assert.AreEqual(0, subscriptions.NumSubscriptions);
-            timer.Dispose();
         }
     }
 }

@@ -3,7 +3,6 @@ using AsyncFiberWorks.Fibers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncFiberWorks.Timers;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Threading;
 
@@ -97,18 +96,18 @@ namespace AsyncFiberWorksTests
                 // Pause.
                 pauseFiber.Enqueue((e) => e.PauseWhileRunning(async () =>
                 {
-                    var timer = new OneshotThreadingTimer();
                     var tcs = new TaskCompletionSource<int>();
-                    timer.Schedule(nonstopFiber, () =>
+                    _ = Task.Run(async () =>
                     {
+                        await Task.Delay(10);
+                        await nonstopFiber.SwitchTo();
                         counter = 10;
                         // Resume.
                         tcs.SetResult(0);
-                    }, 10);
+                    });
                     counter += 1;
 
                     await tcs.Task;
-                    timer.Dispose();
                 }));
                 pauseFiber.Enqueue(() =>
                 {

@@ -6,7 +6,7 @@ using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.Threading;
-using AsyncFiberWorks.Timers;
+using System.Threading.Tasks;
 
 namespace AsyncFiberWorksTests.Examples
 {
@@ -176,7 +176,6 @@ namespace AsyncFiberWorksTests.Examples
             // Thread for Assert.
             var testThread = new ThreadPoolAdapter();
             var testFiber = new PoolFiber(testThread);
-            var timer = new OneshotThreadingTimer();
 
             using (var subscriptions = new Subscriptions())
             {
@@ -188,11 +187,13 @@ namespace AsyncFiberWorksTests.Examples
 
                 var disposables = new Unsubscriber();
                 var cancellation = new CancellationTokenSource();
-                timer.Schedule(testFiber, () =>
+                _ = Task.Run(async () =>
                 {
+                    await Task.Delay(10000, cancellation.Token);
+                    await testFiber.SwitchTo();
                     disposables.Dispose();
                     Assert.Fail();
-                }, 10000, cancellation.Token);
+                });
                 var replyChannel = new Channel<string>();
                 var disposableReply = replyChannel.Subscribe(testFiber, (result) =>
                 {
@@ -204,7 +205,6 @@ namespace AsyncFiberWorksTests.Examples
                 disposables.AppendDisposable(disposableReply);
                 testThread.Run();
             }
-            timer.Dispose();
         }
 
         [Test]
