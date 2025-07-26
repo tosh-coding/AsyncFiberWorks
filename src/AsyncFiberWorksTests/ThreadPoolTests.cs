@@ -82,7 +82,7 @@ namespace AsyncFiberWorksTests
         {
             var pool = UserThreadPool.Create();
             pool.Start();
-            pool.Enqueue(() =>
+            pool.Queue(() =>
             {
                 Thread.Sleep(600);
                 pool.Stop();
@@ -128,9 +128,9 @@ namespace AsyncFiberWorksTests
             {
                 for (int i = 0; i < loopCount; i++)
                 {
-                    pool1.Enqueue(() => Interlocked.Increment(ref counter1));
-                    pool2.Enqueue(() => Interlocked.Increment(ref counter2));
-                    pool3.Enqueue(() => Interlocked.Increment(ref counter3));
+                    pool1.Queue(() => Interlocked.Increment(ref counter1));
+                    pool2.Queue(() => Interlocked.Increment(ref counter2));
+                    pool3.Queue(() => Interlocked.Increment(ref counter3));
                 }
 
                 var sw = Stopwatch.StartNew();

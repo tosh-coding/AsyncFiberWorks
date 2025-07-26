@@ -138,14 +138,14 @@ namespace AsyncFiberWorks.Threading
         /// <param name="callback"></param>
         public void Queue(WaitCallback callback)
         {
-            Enqueue(() => callback(null));
+            Queue(() => callback(null));
         }
 
         /// <summary>
         /// Enqueues action.
         /// </summary>
         /// <param name="action"></param>
-        public void Enqueue(Action action)
+        public void Queue(Action action)
         {
             _actions.Add(action);
         }
