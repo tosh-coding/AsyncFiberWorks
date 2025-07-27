@@ -18,7 +18,8 @@ namespace AsyncFiberWorks.Procedures
         private readonly ManualResetEventSlim _notifierExecutionFinished = new ManualResetEventSlim();
         private readonly UserThreadPool _thread;
         private bool _inExecuting;
-        private CancellationToken _cancellationToken;
+        private CancellationToken _cancellationTokenExternal;
+        private readonly CancellationTokenSource _onDispose = new CancellationTokenSource();
 
         /// <summary>
         /// Register a task to the sequential task list.
@@ -28,7 +29,7 @@ namespace AsyncFiberWorks.Procedures
         public FiberTaskWaiter(ISequentialTaskListRegistry taskList, CancellationToken cancellationToken = default)
         {
             _thread = UserThreadPool.StartNew(1);
-            _cancellationToken = cancellationToken;
+            _cancellationTokenExternal = cancellationToken;
             _unsubscriber = taskList.Add(ExecuteAsync);
         }
 
@@ -45,7 +46,7 @@ namespace AsyncFiberWorks.Procedures
                 {
                     return;
                 }
-                if (_cancellationToken.IsCancellationRequested)
+                if (_cancellationTokenExternal.IsCancellationRequested)
                 {
                     return;
                 }
@@ -69,7 +70,8 @@ namespace AsyncFiberWorks.Procedures
 
             try
             {
-                await _thread.RegisterWaitForSingleObjectAsync(_notifierExecutionFinished.WaitHandle, _cancellationToken).ConfigureAwait(false);
+                var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenExternal, _onDispose.Token);
+                await _thread.RegisterWaitForSingleObjectAsync(_notifierExecutionFinished.WaitHandle, cancellation.Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -95,7 +97,7 @@ namespace AsyncFiberWorks.Procedures
                 {
                     throw new ObjectDisposedException(GetType().FullName);
                 }
-                if (_cancellationToken.IsCancellationRequested)
+                if (_cancellationTokenExternal.IsCancellationRequested)
                 {
                     throw new OperationCanceledException();
                 }
@@ -108,7 +110,24 @@ namespace AsyncFiberWorks.Procedures
                 }
             }
 
-            await _thread.RegisterWaitForSingleObjectAsync(_notifierExecutionRequested.WaitHandle, _cancellationToken).ConfigureAwait(false);
+            using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenExternal, _onDispose.Token))
+            {
+                try
+                {
+                    await _thread.RegisterWaitForSingleObjectAsync(_notifierExecutionRequested.WaitHandle, linkedCts.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    if (_cancellationTokenExternal.IsCancellationRequested)
+                    {
+                        _cancellationTokenExternal.ThrowIfCancellationRequested();
+                    }
+                    else
+                    {
+                        throw new ObjectDisposedException(nameof(FiberTaskWaiter));
+                    }
+                }
+            }
 
             lock (_lockObj)
             {
@@ -132,6 +151,8 @@ namespace AsyncFiberWorks.Procedures
                 _executionRequested = false;
                 _inExecuting = false;
                 _unsubscriber.Dispose();
+                _onDispose.Cancel();
+                _onDispose.Dispose();
                 _notifierExecutionRequested.Dispose();
                 _notifierExecutionFinished.Dispose();
             }
