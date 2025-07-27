@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AsyncFiberWorks.Threading;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,8 +15,9 @@ namespace AsyncFiberWorks.Procedures
         private IDisposable _subscription;
         private bool _hasValue;
         private bool _isDisposed;
-        private readonly SemaphoreSlim _notifierSet = new SemaphoreSlim(0);
-        private readonly SemaphoreSlim _notifierClear = new SemaphoreSlim(0);
+        private readonly ManualResetEventSlim _notifierSet = new ManualResetEventSlim();
+        private readonly ManualResetEventSlim _notifierClear = new ManualResetEventSlim();
+        private readonly UserThreadPool _thread;
         private bool _reading;
         private CancellationToken _cancellationToken;
 
@@ -26,6 +28,7 @@ namespace AsyncFiberWorks.Procedures
         /// <param name="cancellationToken"></param>
         public AsyncRegister(ISequentialTaskListRegistry taskList, CancellationToken cancellationToken = default)
         {
+            _thread = UserThreadPool.StartNew(1);
             _cancellationToken = cancellationToken;
             _subscription = taskList.Add(async () =>
             {
@@ -58,20 +61,25 @@ namespace AsyncFiberWorks.Procedures
                 {
                     throw new InvalidOperationException();
                 }
-                if (_notifierClear.CurrentCount != 0)
+                if (_notifierSet.IsSet)
                 {
                     throw new InvalidOperationException();
                 }
 
                 _hasValue = true;
-                _notifierSet.Release(1);
+                _notifierClear.Reset();
+                _notifierSet.Set();
             }
 
             try
             {
-                await _notifierClear.WaitAsync(_cancellationToken).ConfigureAwait(false);
+                await _thread.RegisterWaitForSingleObjectAsync(_notifierClear.WaitHandle, _cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (ObjectDisposedException)
             {
                 return;
             }
@@ -99,16 +107,16 @@ namespace AsyncFiberWorks.Procedures
                 {
                     _hasValue = false;
                     _reading = false;
-                    _notifierClear.Release(1);
+                    _notifierSet.Reset();
+                    _notifierClear.Set();
                 }
             }
 
-            await _notifierSet.WaitAsync(_cancellationToken).ConfigureAwait(false);
+            await _thread.RegisterWaitForSingleObjectAsync(_notifierSet.WaitHandle, _cancellationToken).ConfigureAwait(false);
 
             lock (_lockObj)
             {
                 _reading = true;
-                return;
             }
         }
 
@@ -126,7 +134,6 @@ namespace AsyncFiberWorks.Procedures
                 _isDisposed = true;
                 _hasValue = false;
                 _reading = false;
-                _notifierClear.Release(1);
                 _notifierClear.Dispose();
                 _notifierSet.Dispose();
             }
