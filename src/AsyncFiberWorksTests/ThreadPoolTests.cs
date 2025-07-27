@@ -16,6 +16,12 @@ namespace AsyncFiberWorksTests
     {
         static int NumberOfMinThreads = 2;
 
+        static object[] ThreadPoolCreators =
+        {
+            new object[] { (Func<IThreadPool>)(() => DefaultThreadPool.Instance) },
+            new object[] { (Func<IThreadPool>)(() => UserThreadPool.StartNew(3)) },
+        };
+
         [OneTimeSetUp]
         public void Init()
         {
@@ -226,12 +232,33 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(201, value);
         }
 
-
-        static object[] ThreadPoolCreators =
+        [Test, TestCaseSource(nameof(ThreadPoolCreators))]
+        public async Task ThreadPoolRegisterWaitForSingleObjectAsyncTest(Func<IThreadPool> poolCreator)
         {
-            new object[] { (Func<IThreadPool>)(() => DefaultThreadPool.Instance) },
-            new object[] { (Func<IThreadPool>)(() => UserThreadPool.StartNew(3)) },
-        };
+            var threadPool = poolCreator();
+            var cts = new CancellationTokenSource();
+            var manualResetEvent1 = new ManualResetEventSlim();
+            var t1 = threadPool.RegisterWaitForSingleObjectAsync(manualResetEvent1.WaitHandle, cts.Token);
+            Assert.IsFalse(t1.IsCompleted);
+            
+            manualResetEvent1.Set();
+            await t1.ConfigureAwait(false);
+            Assert.IsTrue(t1.IsCompleted);
 
+            var manualResetEvent2 = new ManualResetEventSlim();
+            var t2 = threadPool.RegisterWaitForSingleObjectAsync(manualResetEvent2.WaitHandle, cts.Token);
+            Assert.IsFalse(t2.IsCompleted);
+
+            cts.Cancel();
+            try
+            {
+                await t2.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            Assert.IsTrue(t2.IsCompleted);
+            Assert.IsTrue(t2.IsCanceled);
+        }
     }
 }

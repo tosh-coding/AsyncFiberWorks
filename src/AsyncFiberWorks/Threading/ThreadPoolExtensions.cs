@@ -45,5 +45,33 @@ namespace AsyncFiberWorks.Threading
         {
             await threadPool.QueueAsync((_) => action()).ConfigureAwait(false);
         }
+
+        /// <summary>
+        /// Wait for WaitHandle.
+        /// </summary>
+        /// <param name="threadPool">Thread pool used for waiting.</param>
+        /// <param name="waitHandle">Waiting target.</param>
+        /// <param name="cancellationToken">Handle for cancellation.</param>
+        /// <returns>Task waiting for WaitHandle to complete.</returns>
+        /// <exception cref="OperationCanceledException">An exception that occurs when canceled.</exception>
+        public static async Task RegisterWaitForSingleObjectAsync(this IThreadPool threadPool, WaitHandle waitHandle, CancellationToken cancellationToken)
+        {
+            await threadPool.QueueAsync(() =>
+            {
+                int index = WaitHandle.WaitAny(new WaitHandle[]
+                {
+                    waitHandle,
+                    cancellationToken.WaitHandle
+                });
+                if (index == 0)
+                {
+                    // completed.
+                }
+                else
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+            }).ConfigureAwait(false);
+        }
     }
 }
