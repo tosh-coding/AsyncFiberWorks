@@ -7,6 +7,7 @@ using NUnit.Framework;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.Threading;
+using System;
 
 namespace AsyncFiberWorksTests
 {
@@ -198,5 +199,39 @@ namespace AsyncFiberWorksTests
                 }
             }
         }
+
+        [Test, TestCaseSource(nameof(ThreadPoolCreators))]
+        public async Task ThreadPoolQueueAsync(Func<IThreadPool> poolCreator)
+        {
+            long value = 0;
+            var threadPool = poolCreator();
+            var t1 = threadPool.QueueAsync(() =>
+            {
+                value = 1;
+                Thread.Sleep(150);
+                value += 1;
+            });
+            var t2 = threadPool.QueueAsync(() =>
+            {
+                Thread.Sleep(50);
+                value *= 2;
+            });
+            var t3 = threadPool.QueueAsync(() =>
+            {
+                Thread.Sleep(100);
+                value *= 100;
+            });
+
+            await Task.WhenAll(t1, t2, t3).ConfigureAwait(false);
+            Assert.AreEqual(201, value);
+        }
+
+
+        static object[] ThreadPoolCreators =
+        {
+            new object[] { (Func<IThreadPool>)(() => DefaultThreadPool.Instance) },
+            new object[] { (Func<IThreadPool>)(() => UserThreadPool.StartNew(3)) },
+        };
+
     }
 }
