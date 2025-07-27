@@ -6,42 +6,38 @@ using System.Threading.Tasks;
 namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
-    /// Keep only one value. It provides a task from setting the flag
-    /// to the completion of processing, and a task until it is set.
+    /// Asynchronous context switching.
     /// </summary>
-    public class AsyncRegister : IDisposable
+    public class FiberTaskWaiter : IDisposable
     {
         private readonly object _lockObj = new object();
-        private IDisposable _subscription;
-        private bool _hasValue;
+        private IDisposable _unsubscriber;
+        private bool _executionRequested;
         private bool _isDisposed;
-        private readonly ManualResetEventSlim _notifierSet = new ManualResetEventSlim();
-        private readonly ManualResetEventSlim _notifierClear = new ManualResetEventSlim();
+        private readonly ManualResetEventSlim _notifierExecutionRequested = new ManualResetEventSlim();
+        private readonly ManualResetEventSlim _notifierExecutionFinished = new ManualResetEventSlim();
         private readonly UserThreadPool _thread;
-        private bool _reading;
+        private bool _inExecuting;
         private CancellationToken _cancellationToken;
 
         /// <summary>
-        /// Subscribe a task list.
+        /// Register a task to the sequential task list.
         /// </summary>
         /// <param name="taskList"></param>
         /// <param name="cancellationToken"></param>
-        public AsyncRegister(ISequentialTaskListRegistry taskList, CancellationToken cancellationToken = default)
+        public FiberTaskWaiter(ISequentialTaskListRegistry taskList, CancellationToken cancellationToken = default)
         {
             _thread = UserThreadPool.StartNew(1);
             _cancellationToken = cancellationToken;
-            _subscription = taskList.Add(async () =>
-            {
-                await SetFlagAndWaitClearing().ConfigureAwait(false);
-            });
+            _unsubscriber = taskList.Add(ExecuteAsync);
         }
 
         /// <summary>
-        /// Set the flag and wait for it to be cleared.
+        /// Execute a task.
         /// </summary>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task SetFlagAndWaitClearing()
+        public async Task ExecuteAsync()
         {
             lock (_lockObj)
             {
@@ -53,27 +49,27 @@ namespace AsyncFiberWorks.Procedures
                 {
                     return;
                 }
-                if (_hasValue)
+                if (_executionRequested)
                 {
                     throw new InvalidOperationException();
                 }
-                if (_reading)
+                if (_inExecuting)
                 {
                     throw new InvalidOperationException();
                 }
-                if (_notifierSet.IsSet)
+                if (_notifierExecutionRequested.IsSet)
                 {
                     throw new InvalidOperationException();
                 }
 
-                _hasValue = true;
-                _notifierClear.Reset();
-                _notifierSet.Set();
+                _executionRequested = true;
+                _notifierExecutionFinished.Reset();
+                _notifierExecutionRequested.Set();
             }
 
             try
             {
-                await _thread.RegisterWaitForSingleObjectAsync(_notifierClear.WaitHandle, _cancellationToken).ConfigureAwait(false);
+                await _thread.RegisterWaitForSingleObjectAsync(_notifierExecutionFinished.WaitHandle, _cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -86,12 +82,12 @@ namespace AsyncFiberWorks.Procedures
         }
 
         /// <summary>
-        /// Wait for the flag to be set.
+        /// Wait for task execution.
         /// </summary>
         /// <returns></returns>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="OperationCanceledException"></exception>
-        public async Task WaitSetting()
+        public async Task ExecutionStarted()
         {
             lock (_lockObj)
             {
@@ -103,25 +99,25 @@ namespace AsyncFiberWorks.Procedures
                 {
                     throw new OperationCanceledException();
                 }
-                if (_hasValue && _reading)
+                if (_executionRequested && _inExecuting)
                 {
-                    _hasValue = false;
-                    _reading = false;
-                    _notifierSet.Reset();
-                    _notifierClear.Set();
+                    _executionRequested = false;
+                    _inExecuting = false;
+                    _notifierExecutionRequested.Reset();
+                    _notifierExecutionFinished.Set();
                 }
             }
 
-            await _thread.RegisterWaitForSingleObjectAsync(_notifierSet.WaitHandle, _cancellationToken).ConfigureAwait(false);
+            await _thread.RegisterWaitForSingleObjectAsync(_notifierExecutionRequested.WaitHandle, _cancellationToken).ConfigureAwait(false);
 
             lock (_lockObj)
             {
-                _reading = true;
+                _inExecuting = true;
             }
         }
 
         /// <summary>
-        /// Unsubscribe.
+        /// Unregister.
         /// </summary>
         public void Dispose()
         {
@@ -132,13 +128,13 @@ namespace AsyncFiberWorks.Procedures
                     return;
                 }
                 _isDisposed = true;
-                _hasValue = false;
-                _reading = false;
-                _notifierClear.Dispose();
-                _notifierSet.Dispose();
-            }
 
-            _subscription.Dispose();
+                _executionRequested = false;
+                _inExecuting = false;
+                _unsubscriber.Dispose();
+                _notifierExecutionRequested.Dispose();
+                _notifierExecutionFinished.Dispose();
+            }
         }
     }
 }

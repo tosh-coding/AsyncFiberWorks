@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 namespace AsyncFiberWorksTests
 {
     [TestFixture]
-    public class AsyncRegisterTests
+    public class FiberTaskWaiterTests
     {
         [Test]
-        public async Task WaitingOfAsyncRegister()
+        public async Task TestWait()
         {
             var taskList = new FiberAndTaskPairList();
             int resultCounter = 0;
@@ -19,12 +19,12 @@ namespace AsyncFiberWorksTests
 
             Func<int, Task> func = async (maxCount) =>
             {
-                using (var reg = new AsyncRegister(taskList))
+                using (var activator = new FiberTaskWaiter(taskList))
                 {
                     int counter = 0;
                     while (counter < maxCount)
                     {
-                        await reg.WaitSetting();
+                        await activator.ExecutionStarted();
                         lock (lockObj)
                         {
                             resultCounter += 1;
@@ -48,7 +48,7 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task CancellationOfAsyncRegister()
+        public async Task TestCancellation()
         {
             var taskList = new FiberAndTaskPairList();
             int resultCounter = 0;
@@ -59,13 +59,13 @@ namespace AsyncFiberWorksTests
 
             var func = new Func<Task>(async () =>
             {
-                using (var reg = new AsyncRegister(taskList, cancellationToken))
+                using (var activator = new FiberTaskWaiter(taskList, cancellationToken))
                 {
                     try
                     {
                         while (true)
                         {
-                            await reg.WaitSetting();
+                            await activator.ExecutionStarted();
                             lock (lockObj)
                             {
                                 resultCounter += 1;
@@ -93,7 +93,7 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task WaitingOfAsyncRegisterOfT()
+        public async Task TestWaitingOfT()
         {
             var handlerList = new FiberAndHandlerPairList<int>();
             int resultCounter = 0;
@@ -135,7 +135,7 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task CancellationOfAsyncRegisterOfT()
+        public async Task TestCancellationOfT()
         {
             var handlerList = new FiberAndHandlerPairList<int>();
             int resultCounter = 0;
@@ -183,7 +183,7 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public async Task WaitingOfProcessedFlagEventArgs()
+        public async Task TestWaitingOfProcessedFlagEventArgs()
         {
             var driver = new FiberAndHandlerPairList<int>();
             int resultCounter = 0;
