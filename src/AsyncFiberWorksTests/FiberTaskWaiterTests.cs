@@ -19,7 +19,7 @@ namespace AsyncFiberWorksTests
 
             Func<int, Task> func = async (maxCount) =>
             {
-                using (var activator = new FiberTaskWaiter(taskList))
+                using (var activator = new SequentialTaskWaiter(taskList))
                 {
                     int counter = 0;
                     while (counter < maxCount)
@@ -59,7 +59,7 @@ namespace AsyncFiberWorksTests
 
             var func = new Func<Task>(async () =>
             {
-                using (var activator = new FiberTaskWaiter(taskList, cancellationToken))
+                using (var activator = new SequentialTaskWaiter(taskList, cancellationToken))
                 {
                     try
                     {

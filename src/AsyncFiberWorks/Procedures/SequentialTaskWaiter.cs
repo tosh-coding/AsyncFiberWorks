@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
-    /// Asynchronous context switching.
+    /// Use "await" to simply wait for the start of a task on a sequential task list.
     /// </summary>
-    public class FiberTaskWaiter : IDisposable
+    public class SequentialTaskWaiter : IDisposable
     {
         private readonly object _lockObj = new object();
         private IDisposable _unsubscriber;
@@ -26,7 +26,7 @@ namespace AsyncFiberWorks.Procedures
         /// </summary>
         /// <param name="taskList"></param>
         /// <param name="cancellationToken"></param>
-        public FiberTaskWaiter(ISequentialTaskListRegistry taskList, CancellationToken cancellationToken = default)
+        public SequentialTaskWaiter(ISequentialTaskListRegistry taskList, CancellationToken cancellationToken = default)
         {
             _thread = UserThreadPool.StartNew(1);
             _cancellationTokenExternal = cancellationToken;
@@ -124,7 +124,7 @@ namespace AsyncFiberWorks.Procedures
                     }
                     else
                     {
-                        throw new ObjectDisposedException(nameof(FiberTaskWaiter));
+                        throw new ObjectDisposedException(nameof(SequentialTaskWaiter));
                     }
                 }
             }
@@ -136,7 +136,7 @@ namespace AsyncFiberWorks.Procedures
         }
 
         /// <summary>
-        /// Unregister.
+        /// Unregister a task from the sequential task list.
         /// </summary>
         public void Dispose()
         {
