@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace AsyncFiberWorksTests
 {
     [TestFixture]
-    public class FiberTaskWaiterTests
+    public class SequentialTaskWaiterTests
     {
         [Test]
         public async Task TestWait()
@@ -101,12 +101,12 @@ namespace AsyncFiberWorksTests
 
             Func<int, Task> func = async (maxCount) =>
             {
-                using (var reg = new AsyncRegister<int>(handlerList))
+                using (var reg = new SequentialHandlerWaiter<int>(handlerList))
                 {
                     int counter = 0;
                     while (counter < maxCount)
                     {
-                        var e = await reg.WaitSetting();
+                        var e = await reg.ExecutionStarted();
                         lock (lockObj)
                         {
                             resultCounter += e.Arg;
@@ -147,13 +147,13 @@ namespace AsyncFiberWorksTests
 
             var func = new Func<Task>(async () =>
             {
-                using (var reg = new AsyncRegister<int>(handlerList, cancellationToken))
+                using (var reg = new SequentialHandlerWaiter<int>(handlerList, cancellationToken))
                 {
                     try
                     {
                         while (true)
                         {
-                            var ret = await reg.WaitSetting();
+                            var ret = await reg.ExecutionStarted();
                             lock (lockObj)
                             {
                                 totalCounter += ret.Arg;
@@ -192,11 +192,11 @@ namespace AsyncFiberWorksTests
             var cts = new CancellationTokenSource();
             Func<int, Task> func = async (threshold) =>
             {
-                using (var reg = new AsyncRegister<int>(driver, cts.Token))
+                using (var reg = new SequentialHandlerWaiter<int>(driver, cts.Token))
                 {
                     while (true)
                     {
-                        var e = await reg.WaitSetting();
+                        var e = await reg.ExecutionStarted();
                         if (e.Arg < threshold)
                         {
                             e.Processed = false;

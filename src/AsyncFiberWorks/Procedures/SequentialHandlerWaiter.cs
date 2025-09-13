@@ -5,11 +5,10 @@ using System.Threading.Tasks;
 namespace AsyncFiberWorks.Procedures
 {
     /// <summary>
-    /// Keep only one value. It provides a task from setting the value
-    /// to the completion of processing, and a task until it is set.
+    /// Use "await" to simply wait for the start of a task on a sequential handler list.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class AsyncRegister<T> : IDisposable
+    public class SequentialHandlerWaiter<T> : IDisposable
     {
         private readonly object _lockObj = new object();
         private readonly IDisposable _subscription;
@@ -22,23 +21,23 @@ namespace AsyncFiberWorks.Procedures
         private CancellationToken _cancellationToken;
 
         /// <summary>
-        /// Subscribe a handler list.
+        /// Register a handler to the sequential handler list.
         /// </summary>
         /// <param name="handlerList"></param>
         /// <param name="cancellationToken"></param>
-        public AsyncRegister(ISequentialHandlerListRegistry<T> handlerList, CancellationToken cancellationToken = default)
+        public SequentialHandlerWaiter(ISequentialHandlerListRegistry<T> handlerList, CancellationToken cancellationToken = default)
         {
             _cancellationToken = cancellationToken;
-            _subscription = handlerList.Add((arg) => SetValueAndWaitClearing(arg));
+            _subscription = handlerList.Add((arg) => ExecuteAsync(arg));
         }
 
         /// <summary>
-        /// Set the value and wait for it to be cleared.
+        /// Execute a handler.
         /// </summary>
         /// <param name="newValue"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        async Task<bool> SetValueAndWaitClearing(T newValue)
+        async Task<bool> ExecuteAsync(T newValue)
         {
             lock (_lockObj)
             {
@@ -81,12 +80,12 @@ namespace AsyncFiberWorks.Procedures
         }
 
         /// <summary>
-        /// Wait for the value to be set.
+        /// Wait for handler execution.
         /// </summary>
         /// <returns></returns>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="OperationCanceledException"></exception>
-        public async Task<ProcessedFlagEventArgs<T>> WaitSetting()
+        public async Task<ProcessedFlagEventArgs<T>> ExecutionStarted()
         {
             lock (_lockObj)
             {
@@ -117,7 +116,7 @@ namespace AsyncFiberWorks.Procedures
         }
 
         /// <summary>
-        /// Unsubscribe.
+        /// Unregister a handle from the sequential handler list.
         /// </summary>
         public void Dispose()
         {
