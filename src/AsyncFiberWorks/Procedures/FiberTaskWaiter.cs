@@ -38,7 +38,7 @@ namespace AsyncFiberWorks.Procedures
         /// </summary>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task ExecuteAsync()
+        async Task ExecuteAsync()
         {
             lock (_lockObj)
             {
