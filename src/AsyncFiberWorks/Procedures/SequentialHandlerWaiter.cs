@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AsyncFiberWorks.Threading;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,14 +12,16 @@ namespace AsyncFiberWorks.Procedures
     public class SequentialHandlerWaiter<T> : IDisposable
     {
         private readonly object _lockObj = new object();
-        private readonly IDisposable _subscription;
-        private readonly ProcessedFlagEventArgs<T> _currentValue = new ProcessedFlagEventArgs<T>();
-        private bool _hasValue;
+        private IDisposable _unsubscriber;
+        private bool _executionRequested;
         private bool _isDisposed;
-        private readonly SemaphoreSlim _notifierSet = new SemaphoreSlim(0);
-        private readonly SemaphoreSlim _notifierClear = new SemaphoreSlim(0);
-        private bool _reading;
-        private CancellationToken _cancellationToken;
+        private readonly ManualResetEventSlim _notifierExecutionRequested = new ManualResetEventSlim();
+        private readonly ManualResetEventSlim _notifierExecutionFinished = new ManualResetEventSlim();
+        private readonly UserThreadPool _thread;
+        private bool _inExecuting;
+        private CancellationToken _cancellationTokenExternal;
+        private readonly CancellationTokenSource _onDispose = new CancellationTokenSource();
+        private readonly ProcessedFlagEventArgs<T> _currentValue = new ProcessedFlagEventArgs<T>();
 
         /// <summary>
         /// Register a handler to the sequential handler list.
@@ -27,56 +30,66 @@ namespace AsyncFiberWorks.Procedures
         /// <param name="cancellationToken"></param>
         public SequentialHandlerWaiter(ISequentialHandlerListRegistry<T> handlerList, CancellationToken cancellationToken = default)
         {
-            _cancellationToken = cancellationToken;
-            _subscription = handlerList.Add((arg) => ExecuteAsync(arg));
+            _thread = UserThreadPool.StartNew(1);
+            _cancellationTokenExternal = cancellationToken;
+            _unsubscriber = handlerList.Add(async (arg) =>
+            {
+                _currentValue.Processed = false;
+                _currentValue.Arg = arg;
+                await ExecuteAsync().ConfigureAwait(false);
+                return _currentValue.Processed;
+            });
+
         }
 
         /// <summary>
         /// Execute a handler.
         /// </summary>
-        /// <param name="newValue"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        async Task<bool> ExecuteAsync(T newValue)
+        async Task ExecuteAsync()
         {
             lock (_lockObj)
             {
                 if (_isDisposed)
                 {
-                    return false;
+                    return;
                 }
-                if (_cancellationToken.IsCancellationRequested)
+                if (_cancellationTokenExternal.IsCancellationRequested)
                 {
-                    return false;
+                    return;
                 }
-                if (_hasValue)
-                {
-                    throw new InvalidOperationException();
-                }
-                if (_reading)
+                if (_executionRequested)
                 {
                     throw new InvalidOperationException();
                 }
-                if (_notifierClear.CurrentCount != 0)
+                if (_inExecuting)
+                {
+                    throw new InvalidOperationException();
+                }
+                if (_notifierExecutionRequested.IsSet)
                 {
                     throw new InvalidOperationException();
                 }
 
-                _currentValue.Processed = false;
-                _currentValue.Arg = newValue;
-                _hasValue = true;
-                _notifierSet.Release(1);
+                _executionRequested = true;
+                _notifierExecutionFinished.Reset();
+                _notifierExecutionRequested.Set();
             }
 
             try
             {
-                await _notifierClear.WaitAsync(_cancellationToken).ConfigureAwait(false);
+                var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenExternal, _onDispose.Token);
+                await _thread.RegisterWaitForSingleObjectAsync(_notifierExecutionFinished.WaitHandle, cancellation.Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
-                return false;
+                return;
             }
-            return _currentValue.Processed;
+            catch (ObjectDisposedException)
+            {
+                return;
+            }
         }
 
         /// <summary>
@@ -93,26 +106,43 @@ namespace AsyncFiberWorks.Procedures
                 {
                     throw new ObjectDisposedException(GetType().FullName);
                 }
-                if (_cancellationToken.IsCancellationRequested)
+                if (_cancellationTokenExternal.IsCancellationRequested)
                 {
                     throw new OperationCanceledException();
                 }
-                if (_hasValue && _reading)
+                if (_executionRequested && _inExecuting)
                 {
-                    _currentValue.Arg = default;
-                    _hasValue = false;
-                    _reading = false;
-                    _notifierClear.Release(1);
+                    _executionRequested = false;
+                    _inExecuting = false;
+                    _notifierExecutionRequested.Reset();
+                    _notifierExecutionFinished.Set();
                 }
             }
 
-            await _notifierSet.WaitAsync(_cancellationToken).ConfigureAwait(false);
+            using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenExternal, _onDispose.Token))
+            {
+                try
+                {
+                    await _thread.RegisterWaitForSingleObjectAsync(_notifierExecutionRequested.WaitHandle, linkedCts.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    if (_cancellationTokenExternal.IsCancellationRequested)
+                    {
+                        _cancellationTokenExternal.ThrowIfCancellationRequested();
+                    }
+                    else
+                    {
+                        throw new ObjectDisposedException(nameof(SequentialTaskWaiter));
+                    }
+                }
+            }
 
             lock (_lockObj)
             {
-                _reading = true;
-                return _currentValue;
+                _inExecuting = true;
             }
+            return _currentValue;
         }
 
         /// <summary>
@@ -127,15 +157,15 @@ namespace AsyncFiberWorks.Procedures
                     return;
                 }
                 _isDisposed = true;
-                _currentValue.Arg = default;
-                _hasValue = false;
-                _reading = false;
-                _notifierClear.Release(1);
-                _notifierClear.Dispose();
-                _notifierSet.Dispose();
-            }
 
-            _subscription.Dispose();
+                _executionRequested = false;
+                _inExecuting = false;
+                _unsubscriber.Dispose();
+                _onDispose.Cancel();
+                _onDispose.Dispose();
+                _notifierExecutionRequested.Dispose();
+                _notifierExecutionFinished.Dispose();
+            }
         }
     }
 }
