@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.Procedures
     /// <summary>
     /// Use "await" to simply wait for the start of a task on a sequential task list.
     /// </summary>
-    public class SequentialTaskWaiter : IDisposable
+    public class SequentialTaskWaiter : IDisposable, ISequentialTaskWaiter
     {
         private readonly object _lockObj = new object();
         private bool _executionRequested;
