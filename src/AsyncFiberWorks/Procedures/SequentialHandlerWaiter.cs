@@ -166,6 +166,7 @@ namespace AsyncFiberWorks.Procedures
                 _notifierExecutionRequested.Dispose();
                 _notifierExecutionFinished.Dispose();
             }
+            _thread.Dispose();
         }
     }
 }
