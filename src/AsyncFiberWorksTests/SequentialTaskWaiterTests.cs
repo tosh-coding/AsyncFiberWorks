@@ -19,8 +19,7 @@ namespace AsyncFiberWorksTests
 
             Func<int, Task> func = async (maxCount) =>
             {
-                using (var activator = new SequentialTaskWaiter())
-                using (var unsubscriber = taskList.Add(activator.ExecuteTask))
+                using (var activator = taskList.CreateWaiter())
                 {
                     int counter = 0;
                     while (counter < maxCount)
@@ -60,8 +59,7 @@ namespace AsyncFiberWorksTests
 
             var func = new Func<Task>(async () =>
             {
-                using (var activator = new SequentialTaskWaiter(cancellationToken))
-                using (var unsubscriber = taskList.Add(activator.ExecuteTask))
+                using (var activator = taskList.CreateWaiter(cancellationToken))
                 {
                     try
                     {
@@ -103,8 +101,7 @@ namespace AsyncFiberWorksTests
 
             Func<int, Task> func = async (maxCount) =>
             {
-                using (var reg = new SequentialHandlerWaiter<int>())
-                using (var unsubscriber = handlerList.Add(reg.Handler))
+                using (var reg = handlerList.CreateWaiter())
                 {
                     int counter = 0;
                     while (counter < maxCount)
@@ -150,8 +147,7 @@ namespace AsyncFiberWorksTests
 
             var func = new Func<Task>(async () =>
             {
-                using (var reg = new SequentialHandlerWaiter<int>(cancellationToken))
-                using (var unsubscriber = handlerList.Add(reg.Handler))
+                using (var reg = handlerList.CreateWaiter(cancellationToken))
                 {
                     try
                     {
@@ -196,8 +192,7 @@ namespace AsyncFiberWorksTests
             var cts = new CancellationTokenSource();
             Func<int, Task> func = async (threshold) =>
             {
-                using (var reg = new SequentialHandlerWaiter<int>(cts.Token))
-                using (var unsubscriber = handlerList.Add(reg.Handler))
+                using (var reg = handlerList.CreateWaiter(cts.Token))
                 {
                     while (true)
                     {

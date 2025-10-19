@@ -19,6 +19,7 @@ namespace AsyncFiberWorks.Procedures
         private bool _inExecuting;
         private CancellationToken _cancellationTokenExternal;
         private readonly CancellationTokenSource _onDispose = new CancellationTokenSource();
+        private IDisposable _extraDisposable;
 
         /// <summary>
         /// Constructor.
@@ -28,6 +29,15 @@ namespace AsyncFiberWorks.Procedures
         {
             _thread = UserThreadPool.StartNew(1);
             _cancellationTokenExternal = cancellationToken;
+        }
+
+        /// <summary>
+        /// Register additional objects you want to destroy when Dispose is performed.
+        /// </summary>
+        /// <param name="disposable"></param>
+        public void SetDisposable(IDisposable disposable)
+        {
+            _extraDisposable = disposable;
         }
 
         /// <summary>
@@ -152,6 +162,8 @@ namespace AsyncFiberWorks.Procedures
                 _notifierExecutionRequested.Dispose();
                 _notifierExecutionFinished.Dispose();
             }
+            _extraDisposable?.Dispose();
+            _extraDisposable = null;
             _thread.Dispose();
         }
     }
