@@ -12,7 +12,6 @@ namespace AsyncFiberWorks.Procedures
     public class SequentialHandlerWaiter<T> : IDisposable
     {
         private readonly object _lockObj = new object();
-        private IDisposable _unsubscriber;
         private bool _executionRequested;
         private bool _isDisposed;
         private readonly ManualResetEventSlim _notifierExecutionRequested = new ManualResetEventSlim();
@@ -24,22 +23,26 @@ namespace AsyncFiberWorks.Procedures
         private readonly ProcessedFlagEventArgs<T> _currentValue = new ProcessedFlagEventArgs<T>();
 
         /// <summary>
-        /// Register a handler to the sequential handler list.
+        /// Constructor.
         /// </summary>
-        /// <param name="handlerList"></param>
         /// <param name="cancellationToken"></param>
-        public SequentialHandlerWaiter(ISequentialHandlerListRegistry<T> handlerList, CancellationToken cancellationToken = default)
+        public SequentialHandlerWaiter(CancellationToken cancellationToken = default)
         {
             _thread = UserThreadPool.StartNew(1);
             _cancellationTokenExternal = cancellationToken;
-            _unsubscriber = handlerList.Add(async (arg) =>
-            {
-                _currentValue.Processed = false;
-                _currentValue.Arg = arg;
-                await ExecuteAsync().ConfigureAwait(false);
-                return _currentValue.Processed;
-            });
+        }
 
+        /// <summary>
+        /// Execute a handler.
+        /// </summary>
+        /// <param name="arg">An argument.</param>
+        /// <returns>Indicates whether it has been processed.</returns>
+        public async Task<bool> Handler(T arg)
+        {
+            _currentValue.Processed = false;
+            _currentValue.Arg = arg;
+            await ExecuteAsync().ConfigureAwait(false);
+            return _currentValue.Processed;
         }
 
         /// <summary>
@@ -160,7 +163,6 @@ namespace AsyncFiberWorks.Procedures
 
                 _executionRequested = false;
                 _inExecuting = false;
-                _unsubscriber.Dispose();
                 _onDispose.Cancel();
                 _onDispose.Dispose();
                 _notifierExecutionRequested.Dispose();

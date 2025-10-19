@@ -1,6 +1,7 @@
 using AsyncFiberWorks.Core;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Procedures
@@ -11,7 +12,7 @@ namespace AsyncFiberWorks.Procedures
     /// Can specify the fiber to be executed.
     /// Wait for the calls to complete one by one before proceeding.
     /// </summary>
-    public class FiberAndTaskPairList : ISequentialTaskInvoker, ISequentialTaskListRegistry
+    public class FiberAndTaskPairList : ISequentialTaskInvoker
     {
         private readonly object _lock = new object();
         private readonly LinkedList<RegisteredAction> _actions = new LinkedList<RegisteredAction>();
@@ -119,6 +120,17 @@ namespace AsyncFiberWorks.Procedures
             });
 
             return unsubscriber;
+        }
+
+        /// <summary>
+        /// Add a task to the tail.
+        /// </summary>
+        /// <param name="task">Task to be performed.</param>
+        /// <param name="context">The context in which the task will execute. if null, the default is used.</param>
+        /// <returns>Handle for canceling registration.</returns>
+        public IDisposable Add(Func<Task> task, IFiber context = null)
+        {
+            return this.Add((IFiberExecutionEventArgs e) => e.PauseWhileRunning(task), context);
         }
 
         /// <summary>

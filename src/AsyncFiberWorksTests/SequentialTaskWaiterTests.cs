@@ -19,7 +19,8 @@ namespace AsyncFiberWorksTests
 
             Func<int, Task> func = async (maxCount) =>
             {
-                using (var activator = new SequentialTaskWaiter(taskList))
+                using (var activator = new SequentialTaskWaiter())
+                using (var unsubscriber = taskList.Add(activator.ExecuteTask))
                 {
                     int counter = 0;
                     while (counter < maxCount)
@@ -59,7 +60,8 @@ namespace AsyncFiberWorksTests
 
             var func = new Func<Task>(async () =>
             {
-                using (var activator = new SequentialTaskWaiter(taskList, cancellationToken))
+                using (var activator = new SequentialTaskWaiter(cancellationToken))
+                using (var unsubscriber = taskList.Add(activator.ExecuteTask))
                 {
                     try
                     {
@@ -101,7 +103,8 @@ namespace AsyncFiberWorksTests
 
             Func<int, Task> func = async (maxCount) =>
             {
-                using (var reg = new SequentialHandlerWaiter<int>(handlerList))
+                using (var reg = new SequentialHandlerWaiter<int>())
+                using (var unsubscriber = handlerList.Add(reg.Handler))
                 {
                     int counter = 0;
                     while (counter < maxCount)
@@ -147,7 +150,8 @@ namespace AsyncFiberWorksTests
 
             var func = new Func<Task>(async () =>
             {
-                using (var reg = new SequentialHandlerWaiter<int>(handlerList, cancellationToken))
+                using (var reg = new SequentialHandlerWaiter<int>(cancellationToken))
+                using (var unsubscriber = handlerList.Add(reg.Handler))
                 {
                     try
                     {
@@ -185,14 +189,15 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task TestWaitingOfProcessedFlagEventArgs()
         {
-            var driver = new FiberAndHandlerPairList<int>();
+            var handlerList = new FiberAndHandlerPairList<int>();
             int resultCounter = 0;
             var lockObj = new object();
 
             var cts = new CancellationTokenSource();
             Func<int, Task> func = async (threshold) =>
             {
-                using (var reg = new SequentialHandlerWaiter<int>(driver, cts.Token))
+                using (var reg = new SequentialHandlerWaiter<int>(cts.Token))
+                using (var unsubscriber = handlerList.Add(reg.Handler))
                 {
                     while (true)
                     {
@@ -222,7 +227,7 @@ namespace AsyncFiberWorksTests
             for (int i = 0; i < 10; i++)
             {
                 int eventArg = i + 1;
-                await driver.PublishSequentialAsync(eventArg, defaultContext);
+                await handlerList.PublishSequentialAsync(eventArg, defaultContext);
             }
 
             cts.Cancel();

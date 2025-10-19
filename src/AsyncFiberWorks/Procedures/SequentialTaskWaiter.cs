@@ -11,7 +11,6 @@ namespace AsyncFiberWorks.Procedures
     public class SequentialTaskWaiter : IDisposable
     {
         private readonly object _lockObj = new object();
-        private IDisposable _unsubscriber;
         private bool _executionRequested;
         private bool _isDisposed;
         private readonly ManualResetEventSlim _notifierExecutionRequested = new ManualResetEventSlim();
@@ -22,15 +21,13 @@ namespace AsyncFiberWorks.Procedures
         private readonly CancellationTokenSource _onDispose = new CancellationTokenSource();
 
         /// <summary>
-        /// Register a task to the sequential task list.
+        /// Constructor.
         /// </summary>
-        /// <param name="taskList"></param>
         /// <param name="cancellationToken"></param>
-        public SequentialTaskWaiter(ISequentialTaskListRegistry taskList, CancellationToken cancellationToken = default)
+        public SequentialTaskWaiter(CancellationToken cancellationToken = default)
         {
             _thread = UserThreadPool.StartNew(1);
             _cancellationTokenExternal = cancellationToken;
-            _unsubscriber = taskList.Add(ExecuteAsync);
         }
 
         /// <summary>
@@ -38,7 +35,7 @@ namespace AsyncFiberWorks.Procedures
         /// </summary>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        async Task ExecuteAsync()
+        public async Task ExecuteTask()
         {
             lock (_lockObj)
             {
@@ -150,7 +147,6 @@ namespace AsyncFiberWorks.Procedures
 
                 _executionRequested = false;
                 _inExecuting = false;
-                _unsubscriber.Dispose();
                 _onDispose.Cancel();
                 _onDispose.Dispose();
                 _notifierExecutionRequested.Dispose();

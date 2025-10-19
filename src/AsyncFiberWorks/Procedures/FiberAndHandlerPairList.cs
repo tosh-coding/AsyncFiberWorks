@@ -1,6 +1,7 @@
 using AsyncFiberWorks.Core;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Procedures
@@ -13,7 +14,7 @@ namespace AsyncFiberWorks.Procedures
     /// If it has not yet been processed, it proceeds to the next step. If already processed, exit at that point.
     /// </summary>
     /// <typeparam name="TMessage">Message type.</typeparam>
-    public class FiberAndHandlerPairList<TMessage> : ISequentialHandlerListRegistry<TMessage>, ISequentialPublisher<TMessage>
+    public class FiberAndHandlerPairList<TMessage> : ISequentialPublisher<TMessage>
     {
         private readonly object _lock = new object();
         private readonly LinkedList<RegisteredHandler> _actions = new LinkedList<RegisteredHandler>();
@@ -123,6 +124,20 @@ namespace AsyncFiberWorks.Procedures
             });
 
             return unsubscriber;
+        }
+
+        /// <summary>
+        /// Add a handler to the tail.
+        /// </summary>
+        /// <param name="handler">Message handler. The return value is the processed flag. If this flag is true, subsequent handlers are not called.</param>
+        /// <param name="context">The context in which the handler will execute. if null, the default is used.</param>
+        /// <returns>Handle for canceling registration.</returns>
+        public IDisposable Add(Func<TMessage, Task<bool>> handler, IFiber context = null)
+        {
+            return this.Add((IFiberExecutionEventArgs e, ProcessedFlagEventArgs<TMessage> message) => e.PauseWhileRunning(async () =>
+            {
+                message.Processed = await handler(message.Arg).ConfigureAwait(false);
+            }), context);
         }
 
         /// <summary>
