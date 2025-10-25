@@ -67,7 +67,7 @@ namespace AsyncFiberWorksTests
                 {
                     return msg.NodeId != node.NodeId;
                 });
-                var filter = new MessageFilter<MessageFrame>(filters, node.Fiber, (msg) =>
+                var filter = new MessageFilterList<MessageFrame>(filters, node.Fiber, (msg) =>
                 {
                     node.ReceivedMessages.Add(msg);
                 });

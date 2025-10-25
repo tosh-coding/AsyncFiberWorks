@@ -6,10 +6,10 @@ using System.Linq;
 namespace AsyncFiberWorks.Channels
 {
     /// <summary>
-    /// A message filter.
+    /// A message filter list.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class MessageFilter<T>
+    public class MessageFilterList<T>
     {
         private Filter<T>[] _filter;
         private readonly IExecutionContext _fiber;
@@ -21,7 +21,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="filters">Message pass filters.</param>
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="receive">Message receiving handler.</param>
-        public MessageFilter(IEnumerable<Filter<T>> filters, IExecutionContext fiber, Action<T> receive)
+        public MessageFilterList(IEnumerable<Filter<T>> filters, IExecutionContext fiber, Action<T> receive)
         {
             _filter = filters.ToArray();
             _fiber = fiber;
