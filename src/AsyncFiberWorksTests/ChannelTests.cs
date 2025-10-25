@@ -62,7 +62,7 @@ namespace AsyncFiberWorksTests
 
             foreach (var node in nodeList)
             {
-                var filters = new List<Filter<MessageFrame>>();
+                var filters = new List<MessageFilter<MessageFrame>>();
                 filters.Add((msg) =>
                 {
                     return msg.NodeId != node.NodeId;

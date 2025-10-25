@@ -88,7 +88,7 @@ namespace AsyncFiberWorksTests.Examples
                     }
                 };
                 var unsubscriber = subscriptions.BeginSubscription();
-                var filters = new List<Filter<int>>();
+                var filters = new List<MessageFilter<int>>();
                 filters.Add(x => x % 2 == 0);
                 var filter = new MessageFilterList<int>(filters, fiber, onMsg);
                 var disposableChannel = channel.Subscribe(fiber, filter.Receive);

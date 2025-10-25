@@ -11,7 +11,7 @@ namespace AsyncFiberWorks.Channels
     /// <typeparam name="T"></typeparam>
     public class MessageFilterList<T>
     {
-        private Filter<T>[] _filter;
+        private MessageFilter<T>[] _filter;
         private readonly IExecutionContext _fiber;
         private readonly Action<T> _receive;
 
@@ -21,7 +21,7 @@ namespace AsyncFiberWorks.Channels
         /// <param name="filters">Message pass filters.</param>
         /// <param name="fiber">the target executor to receive the message</param>
         /// <param name="receive">Message receiving handler.</param>
-        public MessageFilterList(IEnumerable<Filter<T>> filters, IExecutionContext fiber, Action<T> receive)
+        public MessageFilterList(IEnumerable<MessageFilter<T>> filters, IExecutionContext fiber, Action<T> receive)
         {
             _filter = filters.ToArray();
             _fiber = fiber;
