@@ -13,11 +13,10 @@ namespace AsyncFiberWorksTests
     public class FiberAndTaskPairListTests
     {
         [Test]
-        public void SubscribeSimpleActions()
+        public async Task SubscribeSimpleActions()
         {
-            // Fiber of main thread for Assertion.
-            var mainLoop = new ThreadPoolAdapter();
-            var fiber = mainLoop.CreateFiber();
+            // Task for Assertion.
+            var tcs = new TaskCompletionSource<bool>();
 
             var taskList = new FiberAndTaskPairList();
             long counter = 0;
@@ -37,24 +36,31 @@ namespace AsyncFiberWorksTests
             var disposable1 = taskList.Add(action1);
             var disposable2 = taskList.Add(action2);
 
+            var fiber = new PoolFiber();
             _ = Task.Run(async () =>
             {
                 await taskList.InvokeSequentialAsync(fiber);
                 await fiber.EnqueueAsync(() =>
                 {
-                    Assert.AreEqual(301, counter);
+                    try
+                    {
+                        Assert.AreEqual(301, counter);
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.SetException(ex);
+                    }
                 });
-                mainLoop.Stop();
+                tcs.SetResult(true);
             });
-            mainLoop.Run();
+            await tcs.Task;
         }
 
         [Test]
-        public void SubscribeFuncTask()
+        public async Task SubscribeFuncTask()
         {
-            // Fiber of main thread for Assertion.
-            var mainLoop = new ThreadPoolAdapter();
-            var fiber = mainLoop.CreateFiber();
+            // Task for Assertion.
+            var tcs = new TaskCompletionSource<bool>();
 
             var taskList = new FiberAndTaskPairList();
             long counter = 0;
@@ -76,16 +82,24 @@ namespace AsyncFiberWorksTests
             var disposable1 = taskList.Add(action1);
             var disposable2 = taskList.Add(action2);
 
+            var fiber = new PoolFiber();
             _ = Task.Run(async () =>
             {
                 await taskList.InvokeSequentialAsync(fiber);
                 await fiber.EnqueueAsync(() =>
                 {
-                    Assert.AreEqual(301, counter);
+                    try
+                    {
+                        Assert.AreEqual(301, counter);
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.SetException(ex);
+                    }
                 });
-                mainLoop.Stop();
+                tcs.SetResult(true);
             });
-            mainLoop.Run();
+            await tcs.Task;
         }
 
         [Test]
@@ -120,11 +134,10 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public void ToggleAtUnsubscribe()
+        public async Task ToggleAtUnsubscribe()
         {
-            // Fiber of main thread for Assertion.
-            var mainLoop = new ThreadPoolAdapter();
-            var fiber = mainLoop.CreateFiber();
+            // Task for Assertion.
+            var tcs = new TaskCompletionSource<bool>();
 
             var taskList = new FiberAndTaskPairList();
             long counter = 0;
@@ -141,16 +154,24 @@ namespace AsyncFiberWorksTests
             var disposable2 = taskList.Add(action);
             unsubscriber.AppendDisposable(disposable2);
 
+            var fiber = new PoolFiber();
             _ = Task.Run(async () =>
             {
                 await taskList.InvokeSequentialAsync(fiber);
                 await fiber.EnqueueAsync(() =>
                 {
-                    Assert.AreEqual(1, counter);
+                    try
+                    {
+                        Assert.AreEqual(1, counter);
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.SetException(ex);
+                    }
                 });
-                mainLoop.Stop();
+                tcs.SetResult(true);
             });
-            mainLoop.Run();
+            await tcs.Task;
         }
 
         [Test]
