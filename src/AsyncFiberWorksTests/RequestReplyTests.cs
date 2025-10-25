@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,298 +14,166 @@ namespace AsyncFiberWorksTests
     public class RequestReplyTests
     {
         [Test]
-        public void SynchronousRequestReply()
+        public async Task SimpleRequestReply()
         {
-            var timeCheck = new Channel<IRequest<string, DateTime>>();
-            var now = DateTime.Now;
+            Func<string, Task<string>> getGreeting;
+            var database = new (string, string)[]
+            {
+                ("morning", "Good morning"),
+                ("afternoon", "Hello"),
+                ("evening", "Good evening"),
+            };
+            var keyword = "afternoon";
+            var correct_answer = "Hello";
 
             // Responder.
             {
-                var fiber = new PoolFiber();
-                Action<IRequest<string, DateTime>> onRequest = (req) => req.ReplyTo.Publish(now);
-                var subscriber = timeCheck.Subscribe(fiber, onRequest);
+                var responderFiber = new PoolFiber();
+                getGreeting = async (req) =>
+                {
+                    string response = default;
+                    await responderFiber.EnqueueAsync(() =>
+                    {
+                        response = database.First(x => x.Item1 == req).Item2;
+                    });
+                    return response;
+                };
             }
 
-            // Requester.
-            {
-                var requesterThread = new ThreadPoolAdapter();
-                var requesterFiber = new PoolFiber(requesterThread);
-
-                var tcs = new TaskCompletionSource<Action>();
-                requesterFiber.Enqueue(
-                    (e) => e.PauseWhileRunning(async () =>
-                    {
-                        var act = await tcs.Task;
-                        await e.EnqueueToOriginThreadAsync(act);
-                    }));
-
-                var oneshotExecutor = new OneShotExecutor();
-                var workFiber = new PoolFiber();
-                var cancellation = new CancellationTokenSource();
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(10000, cancellation.Token);
-                    await workFiber.SwitchTo();
-                    oneshotExecutor.Execute(() =>
-                    {
-                        requesterThread.Queue((_) => Assert.Fail());
-                    });
-                });
-                var disposableRequest = new Unsubscriber();
-                var responseChannel = new Channel<DateTime>();
-                var response = responseChannel.Subscribe(workFiber, (result) =>
-                {
-                    oneshotExecutor.Execute(() =>
-                    {
-                        cancellation.Cancel();
-                        disposableRequest.Dispose();
-                        tcs.SetResult(() =>
-                        {
-                            Assert.AreEqual(result, now);
-                            requesterThread.Stop();
-                        });
-                    });
-                });
-                timeCheck.Publish(new RequestReplyChannelRequest<string, DateTime>("hello", responseChannel));
-                disposableRequest.AppendDisposable(response);
-                requesterThread.Run();
-            }
+            // Request.
+            var result = await getGreeting(keyword).ConfigureAwait(false);
+            Assert.AreEqual(result, correct_answer);
         }
 
         [Test]
-        public void MultipleReplies()
+        public async Task MultipleReplies()
         {
-            var countChannel = new Channel<IRequest<string, int>>();
-            var allSent = new AutoResetEvent(false);
+            Func<IPublisher<int>, Task> requestMultipleReply;
 
             // Responder.
             {
-                var fiber = new PoolFiber();
-                Action<IRequest<string, int>> onRequest =
-                    delegate (IRequest<string, int> req)
+                var responderFiber = new PoolFiber();
+                requestMultipleReply = async (replyTo) =>
+                {
+                    await responderFiber.EnqueueAsync(() =>
                     {
                         for (var i = 0; i <= 5; i++)
-                            req.ReplyTo.Publish(i);
-                    };
-                var subscriber = countChannel.Subscribe(fiber, onRequest);
+                        {
+                            replyTo.Publish(i);
+                        }
+                    });
+                };
             }
 
-            // Requester.
+            // Request.
             {
-                var requesterThread = new ThreadPoolAdapter();
-                var workFiber = new PoolFiber(requesterThread);
-                Action actionAssertFail = () => requesterThread.Queue((_) => Assert.Fail());
-
-                var cancellation = new CancellationTokenSource();
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(1000, cancellation.Token);
-                    await workFiber.SwitchTo();
-                    actionAssertFail();
-                });
                 int i = 0;
                 int state = 0;
+                var workFiber = new PoolFiber();
                 var responseChannel = new Channel<int>();
-                using (var response = responseChannel.Subscribe(workFiber, (result) =>
+                IDisposable disposable = default;
+                var tcs = new TaskCompletionSource<bool>();
+                try
                 {
-                    if (state == 0)
+                    disposable = responseChannel.Subscribe(workFiber, (result) =>
                     {
-                        int copyI = i;
-                        int copyResult = result;
-                        requesterThread.Queue((_) => Assert.AreEqual(copyResult, copyI));
-                        i += 1;
-                        if (i >= 5)
+                        try
                         {
-                            state = 1;
+                            if (state == 0)
+                            {
+                                int copyI = i;
+                                int copyResult = result;
+                                Assert.AreEqual(copyResult, copyI);
+                                i += 1;
+                                if (i >= 5)
+                                {
+                                    state = 1;
+                                }
+                            }
+                            else if (state == 1)
+                            {
+                                Assert.AreEqual(5, result);
+                                tcs.SetResult(true);
+                            }
+                            else
+                            {
+                                Assert.Fail();
+                            }
+
                         }
-                    }
-                    else if (state == 1)
+                        catch (Exception ex)
+                        {
+                            tcs.SetException(ex);
+                        }
+                    });
+                    await requestMultipleReply(responseChannel);
+
+                    _ = Task.Run(async () =>
                     {
-                        cancellation?.Cancel();
-                        cancellation = null;
-                        Assert.AreEqual(5, result);
-                        requesterThread.Stop();
-                    }
-                    else
-                    {
-                        actionAssertFail();
-                    }
-                }))
+                        await Task.Delay(1000);
+                        tcs.SetCanceled();
+                    });
+                    await tcs.Task;
+                }
+                finally
                 {
-                    countChannel.Publish(new RequestReplyChannelRequest<string, int>("hello", responseChannel));
-                    requesterThread.Run();
+                    disposable.Dispose();
                 }
             }
         }
 
-        [Test]
-        public void ChangeResponseSync()
+        private static async Task<int> WaitReply(Func<int, Task<int>> acquireResource, int requestData)
         {
-            var countChannel = new Channel<IRequest<string, int>>();
-            var dic = new (string, int)[] {
-                ("apple", 100),
-                ("banana", 200),
-                ("carrot", 300),
-            }.ToDictionary(x => x.Item1, x => x.Item2);
-
-            // Responder.
+            return await Task.Run(async () =>
             {
-                var responder = new PoolFiber();
-                Action<IRequest<string, int>> onRequest =
-                    delegate (IRequest<string, int> req)
-                    {
-                        Thread.Sleep(20);
-                        if (dic.TryGetValue(req.Request, out int value))
-                        {
-                            req.ReplyTo.Publish(value);
-                        }
-                        else
-                        {
-                            req.ReplyTo.Publish(-1);
-                        }
-                    };
-                var subscriber = countChannel.Subscribe(responder, onRequest);
-            }
-
-            // Requester.
-            {
-                var mainThread = new ThreadPoolAdapter();
-                var mainFiber = new PoolFiber(mainThread);
-
-                var requests = new List<string>();
-                requests.AddRange(dic.Keys);
-                requests.Add("daikon");
-                int indexRequest = 0;
-
-                int timeoutInMs = 500;
-                var ownAction = new List<Action>();
-                Action action = () =>
-                {
-                    string requestData = requests[indexRequest];
-                    indexRequest += 1;
-
-                    if (indexRequest >= requests.Count)
-                    {
-                        mainFiber.Enqueue(() => { mainThread.Stop(); });
-                    }
-                    else
-                    {
-                        var disposables = new Unsubscriber();
-                        var cancellation = new CancellationTokenSource();
-                        _ = Task.Run(async () =>
-                        {
-                            await Task.Delay(timeoutInMs, cancellation.Token);
-                            await mainFiber.SwitchTo();
-                            disposables.Dispose();
-                            Assert.Fail();
-                        });
-                        var responseChannel = new Channel<int>();
-                        var response = responseChannel.Subscribe(mainFiber, (responseData) =>
-                        {
-                            cancellation.Cancel();
-                            disposables.Dispose();
-                            if (dic.ContainsKey(requestData))
-                            {
-                                Assert.AreEqual(dic[requestData], responseData);
-                            }
-                            else
-                            {
-                                Assert.AreEqual(-1, responseData);
-                            }
-                            mainFiber.Enqueue(ownAction[0]);
-                        });
-                        countChannel.Publish(new RequestReplyChannelRequest<string, int>(requestData, responseChannel));
-                        disposables.AppendDisposable(response);
-                    }
-                };
-                ownAction.Add(action);
-
-                mainFiber.Enqueue(action);
-                mainThread.Run();
-                Assert.AreEqual(requests.Count, indexRequest);
-            }
-        }
-
-        private static Task<int> WaitReply(Channel<IRequest<int, int>> countChannel, int requestData, int timeoutInMs)
-        {
-            var workFiber = new PoolFiber();
-            var disposables = new Unsubscriber();
-            var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var cancellation = new CancellationTokenSource();
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(timeoutInMs, cancellation.Token);
-                await workFiber.SwitchTo();
-                tcs.TrySetCanceled();
-                disposables.Dispose();
-            });
-            var responseChannel = new Channel<int>();
-            var response = responseChannel.Subscribe(workFiber, (responseData) =>
-            {
-                cancellation.Cancel();
-                tcs.TrySetResult(responseData);
-                disposables.Dispose();
-            });
-
-            countChannel.Publish(new RequestReplyChannelRequest<int, int>(requestData, responseChannel));
-            disposables.AppendDisposable(response);
-            return tcs.Task;
+                return await acquireResource(requestData).ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
 
         [Test]
         public async Task OnlyFirstOneIsAcquired()
         {
-            var countChannel = new Channel<IRequest<int, int>>();
+            Func<int, Task<int>> acquireResource;
             int resourceHolderId = 0;
 
             // Responder.
             {
-                var responder = new PoolFiber();
-                Action<IRequest<int, int>> onRequest =
-                    (IRequest<int, int> req) =>
-                    {
-                        Task.Run(async () =>
-                        {
-                            await responder.SwitchTo();
+                var responderFiber = new PoolFiber();
+                acquireResource = async (req) =>
+                {
+                    await responderFiber.SwitchTo();
 
-                            // There is no resource holder yet.
-                            if (resourceHolderId == 0)
-                            {
-                                resourceHolderId = req.Request;
-                                req.ReplyTo.Publish(resourceHolderId);
-                            }
-                            // There is already a resource holder.
-                            else
-                            {
-                                req.ReplyTo.Publish(resourceHolderId);
-                            }
-                        });
-                    };
-                var subscriber = countChannel.Subscribe(responder, onRequest);
+                    // There is no resource holder yet.
+                    if (resourceHolderId == 0)
+                    {
+                        resourceHolderId = req;
+                        return resourceHolderId;
+                    }
+                    // There is already a resource holder.
+                    else
+                    {
+                        return resourceHolderId;
+                    }
+                };
             }
 
             // Requester.
             {
-                try
-                {
-                    var t1 = WaitReply(countChannel, 1, 500);
-                    var t2 = WaitReply(countChannel, 2, 500);
-                    var t3 = WaitReply(countChannel, 3, 500);
-                    var t4 = WaitReply(countChannel, 4, 500);
-                    var t5 = WaitReply(countChannel, 5, 500);
+                var t1 = WaitReply(acquireResource, 1);
+                var t2 = WaitReply(acquireResource, 2);
+                var t3 = WaitReply(acquireResource, 3);
+                var t4 = WaitReply(acquireResource, 4);
+                var t5 = WaitReply(acquireResource, 5);
 
-                    await Task.WhenAll(t1, t2, t3, t4, t5);
+                await Task.WhenAll(t1, t2, t3, t4, t5);
 
-                    // Only one requestor acquires resources.
-                    Assert.AreEqual(t1.Result, t2.Result);
-                    Assert.AreEqual(t1.Result, t3.Result);
-                    Assert.AreEqual(t1.Result, t4.Result);
-                    Assert.AreEqual(t1.Result, t5.Result);
-                }
-                catch (OperationCanceledException)
-                {
-                    Assert.Fail();
-                }
+                // Only one requestor acquires resources.
+                Assert.AreNotEqual(t1.Result, 0);
+                Assert.AreEqual(t1.Result, t2.Result);
+                Assert.AreEqual(t1.Result, t3.Result);
+                Assert.AreEqual(t1.Result, t4.Result);
+                Assert.AreEqual(t1.Result, t5.Result);
+                Console.WriteLine($"Result: {t1.Result}");
             }
         }
     }

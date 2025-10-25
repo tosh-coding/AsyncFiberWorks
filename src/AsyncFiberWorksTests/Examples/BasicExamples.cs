@@ -171,39 +171,33 @@ namespace AsyncFiberWorksTests.Examples
         }
 
         [Test]
-        public void RequestReply()
+        public async Task RequestReply()
         {
-            // Thread for Assert.
-            var testThread = new ThreadPoolAdapter();
-            var testFiber = new PoolFiber(testThread);
+            Func<string, Task<string>> echo;
 
-            using (var subscriptions = new Subscriptions())
+            // Responder
             {
                 var fiber = new PoolFiber();
-                var channel = new Channel<IRequest<string, string>>();
-                var unsubscriber = subscriptions.BeginSubscription();
-                var disposableChannel = channel.Subscribe(fiber, (req) => req.ReplyTo.Publish("bye"));
-                unsubscriber.AppendDisposable(disposableChannel);
+                int counter = 0;
+                echo = async (req) =>
+                {
+                    string response = default;
+                    await fiber.EnqueueAsync(() =>
+                    {
+                        counter += 1;
+                        response = req + counter;
+                    });
+                    return response;
+                };
+            }
 
-                var disposables = new Unsubscriber();
-                var cancellation = new CancellationTokenSource();
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(10000, cancellation.Token);
-                    await testFiber.SwitchTo();
-                    disposables.Dispose();
-                    Assert.Fail();
-                });
-                var replyChannel = new Channel<string>();
-                var disposableReply = replyChannel.Subscribe(testFiber, (result) =>
-                {
-                    cancellation.Cancel();
-                    Assert.AreEqual("bye", result);
-                    testThread.Stop();
-                });
-                channel.Publish(new RequestReplyChannelRequest<string, string>("hello", replyChannel));
-                disposables.AppendDisposable(disposableReply);
-                testThread.Run();
+            // Requester
+            {
+                var response = await echo("hello");
+                Assert.AreEqual("hello1", response);
+
+                response = await echo("bye");
+                Assert.AreEqual("bye2", response);
             }
         }
 

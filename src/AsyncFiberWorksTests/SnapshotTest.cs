@@ -1,11 +1,9 @@
 ﻿using AsyncFiberWorks.Channels;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.Threading;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorksTests
@@ -13,157 +11,86 @@ namespace AsyncFiberWorksTests
     [TestFixture]
     public class SnapshotTest
     {
+        /// <summary>
+        /// Notify whenever the value held changes.
+        /// </summary>
         [Test]
-        public void Snapshot()
+        public async Task Snapshot()
         {
-            using (var fiberReplySubscriptions = new Subscriptions())
+            using (var subscriptions = new Subscriptions())
             {
+                var unsubscriber = subscriptions.BeginSubscription();
                 var fiberReply = new PoolFiber();
-                var updatesChannel = new Channel<int>();
-                var requestChannel = new Channel<IRequest<Channel<int>, IDisposable>>();
-                var lockerResponseValue = new object();
+                var notificationChannel = new Channel<int>();
+                Func<Channel<int>, Task<IDisposable>> requestChannel;
+                Func<int, Task> setValue;
 
                 // A value managed by the responder.
                 int currentValue = 0;
 
                 // Set up responder. 
-                var subscriptionFiber = fiberReplySubscriptions.BeginSubscription();
-                var subscriptionChannel = requestChannel.Subscribe(fiberReply,
-                    (request) =>
+                requestChannel = async (request) =>
+                {
+                    IDisposable response = default;
+                    await fiberReply.EnqueueAsync(() =>
                     {
-                        int value;
-                        lock (lockerResponseValue)
-                        {
-                            value = currentValue;
-                        }
-                        request.Request.Publish(value);
+                        int value = currentValue;
+                        request.Publish(value);
                         var workFiber = new PoolFiber();
-                        var disposableOfReceiver = updatesChannel.Subscribe(workFiber, (msg) =>
+                        var disposableOfReceiver = notificationChannel.Subscribe(workFiber, (msg) =>
                         {
-                            request.Request.Publish(msg);
+                            request.Publish(msg);
                         });
-                        request.ReplyTo.Publish(disposableOfReceiver);
+                        response = disposableOfReceiver;
                     });
-                subscriptionFiber.AppendDisposable(subscriptionChannel);
-                Assert.AreEqual(1, requestChannel.NumSubscribers);
+                    return response;
+                };
 
-                // Start changing values.
+                setValue = async (newValue) =>
+                {
+                    await fiberReply.EnqueueAsync(() =>
+                    {
+                        currentValue = newValue;
+                        notificationChannel.Publish(currentValue);
+                    });
+                };
 
-                lock (lockerResponseValue)
-                {
-                    currentValue = 1;
-                    updatesChannel.Publish(currentValue);
-                }
-                lock (lockerResponseValue)
-                {
-                    currentValue = 2;
-                    updatesChannel.Publish(currentValue);
-                }
+                // Start changing the value before subscribing.
+                await setValue(1);
+                await setValue(2);
 
                 // Start requesting.
-                var requesterThread = new ThreadPoolAdapter();
-                var fiberRequest = new PoolFiber(requesterThread);
+                var fiberRequest = new PoolFiber();
                 var receivedValues = new List<int>();
-                var timeoutTimerCancellation = new Unsubscriber();
                 var receiveChannel = new Channel<int>();
-                var disposableReceive = receiveChannel.Subscribe(fiberRequest, (v) =>
+                var disposable = receiveChannel.Subscribe(fiberRequest, (v) =>
                 {
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
                 });
-                IDisposable handleReceiveReply = null;
-                bool handleReceiveDisposed = false;
-                IDisposable handleReceiveDisposableOfReceiver = null;
-                var replyChannel = new Channel<IDisposable>();
-                handleReceiveReply = replyChannel.Subscribe(fiberRequest, (disposableOfReceiver) =>
+                unsubscriber.AppendDisposable(disposable);
+
+                disposable = await requestChannel(receiveChannel).ConfigureAwait(false);
+                unsubscriber.AppendDisposable(disposable);
+
+                // Change the value after subscribing.
+                await setValue(4);
+                await setValue(8);
+
+                // Wait publishing.
+                await Task.Delay(200);
+
+                int[] expectedReceiveValues = new int[]
                 {
-                    if (handleReceiveDisposed)
-                    {
-                        disposableOfReceiver.Dispose();
-                        return;
-                    }
+                    2, 4, 8,
+                };
 
-                    handleReceiveReply.Dispose();
-                    handleReceiveReply = null;
-                    handleReceiveDisposableOfReceiver = disposableOfReceiver;
-                    fiberRequest.Enqueue(() =>
-                    {
-                        timeoutTimerCancellation.Dispose();
-                        lock (lockerResponseValue)
-                        {
-                            currentValue = 4;
-                            updatesChannel.Publish(currentValue);
-                        }
-                        lock (lockerResponseValue)
-                        {
-                            currentValue = 8;
-                            updatesChannel.Publish(currentValue);
-                        }
+                Assert.AreEqual(expectedReceiveValues.Length, receivedValues.Count);
 
-                        _ = Task.Run(async () =>
-                        {
-                            await Task.Delay(200);
-                            await fiberRequest.SwitchTo();
-
-                            // Finish.
-
-                            int[] expectedReceiveValues = new int[]
-                            {
-                                2, 4, 8,
-                            };
-
-                            Assert.AreEqual(expectedReceiveValues.Length, receivedValues.Count);
-
-                            for (int i = 0; i < expectedReceiveValues.Length; i++)
-                            {
-                                Assert.AreEqual(expectedReceiveValues[i], receivedValues[i]);
-                            }
-
-                            requesterThread.Stop();
-                        });
-                    });
-                });
-                requestChannel.Publish(new RequestReplyChannelRequest<Channel<int>, IDisposable>(receiveChannel, replyChannel));
-                var cancellation = new CancellationTokenSource();
-                _ = Task.Run(async () =>
+                for (int i = 0; i < expectedReceiveValues.Length; i++)
                 {
-                    await Task.Delay(5000, cancellation.Token);
-                    await fiberRequest.SwitchTo();
-                    if (!handleReceiveDisposed)
-                    {
-                        handleReceiveDisposed = true;
-                        if (handleReceiveReply != null)
-                        {
-                            handleReceiveReply.Dispose();
-                            handleReceiveReply = null;
-                        }
-                        if (handleReceiveDisposableOfReceiver != null)
-                        {
-                            handleReceiveDisposableOfReceiver.Dispose();
-                            handleReceiveDisposableOfReceiver = null;
-                        }
-                    }
-                    Assert.Fail("SnapshotRequestControlEvent.Timeout");
-                });
-                timeoutTimerCancellation.Append(cancellation);
-
-                requesterThread.Run();
-                if (!handleReceiveDisposed)
-                {
-                    handleReceiveDisposed = true;
-                    if (handleReceiveReply != null)
-                    {
-                        handleReceiveReply.Dispose();
-                        handleReceiveReply = null;
-                    }
-                    if (handleReceiveDisposableOfReceiver != null)
-                    {
-                        handleReceiveDisposableOfReceiver.Dispose();
-                        handleReceiveDisposableOfReceiver = null;
-                    }
+                    Assert.AreEqual(expectedReceiveValues[i], receivedValues[i]);
                 }
-                timeoutTimerCancellation.Dispose();
-                disposableReceive.Dispose();
             }
         }
     }
