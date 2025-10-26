@@ -78,6 +78,9 @@ namespace AsyncFiberWorksTests.Examples
                 var fiber = threadPool.CreateFiber();
                 var channel = new Channel<int>();
 
+                var rb = new MessageReceiverBuilder<int>();
+                rb.AddFilter(x => x % 2 == 0);
+
                 var reset = new AutoResetEvent(false);
                 Action<int> onMsg = x =>
                 {
@@ -87,11 +90,9 @@ namespace AsyncFiberWorksTests.Examples
                         reset.Set();
                     }
                 };
+                var receiver = rb.Build(fiber, onMsg);
                 var unsubscriber = subscriptions.BeginSubscription();
-                var filters = new List<MessageFilter<int>>();
-                filters.Add(x => x % 2 == 0);
-                var filter = new MessageFilterList<int>(filters, fiber, onMsg);
-                var disposableChannel = channel.Subscribe(fiber, filter.Receive);
+                var disposableChannel = channel.Subscribe(fiber, receiver);
                 unsubscriber.AppendDisposable(disposableChannel);
                 channel.Publish(1);
                 channel.Publish(2);

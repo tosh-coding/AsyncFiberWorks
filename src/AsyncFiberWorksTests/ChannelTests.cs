@@ -62,16 +62,16 @@ namespace AsyncFiberWorksTests
 
             foreach (var node in nodeList)
             {
-                var filters = new List<MessageFilter<MessageFrame>>();
-                filters.Add((msg) =>
+                var rb = new MessageReceiverBuilder<MessageFrame>();
+                rb.AddFilter((msg) =>
                 {
                     return msg.NodeId != node.NodeId;
                 });
-                var filter = new MessageFilterList<MessageFrame>(filters, node.Fiber, (msg) =>
+                var receiver = rb.Build(node.Fiber, (msg) =>
                 {
                     node.ReceivedMessages.Add(msg);
                 });
-                channel.Subscribe(node.Fiber, filter.Receive);
+                channel.Subscribe(node.Fiber, receiver);
             }
 
             channel.Publish(new MessageFrame() { NodeId = 2, Message = "Hello" });
