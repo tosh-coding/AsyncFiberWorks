@@ -166,8 +166,19 @@ Producer-Consumer pattern.  One or more threads become consumers and execute tas
  * _[AnotherThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/AnotherThreadPool.cs)_ - Convenience wrapper for UserThreadPool.  There are two worker threads.
  * _[ThreadPoolAdapter](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/ThreadPoolAdapter.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
 
+## PubSub ##
+These are mechanisms for loosely coupling messaging within a process.
+
+A design that specifies a destination Fiber and sends messages directly results in tight coupling. This is not a problem if the design is small or speed is the top priority. However, as the design scale increases, the disadvantages often outweigh the benefits. In such cases, this mechanism can be used.
+
+By replacing existing messaging code with code that uses these Pub/Sub interfaces, you can write sending code without specifying a destination. While the dependency on the Pub/Sub interface remains, messaging is one level more loosely coupled than before.
+
+ * _[IPublisher{T}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/IPublisher.cs)_ - This is a message sending interface. It can be delivered to subscribers via the same type ISubscriber.
+ * _[ISubscriber{T}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/ISubscriber.cs)_ - This is a message subscription interface. When subscribing, you can receive messages from the same type of IPublisher.
+ * _[Channel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/Channel.cs)_ - This is the implementation class for IPublisher and ISubscriber. Forward published messages to all subscribers.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ChannelTests.cs).
+
 ## Procedures ##
-These are mechanisms for sequential processing. Call all tasks in the order in which they were registered. Wait for the calls to complete one by one before proceeding. Different fibers can be specified for each action. Can be performed repeatedly.
+These are mechanisms for sequential processing when using multiple fibers. Call all tasks in the order in which they were registered. Wait for the calls to complete one by one before proceeding. Different fibers can be specified for each action. Can be performed repeatedly.
 
  * _[FiberAndTaskPairList](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/FiberAndTaskPairList.cs)_ - List of fiber and task pairs. Tasks using different fibers can be processed sequentially. Can be used repeatedly. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/FiberAndTaskPairListTests.cs).
  * _[FiberAndHandlerPairList{TMessage}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/FiberAndHandlerPairList.cs)_ - List of fiber and handler pairs. Can be used for event handling. Can be used repeatedly. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/FiberAndTaskPairListTests.cs#L93).
@@ -181,17 +192,6 @@ Repeated calls to `FiberAndTaskPairList.PublishSequentialAsync` allow you to imp
 By calling multiple `FiberAndTaskPairList.PublishSequentialAsync` in sequence within a single tick, you can specify timing within one tick.
 
 Similarly, by calling `ConcurrentQueueActionQueue.ExecuteNextBatch` within one tick, you can perform one-time processing at a specified timing.
-
-## PubSub ##
-These are mechanisms for loosely coupling messaging within a process.
-
-A design that specifies a destination Fiber and sends messages directly results in tight coupling. This is not a problem if the design is small or speed is the top priority. However, as the design scale increases, the disadvantages often outweigh the benefits. In such cases, this mechanism can be used.
-
-By replacing existing messaging code with code that uses these Pub/Sub interfaces, you can write sending code without specifying a destination. While the dependency on the Pub/Sub interface remains, messaging is one level more loosely coupled than before.
-
- * _[IPublisher{T}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/IPublisher.cs)_ - This is a message sending interface. It can be delivered to subscribers via the same type ISubscriber.
- * _[ISubscriber{T}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/ISubscriber.cs)_ - This is a message subscription interface. When subscribing, you can receive messages from the same type of IPublisher.
- * _[Channel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/Channel.cs)_ - This is the implementation class for IPublisher and ISubscriber. Forward published messages to all subscribers.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ChannelTests.cs).
 
 # Internal implementation note #
 
