@@ -4,10 +4,11 @@ using System;
 namespace AsyncFiberWorks.Channels
 {
     /// <summary>
-    /// Default Channel Implementation. Published messages are forwarded to all subscribers.
+    /// A channel provides a conduit for messages. It provides methods for publishing and subscribing to messages. 
+    /// The class is thread safe.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class Channel<T> : IChannel<T>
+    public class Channel<T> : ISubscriber<T>, IPublisher<T>
     {
         private readonly MessageHandlerList<T> _channel = new MessageHandlerList<T>();
 

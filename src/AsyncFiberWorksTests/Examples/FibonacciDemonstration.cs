@@ -46,12 +46,12 @@ namespace AsyncFiberWorksTests.Examples
             private readonly Action _onCompleted;
             private readonly string _name;
             private readonly ISubscriber<IntPair> _inboundChannel;
-            private readonly IChannel<IntPair> _outboundChannel;
+            private readonly IPublisher<IntPair> _outboundChannel;
             private readonly int _limit;
 
             public FibonacciCalculator(ConsumerThread fiber, string name, 
                 ISubscriber<IntPair> inboundChannel, 
-                IChannel<IntPair> outboundChannel,
+                IPublisher<IntPair> outboundChannel,
                 int limit,
                 Action onCompleted,
                 Subscriptions subscriptions)

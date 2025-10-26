@@ -1,4 +1,5 @@
-﻿using AsyncFiberWorks.Core;
+﻿using AsyncFiberWorks.Channels;
+using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.Threading;
 using System;
@@ -13,13 +14,12 @@ namespace WpfExample
     {
         private readonly IFiber _fiber;
         private readonly Subscriptions _subscriptions;
-        private readonly WindowChannels _channels;
+        private readonly IPublisher<DateTime> _pubDateTime;
         private bool _timerIsValid = false;
         private CancellationTokenSource _timerCancellation;
 
-        public UpdateController(WindowChannels winChannels)
+        public UpdateController()
         {
-            _channels = winChannels;
             _subscriptions = new Subscriptions();
 
             var disposables = _subscriptions.BeginSubscription();
@@ -27,11 +27,15 @@ namespace WpfExample
             var fiber = AnotherThreadPool.Instance.CreateFiber();
             _fiber = fiber;
 
-            var subscriptionStartChannel = _channels.StartChannel.Subscribe(fiber, OnStart);
-            disposables.AppendDisposable(subscriptionStartChannel);
+            var subscriberStartChannel = ChannelLocator.GetSubscriber<RoutedEventArgs>();
+            var disposable = subscriberStartChannel.Subscribe(fiber, OnStart);
+            disposables.AppendDisposable(disposable);
 
-            var subscriptionOnWindowClosing = _channels.OnWindowClosing.Subscribe(fiber, OnWindowClosing);
-            disposables.AppendDisposable(subscriptionOnWindowClosing);
+            var subscriberOnWindowClosing = ChannelLocator.GetSubscriber<CancelEventArgs>();
+            disposable = subscriberOnWindowClosing.Subscribe(fiber, OnWindowClosing);
+            disposables.AppendDisposable(disposable);
+
+            _pubDateTime = ChannelLocator.GetPublisher<DateTime>();
         }
 
         private void OnStart(RoutedEventArgs msg)
@@ -62,10 +66,10 @@ namespace WpfExample
 
         private void OnTimer()
         {
-            _channels.TimeUpdate.Publish(DateTime.Now);
+            _pubDateTime.Publish(DateTime.Now);
         }
 
-        public void OnWindowClosing(object sender, CancelEventArgs e)
+        public void OnWindowClosing(CancelEventArgs e)
         {
             _subscriptions.Dispose();
         }

@@ -112,11 +112,11 @@ namespace AsyncFiberWorksTests.Examples
         private class QuadraticSource
         {
             // The class has its own thread to use for publishing.
-            private readonly IChannel<Quadratic>[] _channels;
+            private readonly IPublisher<Quadratic>[] _channels;
             private readonly int _numberToGenerate;
             private readonly Random _random;
 
-            public QuadraticSource(IChannel<Quadratic>[] channels, int numberToGenerate, int seed)
+            public QuadraticSource(IPublisher<Quadratic>[] channels, int numberToGenerate, int seed)
             {
                 _channels = channels;
                 _numberToGenerate = numberToGenerate;
@@ -147,9 +147,9 @@ namespace AsyncFiberWorksTests.Examples
         // its solution to the 'solved' channel.
         private class QuadraticSolver
         {
-            private readonly IChannel<SolvedQuadratic> _solvedChannel;
+            private readonly IPublisher<SolvedQuadratic> _solvedChannel;
 
-            public QuadraticSolver(IExecutionContext fiber, ISubscriber<Quadratic> channel, IChannel<SolvedQuadratic> solvedChannel, Subscriptions subscriptions)
+            public QuadraticSolver(IExecutionContext fiber, ISubscriber<Quadratic> channel, IPublisher<SolvedQuadratic> solvedChannel, Subscriptions subscriptions)
             {
                 _solvedChannel = solvedChannel;
                 var subscriptionFiber = subscriptions.BeginSubscription();
@@ -231,7 +231,7 @@ namespace AsyncFiberWorksTests.Examples
 
             // We create and store a reference to 10 solvers,
             // one for each possible square term being published.
-            var quadraticChannels = new IChannel<Quadratic>[10];
+            var quadraticChannels = new Channel<Quadratic>[10];
 
             // reference-preservation list to prevent GC'ing of solvers
             var solvers = new List<QuadraticSolver>();
