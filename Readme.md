@@ -149,6 +149,15 @@ Fiber is a mechanism for sequential processing.  Actions added to a fiber are ex
 
   * _[PoolFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/PoolFiber.cs)_ - Fiber. ".NET ThreadPool" is used by default. User thread pools are also available.
 
+### Parallel processing ###
+Related operations can be submitted to a single fiber to run sequentially, while unrelated operations can be submitted to different fibers to run in parallel. When dealing with multiple fibers, they can be thought of as actors. This design concept has not changed significantly from the source Retlang. The following description is taken from Retlang.
+
+> Message based concurrency in .NET
+> \[...\]
+> The library is intended for use in [message based concurrency](http://en.wikipedia.org/wiki/Message_passing) similar to [event based actors in Scala](http://lampwww.epfl.ch/~phaller/doc/haller07actorsunify.pdf).  The library does not provide remote messaging capabilities. It is designed specifically for high performance in-memory messaging.
+
+(Quote from [Retlang page](https://code.google.com/archive/p/retlang/). Broken links were replaced.)
+
 ## ThreadPools ##
 Producer-Consumer pattern.  One or more threads become consumers and execute tasks taken from the task queue.
 
@@ -173,19 +182,16 @@ By calling multiple `FiberAndTaskPairList.PublishSequentialAsync` in sequence wi
 
 Similarly, by calling `ConcurrentQueueActionQueue.ExecuteNextBatch` within one tick, you can perform one-time processing at a specified timing.
 
-## Channels ##
-This is a mechanism for parallel processing.  A channel is a messaging mechanism that abstracts the communication destination.  Fibers act as actors. Arrival messages are processed in parallel for each fiber. 
+## PubSub ##
+These are mechanisms for loosely coupling messaging within a process.
 
- * _[Channel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/Channel.cs)_ - Forward published messages to all subscribers.  One-way.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ChannelTests.cs).
+A design that specifies a destination Fiber and sends messages directly results in tight coupling. This is not a problem if the design is small or speed is the top priority. However, as the design scale increases, the disadvantages often outweigh the benefits. In such cases, this mechanism can be used.
 
-### Channel design concept ###
-The design concept of the channel has not changed much from its source, Retlang. The following description is taken from Retlang.
+By replacing existing messaging code with code that uses these Pub/Sub interfaces, you can write sending code without specifying a destination. While the dependency on the Pub/Sub interface remains, messaging is one level more loosely coupled than before.
 
-> Message based concurrency in .NET
-> \[...\]
-> The library is intended for use in [message based concurrency](http://en.wikipedia.org/wiki/Message_passing) similar to [event based actors in Scala](http://lampwww.epfl.ch/~phaller/doc/haller07actorsunify.pdf).  The library does not provide remote messaging capabilities. It is designed specifically for high performance in-memory messaging.
-
-(Quote from [Retlang page](https://code.google.com/archive/p/retlang/). Broken links were replaced.)
+ * _[IPublisher{T}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/IPublisher.cs)_ - This is a message sending interface. It can be delivered to subscribers via the same type ISubscriber.
+ * _[ISubscriber{T}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/ISubscriber.cs)_ - This is a message subscription interface. When subscribing, you can receive messages from the same type of IPublisher.
+ * _[Channel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Channels/Channel.cs)_ - This is the implementation class for IPublisher and ISubscriber. Forward published messages to all subscribers.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ChannelTests.cs).
 
 # Internal implementation note #
 
