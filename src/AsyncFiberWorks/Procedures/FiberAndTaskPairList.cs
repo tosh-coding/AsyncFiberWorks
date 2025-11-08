@@ -1,7 +1,6 @@
 using AsyncFiberWorks.Core;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Procedures
@@ -194,7 +193,7 @@ namespace AsyncFiberWorks.Procedures
             var nextAction = getNextAction();
             if (nextAction == null)
             {
-                _defaultContext.Enqueue(() => { _tcsEnd.SetResult(0); });
+                _tcsEnd.SetResult(0);
             }
             else
             {

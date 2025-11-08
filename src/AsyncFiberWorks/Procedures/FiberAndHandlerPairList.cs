@@ -1,7 +1,6 @@
 using AsyncFiberWorks.Core;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Procedures
@@ -271,9 +270,8 @@ namespace AsyncFiberWorks.Procedures
 
             void enqueueEndAction()
             {
-                _defaultContext.Enqueue(() => { _tcsEnd.SetResult(0); });
+                _tcsEnd.SetResult(0);
             }
-
         }
 
         internal class RegisteredHandler
