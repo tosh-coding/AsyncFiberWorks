@@ -36,21 +36,17 @@ namespace AsyncFiberWorksTests
             var disposable1 = taskList.Add(action1);
             var disposable2 = taskList.Add(action2);
 
-            var fiber = new PoolFiber();
             _ = Task.Run(async () =>
             {
-                await taskList.InvokeSequentialAsync(fiber);
-                await fiber.EnqueueAsync(() =>
+                await taskList.InvokeSequentialAsync();
+                try
                 {
-                    try
-                    {
-                        Assert.AreEqual(301, counter);
-                    }
-                    catch (Exception ex)
-                    {
-                        tcs.SetException(ex);
-                    }
-                });
+                    Assert.AreEqual(301, counter);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
                 tcs.SetResult(true);
             });
             await tcs.Task;
@@ -82,21 +78,17 @@ namespace AsyncFiberWorksTests
             var disposable1 = taskList.Add(action1);
             var disposable2 = taskList.Add(action2);
 
-            var fiber = new PoolFiber();
             _ = Task.Run(async () =>
             {
-                await taskList.InvokeSequentialAsync(fiber);
-                await fiber.EnqueueAsync(() =>
+                await taskList.InvokeSequentialAsync();
+                try
                 {
-                    try
-                    {
-                        Assert.AreEqual(301, counter);
-                    }
-                    catch (Exception ex)
-                    {
-                        tcs.SetException(ex);
-                    }
-                });
+                    Assert.AreEqual(301, counter);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
                 tcs.SetResult(true);
             });
             await tcs.Task;
@@ -126,10 +118,9 @@ namespace AsyncFiberWorksTests
             var disposable1 = handlerList.Add(action1);
             var disposable2 = handlerList.Add(action2);
 
-            var defaultFiber = new PoolFiber();
-            await handlerList.PublishSequentialAsync(200, defaultFiber);
+            await handlerList.PublishSequentialAsync(200);
             Assert.AreEqual(200 + 20, counter);
-            await handlerList.PublishSequentialAsync(10, defaultFiber);
+            await handlerList.PublishSequentialAsync(10);
             Assert.AreEqual(200 + 20 + 10 + 1, counter);
         }
 
@@ -154,21 +145,17 @@ namespace AsyncFiberWorksTests
             var disposable2 = taskList.Add(action);
             unsubscriber.AppendDisposable(disposable2);
 
-            var fiber = new PoolFiber();
             _ = Task.Run(async () =>
             {
-                await taskList.InvokeSequentialAsync(fiber);
-                await fiber.EnqueueAsync(() =>
+                await taskList.InvokeSequentialAsync();
+                try
                 {
-                    try
-                    {
-                        Assert.AreEqual(1, counter);
-                    }
-                    catch (Exception ex)
-                    {
-                        tcs.SetException(ex);
-                    }
-                });
+                    Assert.AreEqual(1, counter);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
                 tcs.SetResult(true);
             });
             await tcs.Task;
@@ -203,9 +190,8 @@ namespace AsyncFiberWorksTests
             var disposable1 = driver.Add(receiverFunc1);
             var disposable2 = driver.Add(receiverFunc2);
 
-            var defaultContext = new PoolFiber();
             int eventArg = 123;
-            await driver.PublishSequentialAsync(eventArg, defaultContext);
+            await driver.PublishSequentialAsync(eventArg);
             Thread.Sleep(50);
             Assert.AreEqual(301, counter);
         }
@@ -234,9 +220,8 @@ namespace AsyncFiberWorksTests
             var disposable1 = driver.Add(receiverFunc1);
             var disposable2 = driver.Add(receiverFunc2);
 
-            var defaultContext = new PoolFiber();
             int eventArg = 123;
-            await driver.PublishSequentialAsync(eventArg, defaultContext);
+            await driver.PublishSequentialAsync(eventArg);
             Thread.Sleep(50);
             Assert.AreEqual(300, counter);
         }

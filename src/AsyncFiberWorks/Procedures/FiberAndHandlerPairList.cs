@@ -1,4 +1,5 @@
 using AsyncFiberWorks.Core;
+using AsyncFiberWorks.Fibers;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -20,18 +21,20 @@ namespace AsyncFiberWorks.Procedures
         private readonly List<RegisteredHandler> _copiedActions = new List<RegisteredHandler>();
         private readonly IActionExecutor _executor;
         private readonly ProcessedFlagEventArgs<TMessage> _processedEventArg = new ProcessedFlagEventArgs<TMessage>();
+        private readonly IFiber _defaultContext;
         private bool _inInvoking = false;
         private int _nextIndex = 0;
         private TaskCompletionSource<int> _tcsEnd = null;
-        private IFiber _defaultContext = null;
 
         /// <summary>
         /// Create a list with specified executer.
         /// </summary>
         /// <param name="executor"></param>
-        public FiberAndHandlerPairList(IActionExecutor executor)
+        /// <param name="defaultContext">The default context to be used if not specified when subscribing. If null, PoolFiber will be used.</param>
+        public FiberAndHandlerPairList(IActionExecutor executor, IFiber defaultContext = null)
         {
             _executor = executor ?? SimpleExecutor.Instance;
+            _defaultContext = defaultContext ?? new PoolFiber();
         }
 
         /// <summary>
@@ -63,7 +66,7 @@ namespace AsyncFiberWorks.Procedures
             var registeredHandler = new RegisteredHandler()
             {
                 HandlerType = HandlerType.SimpleHandler,
-                Context = context,
+                Context = context ?? _defaultContext,
                 SimpleHandler = safeAction,
             };
 
@@ -104,7 +107,7 @@ namespace AsyncFiberWorks.Procedures
             var registeredAction = new RegisteredHandler()
             {
                 HandlerType = HandlerType.EventArgHandler,
-                Context = context,
+                Context = context ?? _defaultContext,
                 EventArgHandler = safeAction,
             };
 
@@ -143,9 +146,8 @@ namespace AsyncFiberWorks.Procedures
         /// Distribute one message.
         /// </summary>
         /// <param name="message">A message.</param>
-        /// <param name="defaultContext">Default context to be used if not specified.</param>
         /// <returns>A task that waits for actions to be performed.</returns>
-        public async Task PublishSequentialAsync(TMessage message, IFiber defaultContext)
+        public async Task PublishSequentialAsync(TMessage message)
         {
             lock (_lock)
             {
@@ -165,7 +167,6 @@ namespace AsyncFiberWorks.Procedures
 
             _nextIndex = 0;
             _tcsEnd = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _defaultContext = defaultContext;
             _processedEventArg.Arg = message;
             _processedEventArg.Processed = false;
 
@@ -178,7 +179,6 @@ namespace AsyncFiberWorks.Procedures
             {
                 _copiedActions.Clear();
                 _tcsEnd = null;
-                _defaultContext = null;
                 _processedEventArg.Arg = default;
                 lock (_lock)
                 {
@@ -208,7 +208,7 @@ namespace AsyncFiberWorks.Procedures
             }
             else
             {
-                var nextContext = nextAction.Context ?? _defaultContext;
+                var nextContext = nextAction.Context;
                 if (nextAction.HandlerType == HandlerType.SimpleHandler)
                 {
                     nextContext.Enqueue(() =>

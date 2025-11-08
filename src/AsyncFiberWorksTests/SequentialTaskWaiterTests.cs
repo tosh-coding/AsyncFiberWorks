@@ -1,5 +1,4 @@
-﻿using AsyncFiberWorks.Fibers;
-using AsyncFiberWorks.Procedures;
+﻿using AsyncFiberWorks.Procedures;
 using NUnit.Framework;
 using System;
 using System.Threading;
@@ -37,10 +36,9 @@ namespace AsyncFiberWorksTests
             var task1 = func(3);
             var task2 = func(6);
 
-            var fiber = new PoolFiber();
             for (int i = 0; i < 10; i++)
             {
-                await taskList.InvokeSequentialAsync(fiber);
+                await taskList.InvokeSequentialAsync();
             }
 
             await Task.WhenAll(task1, task2);
@@ -81,10 +79,9 @@ namespace AsyncFiberWorksTests
 
             var task1 = func();
 
-            var fiber = new PoolFiber();
-            await taskList.InvokeSequentialAsync(fiber);
-            await taskList.InvokeSequentialAsync(fiber);
-            await taskList.InvokeSequentialAsync(fiber);
+            await taskList.InvokeSequentialAsync();
+            await taskList.InvokeSequentialAsync();
+            await taskList.InvokeSequentialAsync();
             cts.Cancel();
 
             await task1;
@@ -119,10 +116,9 @@ namespace AsyncFiberWorksTests
             var task1 = func(3);
             var task2 = func(6);
 
-            var defaultContext = new PoolFiber();
             for (int i = 0; i < 10; i++)
             {
-                await handlerList.PublishSequentialAsync(i + 1, defaultContext);
+                await handlerList.PublishSequentialAsync(i + 1);
             }
 
             await Task.WhenAll(task1, task2);
@@ -170,10 +166,9 @@ namespace AsyncFiberWorksTests
 
             var task1 = func();
 
-            var fiber = new PoolFiber();
-            await handlerList.PublishSequentialAsync(1, fiber);
-            await handlerList.PublishSequentialAsync(2, fiber);
-            await handlerList.PublishSequentialAsync(3, fiber);
+            await handlerList.PublishSequentialAsync(1);
+            await handlerList.PublishSequentialAsync(2);
+            await handlerList.PublishSequentialAsync(3);
             cts.Cancel();
 
             await task1;
@@ -218,11 +213,10 @@ namespace AsyncFiberWorksTests
             var task3 = func(3);
             var task4 = func(1);
 
-            var defaultContext = new PoolFiber();
             for (int i = 0; i < 10; i++)
             {
                 int eventArg = i + 1;
-                await handlerList.PublishSequentialAsync(eventArg, defaultContext);
+                await handlerList.PublishSequentialAsync(eventArg);
             }
 
             cts.Cancel();

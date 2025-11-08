@@ -1,4 +1,3 @@
-using AsyncFiberWorks.Core;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Procedures
@@ -13,8 +12,7 @@ namespace AsyncFiberWorks.Procedures
         /// Publish one message to all registrants in sequence.
         /// </summary>
         /// <param name="message">A message.</param>
-        /// <param name="defaultContext">Default context to be used if not specified.</param>
         /// <returns>Tasks awaiting publication completion.</returns>
-        Task PublishSequentialAsync(TMessage message, IFiber defaultContext);
+        Task PublishSequentialAsync(TMessage message);
     }
 }
