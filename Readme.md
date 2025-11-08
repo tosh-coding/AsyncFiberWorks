@@ -185,14 +185,6 @@ These are mechanisms for sequential processing when using multiple fibers. Call 
  * _[ISequentialTaskWaiter](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/ISequentialTaskWaiter.cs)_ - This allows you to await the execution timing of FiberAndTaskPairList. It can be created by `FiberAndTaskPairList.CreateWaiter()`. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/SequentialTaskWaiterTests.cs#L11).
  * _[ISequentialHandlerWaiter{T}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/ISequentialHandlerWaiter.cs)_ - This allows you to wait for the execution timing of FiberAndHandlerPairList. It can be created by `FiberAndHandlerPairList<TMessage>.CreateWaiter()`. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/SequentialTaskWaiterTests.cs#L186).
 
-### Game Loop ###
-
-Repeated calls to `FiberAndTaskPairList.PublishSequentialAsync` allow you to implement a tick-based game loop, but you must provide your own high-precision sleep function or timer.
-
-By calling multiple `FiberAndTaskPairList.PublishSequentialAsync` in sequence within a single tick, you can specify timing within one tick.
-
-Similarly, by calling `ConcurrentQueueActionQueue.ExecuteNextBatch` within one tick, you can perform one-time processing at a specified timing.
-
 # Internal implementation note #
 
 ## How to pause context ##
