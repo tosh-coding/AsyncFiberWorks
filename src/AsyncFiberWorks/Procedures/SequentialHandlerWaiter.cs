@@ -17,7 +17,8 @@ namespace AsyncFiberWorks.Procedures
         private readonly ManualResetEventSlim _notifierExecutionRequested = new ManualResetEventSlim();
         private readonly ManualResetEventSlim _notifierExecutionFinished = new ManualResetEventSlim();
         private readonly UserThreadPool _thread;
-        private bool _inExecuting;
+        private bool _isFirstTime = true;
+        private bool _inWaiting;
         private CancellationToken _cancellationTokenExternal;
         private readonly CancellationTokenSource _onDispose = new CancellationTokenSource();
         private readonly ProcessedFlagEventArgs<T> _currentValue = new ProcessedFlagEventArgs<T>();
@@ -76,24 +77,26 @@ namespace AsyncFiberWorks.Procedures
                 {
                     throw new InvalidOperationException();
                 }
-                if (_inExecuting)
-                {
-                    throw new InvalidOperationException();
-                }
-                if (_notifierExecutionRequested.IsSet)
-                {
-                    throw new InvalidOperationException();
-                }
 
                 _executionRequested = true;
-                _notifierExecutionFinished.Reset();
                 _notifierExecutionRequested.Set();
             }
 
             try
             {
                 var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenExternal, _onDispose.Token);
-                await _thread.RegisterWaitForSingleObjectAsync(_notifierExecutionFinished.WaitHandle, cancellation.Token).ConfigureAwait(false);
+                try
+                {
+                    await _thread.RegisterWaitForSingleObjectAsync(_notifierExecutionFinished.WaitHandle, cancellation.Token).ConfigureAwait(false);
+                }
+                finally
+                {
+                    lock (_lockObj)
+                    {
+                        _executionRequested = false;
+                        _notifierExecutionFinished.Reset();
+                    }
+                }
             }
             catch (OperationCanceledException)
             {
@@ -123,11 +126,18 @@ namespace AsyncFiberWorks.Procedures
                 {
                     throw new OperationCanceledException();
                 }
-                if (_executionRequested && _inExecuting)
+                if (_inWaiting)
                 {
-                    _executionRequested = false;
-                    _inExecuting = false;
-                    _notifierExecutionRequested.Reset();
+                    throw new InvalidOperationException();
+                }
+                _inWaiting = true;
+
+                if (_isFirstTime)
+                {
+                    _isFirstTime = false;
+                }
+                else
+                {
                     _notifierExecutionFinished.Set();
                 }
             }
@@ -136,7 +146,18 @@ namespace AsyncFiberWorks.Procedures
             {
                 try
                 {
-                    await _thread.RegisterWaitForSingleObjectAsync(_notifierExecutionRequested.WaitHandle, linkedCts.Token).ConfigureAwait(false);
+                    try
+                    {
+                        await _thread.RegisterWaitForSingleObjectAsync(_notifierExecutionRequested.WaitHandle, linkedCts.Token).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        lock (_lockObj)
+                        {
+                            _inWaiting = false;
+                            _notifierExecutionRequested.Reset();
+                        }
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -149,11 +170,6 @@ namespace AsyncFiberWorks.Procedures
                         throw new ObjectDisposedException(nameof(SequentialTaskWaiter));
                     }
                 }
-            }
-
-            lock (_lockObj)
-            {
-                _inExecuting = true;
             }
             return _currentValue;
         }
@@ -172,7 +188,6 @@ namespace AsyncFiberWorks.Procedures
                 _isDisposed = true;
 
                 _executionRequested = false;
-                _inExecuting = false;
                 _onDispose.Cancel();
                 _onDispose.Dispose();
                 _notifierExecutionRequested.Dispose();
