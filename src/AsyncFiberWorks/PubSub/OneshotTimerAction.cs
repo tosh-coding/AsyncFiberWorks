@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.PubSub
 {
     internal sealed class OneshotTimerAction : IDisposable
     {

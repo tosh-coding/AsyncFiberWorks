@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Threading;
-using AsyncFiberWorks.Channels;
+using AsyncFiberWorks.PubSub;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 

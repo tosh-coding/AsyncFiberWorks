@@ -1,4 +1,4 @@
-﻿using AsyncFiberWorks.Channels;
+﻿using AsyncFiberWorks.PubSub;
 using System;
 using System.Collections.Generic;
 

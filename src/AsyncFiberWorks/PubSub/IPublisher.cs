@@ -1,4 +1,4 @@
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.PubSub
 {
     /// <summary>
     /// Channel publishing interface.

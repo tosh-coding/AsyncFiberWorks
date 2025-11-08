@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.PubSub
 {
     /// <summary>
     /// Arriving events are buffered once and sent to the next recipient a few moments later.

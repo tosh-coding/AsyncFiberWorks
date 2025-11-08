@@ -1,4 +1,4 @@
-﻿using AsyncFiberWorks.Channels;
+﻿using AsyncFiberWorks.PubSub;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using NUnit.Framework;

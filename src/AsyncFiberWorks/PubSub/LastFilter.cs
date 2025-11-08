@@ -2,7 +2,7 @@ using System;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.PubSub
 {
     /// <summary>
     /// If a new one arrives, the newer one has priority. The older one will disappear.

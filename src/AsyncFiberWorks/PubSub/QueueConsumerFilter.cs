@@ -1,7 +1,7 @@
 using System;
 using AsyncFiberWorks.Core;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.PubSub
 {
     /// <summary>
     /// Queue incoming messages once. It is then dequeued from the callback processing performed on the fiber.

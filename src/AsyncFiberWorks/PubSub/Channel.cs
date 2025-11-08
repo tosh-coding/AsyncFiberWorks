@@ -1,7 +1,7 @@
 using AsyncFiberWorks.Core;
 using System;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.PubSub
 {
     /// <summary>
     /// A channel provides a conduit for messages. It provides methods for publishing and subscribing to messages. 

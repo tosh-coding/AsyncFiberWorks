@@ -2,7 +2,7 @@ using AsyncFiberWorks.Core;
 using System;
 using System.Collections.Generic;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.PubSub
 {
     /// <summary>
     /// A message reception handler builder.

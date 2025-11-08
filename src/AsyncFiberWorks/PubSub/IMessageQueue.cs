@@ -1,4 +1,4 @@
-﻿namespace AsyncFiberWorks.Channels
+﻿namespace AsyncFiberWorks.PubSub
 {
     /// <summary>
     /// An interface for the queue operation.

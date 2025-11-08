@@ -1,7 +1,7 @@
 using AsyncFiberWorks.Core;
 using System;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.PubSub
 {
     /// <summary>
     /// Channel subscription interface.

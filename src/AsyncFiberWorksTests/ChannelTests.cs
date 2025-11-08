@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
-using AsyncFiberWorks.Channels;
+using AsyncFiberWorks.PubSub;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using System.Linq;

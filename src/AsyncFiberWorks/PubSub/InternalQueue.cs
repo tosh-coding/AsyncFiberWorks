@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace AsyncFiberWorks.Channels
+namespace AsyncFiberWorks.PubSub
 {
     internal class InternalQueue<T> : IMessageQueue<T>
     {
