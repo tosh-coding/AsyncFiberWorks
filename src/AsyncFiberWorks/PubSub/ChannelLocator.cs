@@ -43,5 +43,37 @@ namespace AsyncFiberWorks.PubSub
         {
             return GetOrCreateChannel<T>();
         }
+
+        static Channel<TKey, TMessage> GetOrCreateKeyedChannel<TKey, TMessage>()
+        {
+            return KeyedChannelHolder<TKey, TMessage>._channel;
+        }
+
+        /// <summary>
+        /// Get a subscription interface.
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TMessage"></typeparam>
+        /// <returns>The interface found.</returns>
+        public static ISubscriber<TKey, TMessage> GetSubscriber<TKey, TMessage>()
+        {
+            return KeyedChannelHolder<TKey, TMessage>._channel;
+        }
+
+        /// <summary>
+        /// Get a publishing interface.
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TMessage"></typeparam>
+        /// <returns>The interface found.</returns>
+        public static IPublisher<TKey, TMessage> GetPublisher<TKey, TMessage>()
+        {
+            return GetOrCreateKeyedChannel<TKey, TMessage>();
+        }
+
+        internal static class KeyedChannelHolder<TKey, TMessage>
+        {
+            internal static readonly Channel<TKey, TMessage> _channel = new Channel<TKey, TMessage>();
+        }
     }
 }

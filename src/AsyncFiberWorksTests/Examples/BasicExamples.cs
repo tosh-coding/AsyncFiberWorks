@@ -309,5 +309,84 @@ namespace AsyncFiberWorksTests.Examples
             Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
         }
+
+        [Test]
+        public void KeyedPubSub()
+        {
+            using (var subscriptions = new Subscriptions())
+            {
+                var publisher = ChannelLocator.GetPublisher<Guid, string>();
+                var subscriber = ChannelLocator.GetSubscriber<Guid, string>();
+
+                var fiber1 = new PoolFiber();
+                var fiber2 = new PoolFiber();
+                var fiber3 = new PoolFiber();
+                var reset1 = new AutoResetEvent(false);
+                var reset2 = new AutoResetEvent(false);
+                var reset3 = new AutoResetEvent(false);
+
+                var unsubscriber = subscriptions.BeginSubscription();
+
+                var guidA = Guid.NewGuid();
+                var guidB = Guid.NewGuid();
+
+                int helloCount1 = 0;
+                int helloCount2 = 0;
+                int helloCount3 = 0;
+
+                var disposableChannel1 = subscriber.Subscribe(guidA, fiber1, (msg) =>
+                {
+                    if (msg == "hello")
+                    {
+                        helloCount1 += 1;
+                    }
+                    else if (msg == "end")
+                    {
+                        reset1.Set();
+                    }
+                });
+                var disposableChannel2 = subscriber.Subscribe(guidB, fiber2, (msg) =>
+                {
+                    if (msg == "hello")
+                    {
+                        helloCount2 += 1;
+                    }
+                    else if (msg == "end")
+                    {
+                        reset2.Set();
+                    }
+                });
+                var disposableChannel3 = subscriber.Subscribe(guidA, fiber3, (msg) =>
+                {
+                    if (msg == "hello")
+                    {
+                        helloCount3 += 1;
+                    }
+                    else if (msg == "end")
+                    {
+                        reset3.Set();
+                    }
+                });
+
+                unsubscriber.AppendDisposable(disposableChannel1);
+                unsubscriber.AppendDisposable(disposableChannel2);
+                unsubscriber.AppendDisposable(disposableChannel3);
+
+                publisher.Publish(guidA, "hello");
+                publisher.Publish(guidB, "hello");
+                publisher.Publish(guidA, "hello");
+                publisher.Publish(guidA, "hello");
+                publisher.Publish(guidA, "end");
+                publisher.Publish(guidB, "end");
+
+                reset1.WaitOne(5000, false);
+                reset2.WaitOne(5000, false);
+                reset3.WaitOne(5000, false);
+
+                Assert.AreEqual(helloCount1, 3);
+                Assert.AreEqual(helloCount2, 1);
+                Assert.AreEqual(helloCount3, 3);
+            }
+        }
     }
 }
