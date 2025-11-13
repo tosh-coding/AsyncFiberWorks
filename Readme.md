@@ -175,6 +175,8 @@ By replacing existing messaging code with code that uses these Pub/Sub interface
 
  * _[IPublisher{T}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/IPublisher.cs)_ - This is a message sending interface. It can be delivered to subscribers via the same type ISubscriber.
  * _[ISubscriber{T}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/ISubscriber.cs)_ - This is a message subscription interface. When subscribing, you can receive messages from the same type of IPublisher.
+ * _[IPublisher{TKey,TMessage}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/IPublisher_TKey_TMessage.cs)_ - This is a message sending interface. It can be delivered to subscribers via the same type ISubscriber.  The difference with IPublisher{T} is that it allows you to specify different channel instances for the same message type using different keys.
+ * _[ISubscriber{TKey, TMessage}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/ISubscriber_TKey_TMessage.cs)_ - This is a message subscription interface. When subscribing, you can receive messages from the same type of IPublisher.  The difference with ISubscriber{T} is that it allows you to specify different channel instances for the same message type using different keys.
  * _[Channel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/Channel.cs)_ - This is the implementation class for IPublisher and ISubscriber. Forward published messages to all subscribers.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ChannelTests.cs).
 
 ## Procedures ##
