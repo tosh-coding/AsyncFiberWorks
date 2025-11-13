@@ -33,6 +33,25 @@ namespace AsyncFiberWorksTests.Examples
         }
 
         [Test]
+        public void PubSubWithPoolAndLocator()
+        {
+            using (var subscriptions = new Subscriptions())
+            {
+                var publisher = ChannelLocator.GetPublisher<string>();
+                var subscriber = ChannelLocator.GetSubscriber<string>();
+
+                var fiber = new PoolFiber();
+                var reset = new AutoResetEvent(false);
+                var unsubscriber = subscriptions.BeginSubscription();
+                var disposableChannel = subscriber.Subscribe(fiber, (msg) => reset.Set());
+                unsubscriber.AppendDisposable(disposableChannel);
+                publisher.Publish("hello");
+
+                Assert.IsTrue(reset.WaitOne(5000, false));
+            }
+        }
+
+        [Test]
         public void PubSubWithDedicatedThread()
         {
             using (var threadPool = UserThreadPool.StartNew(1))
