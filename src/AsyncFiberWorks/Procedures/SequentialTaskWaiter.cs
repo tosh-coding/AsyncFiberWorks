@@ -28,7 +28,7 @@ namespace AsyncFiberWorks.Procedures
         /// <param name="cancellationToken"></param>
         public SequentialTaskWaiter(CancellationToken cancellationToken = default)
         {
-            _thread = UserThreadPool.StartNew(1);
+            _thread = UserThreadPool.StartNew(2);
             _cancellationTokenExternal = cancellationToken;
         }
 
