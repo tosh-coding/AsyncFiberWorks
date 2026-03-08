@@ -21,7 +21,7 @@ namespace AsyncFiberWorks.PubSub
         {
             _handlers += action;
 
-            var unsubscriber = new Unsubscriber(() => {
+            var unsubscriber = new DisposableAction(() => {
                 this._handlers -= action;
             });
 

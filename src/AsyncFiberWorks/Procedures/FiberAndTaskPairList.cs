@@ -72,7 +72,7 @@ namespace AsyncFiberWorks.Procedures
                 _actions.AddLast(registeredAction);
             }
 
-            var unsubscriber = new Unsubscriber(() =>
+            var unsubscriber = new DisposableAction(() =>
             {
                 maskableFilter.IsEnabled = false;
                 lock (_lock)
@@ -113,7 +113,7 @@ namespace AsyncFiberWorks.Procedures
                 _actions.AddLast(registeredAction);
             }
 
-            var unsubscriber = new Unsubscriber(() =>
+            var unsubscriber = new DisposableAction(() =>
             {
                 maskableFilter.IsEnabled = false;
                 lock (_lock)

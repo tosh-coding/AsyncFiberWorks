@@ -31,7 +31,7 @@ namespace AsyncFiberWorks.Core
             }
             if (added)
             {
-                var unsubscriber = new Unsubscriber(() =>
+                var unsubscriber = new DisposableAction(() =>
                 {
                     this.DeregisterSubscription(toAdd);
                 });

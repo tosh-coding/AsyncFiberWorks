@@ -23,15 +23,6 @@ namespace AsyncFiberWorks.Core
         }
 
         /// <summary>
-        /// Add one disposable along with the construction.
-        /// </summary>
-        /// <param name="action"></param>
-        public Unsubscriber(Action action)
-        {
-            _actionUnsubscribe = action;
-        }
-
-        /// <summary>
         /// Add a disposable.
         /// </summary>
         /// <param name="disposingAction">A disposable.</param>

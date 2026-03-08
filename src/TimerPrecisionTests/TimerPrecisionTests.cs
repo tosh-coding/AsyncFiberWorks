@@ -207,7 +207,7 @@ namespace TimerPrecisionTests
                 uint TIME_PERIODIC = 1;
                 timerID = WinApi.timeSetEvent(firstDelayMs, intervalMs, teh, ref userctx, TIME_PERIODIC);
 
-                var disposable = new Unsubscriber(() =>
+                var disposable = new DisposableAction(() =>
                 {
                     fiber.Enqueue(() =>
                     {
