@@ -32,7 +32,7 @@ namespace AsyncFiberWorks.Threading
         public BusyWaitQueue(int spinsBeforeTimeCheck, int msBeforeBlockingWait, IHookOfBatch hookOfBatch, IExecutor executorSingle)
         {
             _hookOfBatch = hookOfBatch;
-            _executorSingle = executorSingle;
+            _executorSingle = executorSingle ?? SimpleExecutor.Instance;
             _spinsBeforeTimeCheck = spinsBeforeTimeCheck;
             _msBeforeBlockingWait = msBeforeBlockingWait;
         }
@@ -51,21 +51,10 @@ namespace AsyncFiberWorks.Threading
         /// <param name="action"></param>
         public void Enqueue(Action action)
         {
-            if (_executorSingle != null)
+            lock (_lock)
             {
-                lock (_lock)
-                {
-                    _actions.Add(() => _executorSingle.Execute(action));
-                    Monitor.PulseAll(_lock);
-                }
-            }
-            else
-            {
-                lock (_lock)
-                {
-                    _actions.Add(action);
-                    Monitor.PulseAll(_lock);
-                }
+                _actions.Add(action);
+                Monitor.PulseAll(_lock);
             }
         }
 
@@ -161,7 +150,7 @@ namespace AsyncFiberWorks.Threading
             _hookOfBatch.OnBeforeExecute(toExecute.Count);
             foreach (var action in toExecute)
             {
-                action();
+                _executorSingle.Execute(action);
             }
             _hookOfBatch.OnAfterExecute(toExecute.Count);
             return true;

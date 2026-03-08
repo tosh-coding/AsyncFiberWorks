@@ -22,6 +22,7 @@ namespace AsyncFiberWorks.Procedures
         private bool _inInvoking = false;
         private int _nextIndex = 0;
         private TaskCompletionSource<int> _tcsEnd = null;
+        private RegisteredAction _nextAction = null;
 
         /// <summary>
         /// Create a list with specified executer.
@@ -158,6 +159,7 @@ namespace AsyncFiberWorks.Procedures
             }
 
             _nextIndex = 0;
+            _nextAction = null;
             _tcsEnd = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             try
@@ -169,6 +171,7 @@ namespace AsyncFiberWorks.Procedures
             {
                 _copiedActions.Clear();
                 _tcsEnd = null;
+                _nextAction = null;
                 lock (_lock)
                 {
                     _inInvoking = false;
@@ -190,21 +193,20 @@ namespace AsyncFiberWorks.Procedures
 
         void enqueueNextAction()
         {
-            var nextAction = getNextAction();
-            if (nextAction == null)
+            _nextAction = getNextAction();
+            if (_nextAction == null)
             {
                 _tcsEnd.SetResult(0);
             }
             else
             {
-                var nextContext = nextAction.Context;
-                if (nextAction.ActionType == ActionType.SimpleAction)
+                if (_nextAction.ActionType == ActionType.SimpleAction)
                 {
-                    nextContext.Enqueue(() =>
+                    _nextAction.Context.Enqueue(() =>
                     {
                         try
                         {
-                            _executor.Execute(nextAction.SimpleAction);
+                            _executor.Execute(_nextAction.SimpleAction);
                         }
                         finally
                         {
@@ -212,16 +214,16 @@ namespace AsyncFiberWorks.Procedures
                         }
                     });
                 }
-                else if (nextAction.ActionType == ActionType.ActionFiberExecutionEventArgs)
+                else if (_nextAction.ActionType == ActionType.ActionFiberExecutionEventArgs)
                 {
-                    nextContext.Enqueue((e) =>
+                    _nextAction.Context.Enqueue((e) =>
                     {
                         _executor.Execute(e, (arg) =>
                         {
                             var eventArgs = new EnqueueNextActionEventArgs(arg, enqueueNextAction);
                             try
                             {
-                                nextAction.ActionFiberExecutionEventArgs(eventArgs);
+                                _nextAction.ActionFiberExecutionEventArgs(eventArgs);
                             }
                             finally
                             {
@@ -232,7 +234,7 @@ namespace AsyncFiberWorks.Procedures
                 }
                 else
                 {
-                    throw new Exception($"Unknown ActionType found. ActionType={nextAction.ActionType}, nextIndex={_nextIndex}.");
+                    throw new Exception($"Unknown ActionType found. ActionType={_nextAction.ActionType}, nextIndex={_nextIndex}.");
                 }
             }
         }

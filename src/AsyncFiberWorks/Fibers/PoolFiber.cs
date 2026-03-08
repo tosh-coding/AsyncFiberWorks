@@ -73,7 +73,7 @@ namespace AsyncFiberWorks.Fibers
         {
             lock (_lock)
             {
-                _queue.Enqueue(() => _executor.Execute(action));
+                _queue.Enqueue(action);
                 if (!_flushPending)
                 {
                     _pool.Queue(Flush);
@@ -97,7 +97,7 @@ namespace AsyncFiberWorks.Fibers
                         }
                     }
                     Action action = toExecute.Dequeue();
-                    action();
+                    _executor.Execute(action);
                 }
                 lock (_lock)
                 {

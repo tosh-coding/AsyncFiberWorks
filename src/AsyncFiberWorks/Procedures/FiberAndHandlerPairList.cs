@@ -25,6 +25,7 @@ namespace AsyncFiberWorks.Procedures
         private bool _inInvoking = false;
         private int _nextIndex = 0;
         private TaskCompletionSource<int> _tcsEnd = null;
+        private RegisteredHandler _nextAction = null;
 
         /// <summary>
         /// Create a list with specified executer.
@@ -166,6 +167,7 @@ namespace AsyncFiberWorks.Procedures
             }
 
             _nextIndex = 0;
+            _nextAction = null;
             _tcsEnd = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
             _processedEventArg.Arg = message;
             _processedEventArg.Processed = false;
@@ -179,6 +181,7 @@ namespace AsyncFiberWorks.Procedures
             {
                 _copiedActions.Clear();
                 _tcsEnd = null;
+                _nextAction = null;
                 _processedEventArg.Arg = default;
                 lock (_lock)
                 {
@@ -201,42 +204,40 @@ namespace AsyncFiberWorks.Procedures
 
         void enqueueNextAction()
         {
-            var nextAction = getNextAction();
-            if (nextAction == null)
+            _nextAction = getNextAction();
+            if (_nextAction == null)
             {
                 enqueueEndAction();
             }
             else
             {
-                var nextContext = nextAction.Context;
-                if (nextAction.HandlerType == HandlerType.SimpleHandler)
+                if (_nextAction.HandlerType == HandlerType.SimpleHandler)
                 {
-                    nextContext.Enqueue(() =>
+                    _nextAction.Context.Enqueue(() =>
                     {
-                        bool isProcessed = false;
-                        try
+                        _executor.Execute(() =>
                         {
-                            _executor.Execute(() =>
+                            try
                             {
-                                isProcessed = nextAction.SimpleHandler(_processedEventArg.Arg);
-                            });
-                        }
-                        finally
-                        {
-                            if (!isProcessed)
-                            {
-                                enqueueNextAction();
+                                _processedEventArg.Processed = _nextAction.SimpleHandler(_processedEventArg.Arg);
                             }
-                            else
+                            finally
                             {
-                                enqueueEndAction();
+                                if (!_processedEventArg.Processed)
+                                {
+                                    enqueueNextAction();
+                                }
+                                else
+                                {
+                                    enqueueEndAction();
+                                }
                             }
-                        }
+                        });
                     });
                 }
-                else if (nextAction.HandlerType == HandlerType.EventArgHandler)
+                else if (_nextAction.HandlerType == HandlerType.EventArgHandler)
                 {
-                    nextContext.Enqueue((e) =>
+                    _nextAction.Context.Enqueue((e) =>
                     {
                         _executor.Execute(e, (arg) =>
                         {
@@ -253,7 +254,7 @@ namespace AsyncFiberWorks.Procedures
                             });
                             try
                             {
-                                nextAction.EventArgHandler(eventArgs, _processedEventArg);
+                                _nextAction.EventArgHandler(eventArgs, _processedEventArg);
                             }
                             finally
                             {
@@ -264,7 +265,7 @@ namespace AsyncFiberWorks.Procedures
                 }
                 else
                 {
-                    throw new Exception($"Unknown HandlerType found. HandlerType={nextAction.HandlerType}, _copiedActionsIndex={_nextIndex}.");
+                    throw new Exception($"Unknown HandlerType found. HandlerType={_nextAction.HandlerType}, _copiedActionsIndex={_nextIndex}.");
                 }
             }
 
