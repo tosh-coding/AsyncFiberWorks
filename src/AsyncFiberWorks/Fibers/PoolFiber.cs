@@ -15,8 +15,8 @@ namespace AsyncFiberWorks.Fibers
         private readonly IActionExecutor _executor;
         private readonly FiberExecutionEventArgs _eventArgs;
 
-        private Queue<Action> _queue = new Queue<Action>();
-        private Queue<Action> _toPass = new Queue<Action>();
+        private Queue<Action> _queue;
+        private Queue<Action> _toPass;
 
         private bool _flushPending;
         private bool _enabledPause;
@@ -29,15 +29,24 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         /// <param name="pool"></param>
         /// <param name="executor"></param>
-        public PoolFiber(IThreadPool pool, IActionExecutor executor)
+        /// <param name="initialCapacity"></param>
+        /// <exception cref="ArgumentNullException">pool must be non-null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">initialCapacity must be greater than or equal to 1.</exception>
+        public PoolFiber(IThreadPool pool, IActionExecutor executor, int initialCapacity = 4)
         {
             if (pool == null)
             {
                 throw new ArgumentNullException(nameof(pool));
             }
+            if (initialCapacity <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(initialCapacity));
+            }
             _pool = pool;
             _executor = executor ?? SimpleExecutor.Instance;
             _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume, _pool);
+            _queue = new Queue<Action>(initialCapacity);
+            _toPass = new Queue<Action>(initialCapacity);
         }
 
         /// <summary>

@@ -16,18 +16,26 @@ namespace AsyncFiberWorks.Threading
 
         private bool _running = true;
 
-        private List<Action> _actions = new List<Action>();
-        private List<Action> _toPass = new List<Action>();
+        private List<Action> _actions;
+        private List<Action> _toPass;
 
         /// <summary>
         /// Default queue with custom executor
         /// </summary>
         /// <param name="hookOfBatch"></param>
         /// <param name="executorSingle">The executor for each operation.</param>
-        public DefaultQueue(IHookOfBatch hookOfBatch, IExecutor executorSingle)
+        /// <param name="initialCapacity"></param>
+        /// <exception cref="ArgumentOutOfRangeException">initialCapacity must be greater than or equal to 1.</exception>
+        public DefaultQueue(IHookOfBatch hookOfBatch, IExecutor executorSingle, int initialCapacity = 4)
         {
+            if (initialCapacity <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(initialCapacity));
+            }
             _hookOfBatch = hookOfBatch;
             _executorSingle = executorSingle ?? SimpleExecutor.Instance;
+            _actions = new List<Action>(initialCapacity);
+            _toPass = new List<Action>(initialCapacity);
         }
 
         ///<summary>

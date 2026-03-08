@@ -4,7 +4,12 @@ namespace AsyncFiberWorks.PubSub
 {
     internal class InternalQueue<T> : IMessageQueue<T>
     {
-        private readonly Queue<T> _queue = new Queue<T>();
+        private readonly Queue<T> _queue;
+
+        public InternalQueue(int initialCapacity = 4)
+        {
+            _queue = new Queue<T>(initialCapacity);
+        }
 
         public void Enqueue(T message)
         {
