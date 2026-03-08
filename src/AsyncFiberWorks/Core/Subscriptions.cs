@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.Core
     /// <summary>
     /// Registry for subscriptions. Provides thread safe methods for list of subscriptions.
     /// </summary>
-    public class Subscriptions : ISubscriptionRegistry, IDisposable
+    public class Subscriptions : IDisposable
     {
         private readonly object _lock = new object();
         private volatile bool _running = true;
