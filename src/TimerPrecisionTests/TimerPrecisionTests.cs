@@ -85,11 +85,10 @@ namespace TimerPrecisionTests
             WinApi.timeBeginPeriod(1);
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
-                var disposable = new Unsubscriber();
+                var cancellation = new CancellationTokenSource();
+                var disposable = new DisposableAction(() => cancellation.Cancel());
                 Task.Run(async () =>
                 {
-                    var cancellation = new CancellationTokenSource();
-                    disposable.Append(cancellation);
                     while (true)
                     {
                         fiber.Enqueue(action);
@@ -117,12 +116,11 @@ namespace TimerPrecisionTests
         {
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
-                var disposable = new Unsubscriber();
+                var cancellation = new CancellationTokenSource();
+                var disposable = new DisposableAction(() => cancellation.Cancel());
                 var consumerThread = ConsumerThread.StartNew();
                 consumerThread.Enqueue(() =>
                 {
-                    var cancellation = new CancellationTokenSource();
-                    disposable.Append(cancellation);
                     while (true)
                     {
                         fiber.Enqueue(action);
@@ -288,13 +286,11 @@ namespace TimerPrecisionTests
         {
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
-                var disposable = new Unsubscriber();
+                var cancellation = new CancellationTokenSource();
+                var disposable = new DisposableAction(() => cancellation.Cancel());
                 var consumerThread = ConsumerThread.StartNew();
                 consumerThread.Enqueue(() =>
                 {
-                    var cancellation = new CancellationTokenSource();
-                    disposable.Append(cancellation);
-
                     var timerWaitHandle = new WaitableTimer();
                     while (true)
                     {
@@ -372,13 +368,11 @@ namespace TimerPrecisionTests
         {
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
-                var disposable = new Unsubscriber();
+                var cancellation = new CancellationTokenSource();
+                var disposable = new DisposableAction(() => cancellation.Cancel());
                 var consumerThread = ConsumerThread.StartNew();
                 consumerThread.Enqueue(() =>
                 {
-                    var cancellation = new CancellationTokenSource();
-                    disposable.Append(cancellation);
-
                     var timerWaitHandle = new WaitableTimerEx();
                     while (true)
                     {
@@ -427,9 +421,8 @@ namespace TimerPrecisionTests
         {
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
-                var disposable = new Unsubscriber();
                 var cancellation = new CancellationTokenSource();
-                disposable.Append(cancellation);
+                var disposable = new DisposableAction(() => cancellation.Cancel());
                 var handleList = new RegisteredWaitHandle[1];
 
                 // Non-operating dummy event.
@@ -491,9 +484,8 @@ namespace TimerPrecisionTests
         {
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
-                var disposable = new Unsubscriber();
                 var cancellation = new CancellationTokenSource();
-                disposable.Append(cancellation);
+                var disposable = new DisposableAction(() => cancellation.Cancel());
                 Action[] actionList = new Action[1];
                 var handleList = new RegisteredWaitHandle[1];
 
@@ -556,9 +548,8 @@ namespace TimerPrecisionTests
         {
             await BenchmarkTimerAccuracy((fiber, action) =>
             {
-                var disposable = new Unsubscriber();
                 var cancellation = new CancellationTokenSource();
-                disposable.Append(cancellation);
+                var disposable = new DisposableAction(() => cancellation.Cancel());
                 Action[] actionList = new Action[1];
                 var handleList = new RegisteredWaitHandle[1];
 
