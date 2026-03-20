@@ -132,18 +132,18 @@ namespace AsyncFiberWorksTests
 
             var taskList = new FiberAndTaskPairList();
             long counter = 0;
-            var unsubscriber = new Unsubscriber();
+            var composite = new CompositeDisposable();
 
             Action action = () =>
             {
                 counter += 1;
-                unsubscriber.Dispose();
+                composite.Dispose();
             };
 
             var disposable1 = taskList.Add(action);
-            unsubscriber.AppendDisposable(disposable1);
+            composite.AppendDisposable(disposable1);
             var disposable2 = taskList.Add(action);
-            unsubscriber.AppendDisposable(disposable2);
+            composite.AppendDisposable(disposable2);
 
             _ = Task.Run(async () =>
             {

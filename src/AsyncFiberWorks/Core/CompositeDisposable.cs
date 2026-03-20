@@ -7,7 +7,7 @@ namespace AsyncFiberWorks.Core
     /// <summary>
     /// Disposables.
     /// </summary>
-    public class Unsubscriber: IDisposable
+    public class CompositeDisposable: IDisposable
     {
         private readonly object _lock = new object();
         private Action _actionUnsubscribe;
@@ -17,7 +17,7 @@ namespace AsyncFiberWorks.Core
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Unsubscriber()
+        public CompositeDisposable()
         {
             _actionUnsubscribe = null;
         }

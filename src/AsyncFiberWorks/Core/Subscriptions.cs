@@ -40,7 +40,7 @@ namespace AsyncFiberWorks.Core
             else
             {
                 toAdd.Dispose();
-                return new Unsubscriber();
+                return new CompositeDisposable();
             }
         }
 
@@ -48,9 +48,9 @@ namespace AsyncFiberWorks.Core
         /// Begin subscription.
         /// </summary>
         /// <returns>Unsubscribers. It is also discarded when the subscription subject is terminated.</returns>
-        public Unsubscriber BeginSubscription()
+        public CompositeDisposable BeginSubscription()
         {
-            var unsubscriber = new Unsubscriber();
+            var unsubscriber = new CompositeDisposable();
             var unregister = this.RegisterSubscription(unsubscriber);
             unsubscriber.AppendDisposable(unregister);
             return unsubscriber;
