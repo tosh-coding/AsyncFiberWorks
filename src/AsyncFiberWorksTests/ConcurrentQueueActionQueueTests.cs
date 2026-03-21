@@ -68,7 +68,7 @@ namespace AsyncFiberWorksTests
                     await Task.Delay(500, token);
                 }
             });
-            subscriptionFiber.AppendDisposable(cancellation);
+            subscriptionFiber.Add(cancellation);
 
             // add to the pending list.
             Thread.Sleep(200);
@@ -140,12 +140,12 @@ namespace AsyncFiberWorksTests
                 await Task.Delay(1000, cancellation.Token);
                 await fiber.SwitchTo();
             });
-            subscriptionFiber1.AppendDisposable(cancellation);
+            subscriptionFiber1.Add(cancellation);
             queue.ExecuteOnlyPendingNow();
             
             var subscriptionFiber2 = subscriptions.BeginSubscription();
             var subscriptionChannel = channel.Subscribe(fiber, x => { });
-            subscriptionFiber2.AppendDisposable(subscriptionChannel);
+            subscriptionFiber2.Add(subscriptionChannel);
             channel.Publish(2);
 
             Assert.AreEqual(2, subscriptions.NumSubscriptions);

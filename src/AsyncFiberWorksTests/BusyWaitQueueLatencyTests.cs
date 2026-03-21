@@ -74,7 +74,7 @@ namespace AsyncFiberWorksTests
                     var subscriptions = subscriptionsList[i];
                     var subscriptionFiber = subscriptions.BeginSubscription();
                     var subscriptionChannel = channels[prior].Subscribe(consumer, cb);
-                    subscriptionFiber.AppendDisposable(subscriptionChannel);
+                    subscriptionFiber.Add(subscriptionChannel);
                 }
             }
 

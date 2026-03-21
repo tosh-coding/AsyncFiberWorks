@@ -61,7 +61,7 @@ namespace AsyncFiberWorksTests
                 };
                 var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(consumerThread, onMsg);
-                subscriptionFiber.AppendDisposable(subscriptionChannel);
+                subscriptionFiber.Add(subscriptionChannel);
                 using (new PerfTimer(max))
                 {
                     for (var i = 0; i <= max; i++)
@@ -92,7 +92,7 @@ namespace AsyncFiberWorksTests
                                         };
                 var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(consumerThread, onMsg);
-                subscriptionFiber.AppendDisposable(subscriptionChannel);
+                subscriptionFiber.Add(subscriptionChannel);
                 using (new PerfTimer(max))
                 {
                     for (var i = 0; i <= max; i++)
@@ -124,7 +124,7 @@ namespace AsyncFiberWorksTests
                                            };
                 var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(consumerThread, onMsg);
-                subscriptionFiber.AppendDisposable(subscriptionChannel);
+                subscriptionFiber.Add(subscriptionChannel);
                 using (new PerfTimer(max))
                 {
                     var msg = new object();

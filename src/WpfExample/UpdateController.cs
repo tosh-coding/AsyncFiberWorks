@@ -29,11 +29,11 @@ namespace WpfExample
 
             var subscriberStartChannel = ChannelLocator.GetSubscriber<RoutedEventArgs>();
             var disposable = subscriberStartChannel.Subscribe(fiber, OnStart);
-            disposables.AppendDisposable(disposable);
+            disposables.Add(disposable);
 
             var subscriberOnWindowClosing = ChannelLocator.GetSubscriber<CancelEventArgs>();
             disposable = subscriberOnWindowClosing.Subscribe(fiber, OnWindowClosing);
-            disposables.AppendDisposable(disposable);
+            disposables.Add(disposable);
 
             _pubDateTime = ChannelLocator.GetPublisher<DateTime>();
         }

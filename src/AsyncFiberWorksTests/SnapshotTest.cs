@@ -68,10 +68,10 @@ namespace AsyncFiberWorksTests
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
                 });
-                unsubscriber.AppendDisposable(disposable);
+                unsubscriber.Add(disposable);
 
                 disposable = await requestChannel(receiveChannel).ConfigureAwait(false);
-                unsubscriber.AppendDisposable(disposable);
+                unsubscriber.Add(disposable);
 
                 // Change the value after subscribing.
                 await setValue(4);

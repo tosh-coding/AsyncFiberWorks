@@ -141,9 +141,9 @@ namespace AsyncFiberWorksTests
             };
 
             var disposable1 = taskList.Add(action);
-            composite.AppendDisposable(disposable1);
+            composite.Add(disposable1);
             var disposable2 = taskList.Add(action);
-            composite.AppendDisposable(disposable2);
+            composite.Add(disposable2);
 
             _ = Task.Run(async () =>
             {

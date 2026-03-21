@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace AsyncFiberWorks.Core
 {
     /// <summary>
-    /// Disposables.
+    /// It holds multiple disposable objects and disposes of them all at once when the Dispose method is called.
     /// </summary>
     public class CompositeDisposable: IDisposable
     {
@@ -17,16 +16,17 @@ namespace AsyncFiberWorks.Core
         /// <summary>
         /// Constructor.
         /// </summary>
+        /// <param name="capacity">Initial size of the internal buffer.</param>
         public CompositeDisposable(int capacity = 4)
         {
             _disposableList = new List<IDisposable>(capacity);
         }
 
         /// <summary>
-        /// Append a disposable. It will be destroyed in tandem.
+        /// Append a disposable.
         /// </summary>
         /// <param name="disposable">A disposable.</param>
-        public void AppendDisposable(IDisposable disposable)
+        public void Add(IDisposable disposable)
         {
             bool added = false;
             lock (_lockObj)
@@ -44,10 +44,10 @@ namespace AsyncFiberWorks.Core
         }
 
         /// <summary>
-        /// Append disposables. They will be destroyed in tandem.
+        /// Append disposables.
         /// </summary>
         /// <param name="disposableList">Disposables.</param>
-        public void AppendDisposable(IEnumerable<IDisposable> disposableList)
+        public void Add(IEnumerable<IDisposable> disposableList)
         {
             bool added = false;
             lock (_lockObj)
@@ -68,10 +68,10 @@ namespace AsyncFiberWorks.Core
         }
 
         /// <summary>
-        /// Append disposables. They will be destroyed in tandem.
+        /// Append disposables.
         /// </summary>
         /// <param name="disposableList">Disposables.</param>
-        public void AppendDisposable(params IDisposable[] disposableList)
+        public void Add(params IDisposable[] disposableList)
         {
             bool added = false;
             lock (_lockObj)

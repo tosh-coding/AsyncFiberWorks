@@ -52,7 +52,7 @@ namespace AsyncFiberWorks.Core
         {
             var unsubscriber = new CompositeDisposable();
             var unregister = this.RegisterSubscription(unsubscriber);
-            unsubscriber.AppendDisposable(unregister);
+            unsubscriber.Add(unregister);
             return unsubscriber;
         }
 

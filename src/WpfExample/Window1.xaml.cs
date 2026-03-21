@@ -27,11 +27,11 @@ namespace WpfExample
             var disposables = _subscriptions.BeginSubscription();
 
             var lastFilter = new LastFilter<DateTime>(0, _fiber, OnTimeUpdate);
-            disposables.AppendDisposable(lastFilter);
+            disposables.Add(lastFilter);
 
             var subscriberTimeUpdate = ChannelLocator.GetSubscriber<DateTime>();
             var d = subscriberTimeUpdate.Subscribe(_fiber, lastFilter.Receive);
-            disposables.AppendDisposable(d);
+            disposables.Add(d);
 
             Closing += this.OnWindowClosing;
 
