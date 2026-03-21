@@ -9,38 +9,17 @@ namespace AsyncFiberWorks.Core
     /// </summary>
     public class CompositeDisposable: IDisposable
     {
-        private readonly object _lock = new object();
-        private Action _actionUnsubscribe;
+        private readonly object _lockObj = new object();
+        private readonly List<IDisposable> _disposableList;
 
-        private bool _disposed;
+        private bool _isDisposed;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public CompositeDisposable()
+        public CompositeDisposable(int capacity = 4)
         {
-            _actionUnsubscribe = null;
-        }
-
-        /// <summary>
-        /// Add a disposable.
-        /// </summary>
-        /// <param name="disposingAction">A disposable.</param>
-        private void PrivateAdd(Action disposingAction)
-        {
-            bool added = false;
-            lock (_lock)
-            {
-                if (!_disposed)
-                {
-                    _actionUnsubscribe += disposingAction;
-                    added = true;
-                }
-            }
-            if (!added)
-            {
-                disposingAction();
-            }
+            _disposableList = new List<IDisposable>(capacity);
         }
 
         /// <summary>
@@ -49,7 +28,19 @@ namespace AsyncFiberWorks.Core
         /// <param name="disposable">A disposable.</param>
         public void AppendDisposable(IDisposable disposable)
         {
-            this.PrivateAdd(() => disposable.Dispose());
+            bool added = false;
+            lock (_lockObj)
+            {
+                if (!_isDisposed)
+                {
+                    _disposableList.Add(disposable);
+                    added = true;
+                }
+            }
+            if (!added)
+            {
+                disposable.Dispose();
+            }
         }
 
         /// <summary>
@@ -58,9 +49,21 @@ namespace AsyncFiberWorks.Core
         /// <param name="disposableList">Disposables.</param>
         public void AppendDisposable(IEnumerable<IDisposable> disposableList)
         {
-            foreach (var disposable in disposableList)
+            bool added = false;
+            lock (_lockObj)
             {
-                this.PrivateAdd(() => disposable.Dispose());
+                if (!_isDisposed)
+                {
+                    _disposableList.AddRange(disposableList);
+                    added = true;
+                }
+            }
+            if (!added)
+            {
+                foreach (var disposable in disposableList)
+                {
+                    disposable.Dispose();
+                }
             }
         }
 
@@ -70,9 +73,21 @@ namespace AsyncFiberWorks.Core
         /// <param name="disposableList">Disposables.</param>
         public void AppendDisposable(params IDisposable[] disposableList)
         {
-            foreach (var disposable in disposableList)
+            bool added = false;
+            lock (_lockObj)
             {
-                this.PrivateAdd(() => disposable.Dispose());
+                if (!_isDisposed)
+                {
+                    _disposableList.AddRange(disposableList);
+                    added = true;
+                }
+            }
+            if (!added)
+            {
+                foreach (var disposable in disposableList)
+                {
+                    disposable.Dispose();
+                }
             }
         }
 
@@ -81,15 +96,19 @@ namespace AsyncFiberWorks.Core
         /// </summary>
         public void Dispose()
         {
-            lock (_lock)
+            lock (_lockObj)
             {
-                if (_disposed)
+                if (_isDisposed)
                 {
                     return;
                 }
-                _disposed = true;
+                _isDisposed = true;
             }
-            _actionUnsubscribe?.Invoke();
+            foreach (var d in _disposableList)
+            {
+                d?.Dispose();
+            }
+            _disposableList.Clear();
         }
     }
 }
