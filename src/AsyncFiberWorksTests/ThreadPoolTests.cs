@@ -170,39 +170,34 @@ namespace AsyncFiberWorksTests
                 var fiber1 = new PoolFiber(pool);
                 var fiber2 = new PoolFiber(pool);
                 var fiber3 = new PoolFiber(pool);
-                using (var fiberSubscriptions1 = new Subscriptions())
-                using (var fiberSubscriptions2 = new Subscriptions())
-                using (var fiberSubscriptions3 = new Subscriptions())
+                int loopCount = 1000;
+
+                long counter1 = 0;
+                long counter2 = 0;
+                long counter3 = 0;
+                for (int i = 0; i < loopCount; i++)
                 {
-                    int loopCount = 1000;
-
-                    long counter1 = 0;
-                    long counter2 = 0;
-                    long counter3 = 0;
-                    for (int i = 0; i < loopCount; i++)
+                    fiber1.Enqueue(() =>
                     {
-                        fiber1.Enqueue(() =>
-                        {
-                            var tmp = Interlocked.Read(ref counter1);
-                            Interlocked.Exchange(ref counter1, tmp + 1);
-                        });
-                        fiber2.Enqueue(() =>
-                        {
-                            var tmp = Interlocked.Read(ref counter2);
-                            Interlocked.Exchange(ref counter2, tmp + 2);
-                        });
-                        fiber3.Enqueue(() =>
-                        {
-                            var tmp = Interlocked.Read(ref counter3);
-                            Interlocked.Exchange(ref counter3, tmp + 3);
-                        });
-                    }
-                    Thread.Sleep(1000);
-
-                    Assert.AreEqual(loopCount * 1, counter1);
-                    Assert.AreEqual(loopCount * 2, counter2);
-                    Assert.AreEqual(loopCount * 3, counter3);
+                        var tmp = Interlocked.Read(ref counter1);
+                        Interlocked.Exchange(ref counter1, tmp + 1);
+                    });
+                    fiber2.Enqueue(() =>
+                    {
+                        var tmp = Interlocked.Read(ref counter2);
+                        Interlocked.Exchange(ref counter2, tmp + 2);
+                    });
+                    fiber3.Enqueue(() =>
+                    {
+                        var tmp = Interlocked.Read(ref counter3);
+                        Interlocked.Exchange(ref counter3, tmp + 3);
+                    });
                 }
+                Thread.Sleep(1000);
+
+                Assert.AreEqual(loopCount * 1, counter1);
+                Assert.AreEqual(loopCount * 2, counter2);
+                Assert.AreEqual(loopCount * 3, counter3);
             }
         }
 

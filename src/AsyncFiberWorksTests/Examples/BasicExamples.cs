@@ -217,21 +217,15 @@ namespace AsyncFiberWorksTests.Examples
         [Test]
         public void ShouldIncreasePoolFiberSubscriberCountByOne()
         {
-            var subscriptions = new Subscriptions();
             var fiber = new PoolFiber();
             var channel = new Channel<int>();
 
-            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
-            var unsubscriber = subscriptions.BeginSubscription();
             var disposableChannel = channel.Subscribe(fiber, x => { });
-            unsubscriber.Add(disposableChannel);
 
-            Assert.AreEqual(1, subscriptions.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
-            subscriptions.Dispose();
+            disposableChannel.Dispose();
 
-            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
         }
 
@@ -240,66 +234,48 @@ namespace AsyncFiberWorksTests.Examples
         {
             var threadPool = UserThreadPool.StartNew(1);
             var fiber = threadPool.CreateFiber();
-            var subscriptions = new Subscriptions();
             var channel = new Channel<int>();
 
-            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
-            var unsubscriber = subscriptions.BeginSubscription();
             var disposableChannel = channel.Subscribe(fiber, x => { });
-            unsubscriber.Add(disposableChannel);
 
-            Assert.AreEqual(1, subscriptions.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
-            subscriptions.Dispose();
+            disposableChannel.Dispose();
             threadPool.Dispose();
 
-            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
         }
 
         [Test]
         public void ShouldIncreaseConcurrentQueueActionQueueSubscriberCountByOne()
         {
-            var subscriptions = new Subscriptions();
             var queue = new ConcurrentQueueActionQueue();
             var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
             var channel = new Channel<int>();
 
-            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
-            var unsubscriber = subscriptions.BeginSubscription();
             var disposableChannel = channel.Subscribe(fiber, x => { });
-            unsubscriber.Add(disposableChannel);
 
-            Assert.AreEqual(1, subscriptions.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
-            subscriptions.Dispose();
+            disposableChannel.Dispose();
 
-            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
         }
 
         [Test]
         public void UnsubscriptionShouldRemoveSubscriber()
         {
-            var subscriptions = new Subscriptions();
             var queue = new ConcurrentQueueActionQueue();
             var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
             var channel = new Channel<int>();
 
-            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
 
-            var unsubscriber = subscriptions.BeginSubscription();
             var disposableChannel = channel.Subscribe(fiber, x => { });
-            unsubscriber.Add(disposableChannel);
 
-            Assert.AreEqual(1, subscriptions.NumSubscriptions);
             Assert.AreEqual(1, channel.NumSubscribers);
-            unsubscriber.Dispose();
+            disposableChannel.Dispose();
 
-            Assert.AreEqual(0, subscriptions.NumSubscriptions);
             Assert.AreEqual(0, channel.NumSubscribers);
         }
 
