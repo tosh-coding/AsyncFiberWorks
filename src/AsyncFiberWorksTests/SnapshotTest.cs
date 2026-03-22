@@ -17,9 +17,8 @@ namespace AsyncFiberWorksTests
         [Test]
         public async Task Snapshot()
         {
-            using (var subscriptions = new Subscriptions())
+            using (var composite = new CompositeDisposable())
             {
-                var unsubscriber = subscriptions.BeginSubscription();
                 var fiberReply = new PoolFiber();
                 var notificationChannel = new Channel<int>();
                 Func<Channel<int>, Task<IDisposable>> requestChannel;
@@ -68,10 +67,10 @@ namespace AsyncFiberWorksTests
                     receivedValues.Add(v);
                     Console.WriteLine("Received: " + v);
                 });
-                unsubscriber.Add(disposable);
+                composite.Add(disposable);
 
                 disposable = await requestChannel(receiveChannel).ConfigureAwait(false);
-                unsubscriber.Add(disposable);
+                composite.Add(disposable);
 
                 // Change the value after subscribing.
                 await setValue(4);

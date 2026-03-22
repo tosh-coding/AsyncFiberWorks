@@ -54,15 +54,14 @@ namespace AsyncFiberWorksTests.Examples
                 IPublisher<IntPair> outboundChannel,
                 int limit,
                 Action onCompleted,
-                Subscriptions subscriptions)
+                CompositeDisposable composite)
             {
                 _onCompleted = onCompleted;
                 _name = name;
                 _inboundChannel = inboundChannel;
                 _outboundChannel = outboundChannel;
-                var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriptionChannel = _inboundChannel.Subscribe(fiber, CalculateNext);
-                subscriptionFiber.Add(subscriptionChannel);
+                composite.Add(subscriptionChannel);
                 _limit = limit;
             }
 
@@ -109,7 +108,7 @@ namespace AsyncFiberWorksTests.Examples
             };
 
             using (ConsumerThread oddFiber = ConsumerThread.StartNew(), evenFiber = ConsumerThread.StartNew())
-            using (Subscriptions oddSubscriptions = new Subscriptions(), evenSubscriptions = new Subscriptions())
+            using (CompositeDisposable oddSubscriptions = new CompositeDisposable(), evenSubscriptions = new CompositeDisposable())
             {
                 var oddCalculator = new FibonacciCalculator(oddFiber, "Odd", oddChannel, evenChannel, limit, onCompleted, oddSubscriptions);
 

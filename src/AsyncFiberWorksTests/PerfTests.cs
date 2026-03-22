@@ -47,7 +47,7 @@ namespace AsyncFiberWorksTests
         private static void PointToPointPerfTestWithStructInternal(IDedicatedConsumerThreadWork queue)
         {
             using (var consumerThread = ConsumerThread.StartNew(queue))
-            using (var subscriptions = new Subscriptions())
+            using (var composite = new CompositeDisposable())
             {
                 var channel = new Channel<MsgStruct>();
                 const int max = 5000000;
@@ -59,9 +59,8 @@ namespace AsyncFiberWorksTests
                         reset.Set();
                     }
                 };
-                var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(consumerThread, onMsg);
-                subscriptionFiber.Add(subscriptionChannel);
+                composite.Add(subscriptionChannel);
                 using (new PerfTimer(max))
                 {
                     for (var i = 0; i <= max; i++)
@@ -78,7 +77,7 @@ namespace AsyncFiberWorksTests
         {
             var queue = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
             using (var consumerThread = ConsumerThread.StartNew(queue))
-            using (var subscriptions = new Subscriptions())
+            using (var composite = new CompositeDisposable())
             {
                 var channel = new Channel<int>();
                 const int max = 5000000;
@@ -90,9 +89,8 @@ namespace AsyncFiberWorksTests
                                                 reset.Set();
                                             }
                                         };
-                var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(consumerThread, onMsg);
-                subscriptionFiber.Add(subscriptionChannel);
+                composite.Add(subscriptionChannel);
                 using (new PerfTimer(max))
                 {
                     for (var i = 0; i <= max; i++)
@@ -109,7 +107,7 @@ namespace AsyncFiberWorksTests
         {
             var queue = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 100000, MaxEnqueueWaitTimeInMs = 1000 };
             using (var consumerThread = ConsumerThread.StartNew(queue))
-            using (var subscriptions = new Subscriptions())
+            using (var composite = new CompositeDisposable())
             {
                 var channel = new Channel<object>();
                 const int max = 5000000;
@@ -122,9 +120,8 @@ namespace AsyncFiberWorksTests
                                                    reset.Set();
                                                }
                                            };
-                var subscriptionFiber = subscriptions.BeginSubscription();
                 var subscriptionChannel = channel.Subscribe(consumerThread, onMsg);
-                subscriptionFiber.Add(subscriptionChannel);
+                composite.Add(subscriptionChannel);
                 using (new PerfTimer(max))
                 {
                     var msg = new object();

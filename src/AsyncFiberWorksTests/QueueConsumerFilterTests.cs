@@ -15,11 +15,10 @@ namespace AsyncFiberWorksTests
         [Test]
         public void SingleConsumer()
         {
-            var subscriptions = new Subscriptions();
             var one = new PoolFiber();
             var oneConsumed = 0;
             var reset = new AutoResetEvent(false);
-            using (subscriptions)
+            using (var composite = new CompositeDisposable())
             {
                 var channel = new Channel<int>();
                 Action<int> onMsg = delegate
@@ -30,10 +29,9 @@ namespace AsyncFiberWorksTests
                         reset.Set();
                     }
                 };
-                var subscriptionFiber = subscriptions.BeginSubscription();
                 var consumer = new QueueConsumerFilter<int>(one, onMsg);
                 var subscriptionChannel = channel.Subscribe(one, consumer.Receive);
-                subscriptionFiber.Add(subscriptionChannel);
+                composite.Add(subscriptionChannel);
                 for (var i = 0; i < 20; i++)
                 {
                     channel.Publish(i);
@@ -46,10 +44,9 @@ namespace AsyncFiberWorksTests
         public void SingleConsumerWithException()
         {
             var exec = new StubExecutor();
-            var oneSubscriptions = new Subscriptions();
             var one = new PoolFiber(new DefaultThreadPool(), exec);
             var reset = new AutoResetEvent(false);
-            using (oneSubscriptions)
+            using (var composite = new CompositeDisposable())
             {
                 var channel = new Channel<int>();
                 Action<int> onMsg = delegate(int num)
@@ -60,10 +57,9 @@ namespace AsyncFiberWorksTests
                     }
                     reset.Set();
                 };
-                var subscriptionFiber = oneSubscriptions.BeginSubscription();
                 var consumer = new QueueConsumerFilter<int>(one, onMsg);
                 var subscriptionChannel = channel.Subscribe(one, consumer.Receive);
-                subscriptionFiber.Add(subscriptionChannel);
+                composite.Add(subscriptionChannel);
                 channel.Publish(0);
                 channel.Publish(1);
                 Assert.IsTrue(reset.WaitOne(10000, false));
@@ -95,14 +91,13 @@ namespace AsyncFiberWorksTests
                                                     }
                                                 }
                                             };
-                var subscriptions = new Subscriptions();
+                var composite = new CompositeDisposable();
                 var fiber = new PoolFiber();
-                queues.Add(subscriptions);
-                var subscriptionFiber = subscriptions.BeginSubscription();
+                queues.Add(composite);
 
                 var consumer = new QueueConsumerFilter<int>(fiber, onReceive);
                 var subscriptionChannel = channel.Subscribe(fiber, consumer.Receive);
-                subscriptionFiber.Add(subscriptionChannel);
+                composite.Add(subscriptionChannel);
             }
             for (var i = 0; i < messageCount; i++)
             {

@@ -16,16 +16,15 @@ namespace AsyncFiberWorksTests.Examples
         [Test]
         public void PubSubWithPool()
         {
-            //PoolFiber uses the .NET thread pool by default
-            using (var subscriptions = new Subscriptions())
+            using (var composite = new CompositeDisposable())
             {
+                //PoolFiber uses the .NET thread pool by default
                 var fiber = new PoolFiber();
                 var channel = new Channel<string>();
 
                 var reset = new AutoResetEvent(false);
-                var unsubscriber = subscriptions.BeginSubscription();
                 var disposableChannel = channel.Subscribe(fiber, (msg) => reset.Set());
-                unsubscriber.Add(disposableChannel);
+                composite.Add(disposableChannel);
                 channel.Publish("hello");
 
                 Assert.IsTrue(reset.WaitOne(5000, false));
@@ -35,16 +34,15 @@ namespace AsyncFiberWorksTests.Examples
         [Test]
         public void PubSubWithPoolAndLocator()
         {
-            using (var subscriptions = new Subscriptions())
+            using (var composite = new CompositeDisposable())
             {
                 var publisher = ChannelLocator.GetPublisher<string>();
                 var subscriber = ChannelLocator.GetSubscriber<string>();
 
                 var fiber = new PoolFiber();
                 var reset = new AutoResetEvent(false);
-                var unsubscriber = subscriptions.BeginSubscription();
                 var disposableChannel = subscriber.Subscribe(fiber, (msg) => reset.Set());
-                unsubscriber.Add(disposableChannel);
+                composite.Add(disposableChannel);
                 publisher.Publish("hello");
 
                 Assert.IsTrue(reset.WaitOne(5000, false));
@@ -55,15 +53,14 @@ namespace AsyncFiberWorksTests.Examples
         public void PubSubWithDedicatedThread()
         {
             using (var threadPool = UserThreadPool.StartNew(1))
-            using (var subscriptions = new Subscriptions())
+            using (var composite = new CompositeDisposable())
             {
                 var fiber = new PoolFiber(threadPool);
                 var channel = new Channel<string>();
 
                 var reset = new AutoResetEvent(false);
-                var unsubscriber = subscriptions.BeginSubscription();
                 var disposableChannel = channel.Subscribe(fiber, (msg) => reset.Set());
-                unsubscriber.Add(disposableChannel);
+                composite.Add(disposableChannel);
                 channel.Publish("hello");
 
                 Assert.IsTrue(reset.WaitOne(5000, false));
@@ -73,15 +70,14 @@ namespace AsyncFiberWorksTests.Examples
         [Test]
         public void PubSubWithAnotherThreadPool()
         {
-            using (var subscriptions = new Subscriptions())
+            using (var composite = new CompositeDisposable())
             {
                 var fiber = AnotherThreadPool.Instance.CreateFiber();
                 var channel = new Channel<string>();
 
                 var reset = new AutoResetEvent(false);
-                var unsubscriber = subscriptions.BeginSubscription();
                 var disposableChannel = channel.Subscribe(fiber, (msg) => reset.Set());
-                unsubscriber.Add(disposableChannel);
+                composite.Add(disposableChannel);
                 channel.Publish("hello");
 
                 Assert.IsTrue(reset.WaitOne(5000, false));
@@ -92,7 +88,7 @@ namespace AsyncFiberWorksTests.Examples
         public void PubSubWithDedicatedThreadWithFilter()
         {
             using (var threadPool = UserThreadPool.StartNew())
-            using (var subscriptions = new Subscriptions())
+            using (var composite = new CompositeDisposable())
             {
                 var fiber = threadPool.CreateFiber();
                 var channel = new Channel<int>();
@@ -110,9 +106,8 @@ namespace AsyncFiberWorksTests.Examples
                     }
                 };
                 var receiver = rb.Build(fiber, onMsg);
-                var unsubscriber = subscriptions.BeginSubscription();
                 var disposableChannel = channel.Subscribe(fiber, receiver);
-                unsubscriber.Add(disposableChannel);
+                composite.Add(disposableChannel);
                 channel.Publish(1);
                 channel.Publish(2);
                 channel.Publish(3);
@@ -126,7 +121,7 @@ namespace AsyncFiberWorksTests.Examples
         public void Batching()
         {
             using (var threadPool = UserThreadPool.StartNew())
-            using (var subscriptions = new Subscriptions())
+            using (var composite = new CompositeDisposable())
             {
                 var fiber = threadPool.CreateFiber();
                 var counter = new Channel<int>();
@@ -141,10 +136,9 @@ namespace AsyncFiberWorksTests.Examples
                                                 }
                                             };
 
-                var unsubscriber = subscriptions.BeginSubscription();
                 var filter = new BatchFilter<int>(1, fiber, cb);
                 var disposableChannel = counter.Subscribe(fiber, filter.Receive);
-                unsubscriber.Add(filter, disposableChannel);
+                composite.Add(filter, disposableChannel);
 
                 for (var i = 0; i < 10; i++)
                 {
@@ -159,7 +153,7 @@ namespace AsyncFiberWorksTests.Examples
         public void BatchingWithKey()
         {
             using (var threadPool = UserThreadPool.StartNew())
-            using (var subscriptions = new Subscriptions())
+            using (var composite = new CompositeDisposable())
             {
                 var fiber = threadPool.CreateFiber();
                 var counter = new Channel<int>();
@@ -173,13 +167,12 @@ namespace AsyncFiberWorksTests.Examples
                 };
 
                 var disposables = new List<IDisposable>();
-                var unsubscriber = subscriptions.BeginSubscription();
                 Converter<int, String> keyResolver = x => x.ToString();
                 var filter = new KeyedBatchFilter<string, int>(keyResolver, 0, fiber, cb);
                 disposables.Add(filter);
                 var disposableChannel = counter.Subscribe(fiber, filter.Receive);
                 disposables.Add(disposableChannel);
-                unsubscriber.Add(disposables);
+                composite.Add(disposables);
 
                 for (var i = 0; i < 10; i++)
                 {
@@ -313,7 +306,7 @@ namespace AsyncFiberWorksTests.Examples
         [Test]
         public void KeyedPubSub()
         {
-            using (var subscriptions = new Subscriptions())
+            using (var composite = new CompositeDisposable())
             {
                 var publisher = ChannelLocator.GetPublisher<Guid, string>();
                 var subscriber = ChannelLocator.GetSubscriber<Guid, string>();
@@ -324,8 +317,6 @@ namespace AsyncFiberWorksTests.Examples
                 var reset1 = new AutoResetEvent(false);
                 var reset2 = new AutoResetEvent(false);
                 var reset3 = new AutoResetEvent(false);
-
-                var unsubscriber = subscriptions.BeginSubscription();
 
                 var guidA = Guid.NewGuid();
                 var guidB = Guid.NewGuid();
@@ -368,9 +359,9 @@ namespace AsyncFiberWorksTests.Examples
                     }
                 });
 
-                unsubscriber.Add(disposableChannel1);
-                unsubscriber.Add(disposableChannel2);
-                unsubscriber.Add(disposableChannel3);
+                composite.Add(disposableChannel1);
+                composite.Add(disposableChannel2);
+                composite.Add(disposableChannel3);
 
                 publisher.Publish(guidA, "hello");
                 publisher.Publish(guidB, "hello");

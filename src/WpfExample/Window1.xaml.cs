@@ -14,7 +14,7 @@ namespace WpfExample
     public partial class Window1 : Window
     {
         private readonly IFiber _fiber;
-        private readonly Subscriptions _subscriptions = new Subscriptions();
+        private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly IPublisher<RoutedEventArgs> _startChannel;
         private readonly IPublisher<CancelEventArgs> _channelOnWindowClosing;
 
@@ -24,14 +24,12 @@ namespace WpfExample
             var adapter = new DispatcherAdapter(Dispatcher, DispatcherPriority.Normal);
             _fiber = new PoolFiber(adapter);
 
-            var disposables = _subscriptions.BeginSubscription();
-
             var lastFilter = new LastFilter<DateTime>(0, _fiber, OnTimeUpdate);
-            disposables.Add(lastFilter);
+            _disposables.Add(lastFilter);
 
             var subscriberTimeUpdate = ChannelLocator.GetSubscriber<DateTime>();
             var d = subscriberTimeUpdate.Subscribe(_fiber, lastFilter.Receive);
-            disposables.Add(d);
+            _disposables.Add(d);
 
             Closing += this.OnWindowClosing;
 
@@ -54,6 +52,7 @@ namespace WpfExample
         public void OnWindowClosing(object sender, CancelEventArgs e)
         {
             _channelOnWindowClosing.Publish(e);
+            _disposables.Dispose();
         }
     }
 }

@@ -43,7 +43,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void ScheduledTasksShouldBeExecutedOnceScheduleIntervalShouldBeExecutedEveryTimeExecuteScheduleAllIsCalled()
         {
-            var subscriptions = new Subscriptions();
+            var composite = new CompositeDisposable();
             var queue = new ConcurrentQueueActionQueue();
             var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
 
@@ -56,7 +56,6 @@ namespace AsyncFiberWorksTests
                 await fiber.SwitchTo();
                 scheduleFired++;
             });
-            var subscriptionFiber = subscriptions.BeginSubscription();
             var cancellation = new CancellationTokenSource();
             var token = cancellation.Token;
             _ = Task.Run(async () =>
@@ -68,7 +67,7 @@ namespace AsyncFiberWorksTests
                     await Task.Delay(500, token);
                 }
             });
-            subscriptionFiber.Add(cancellation);
+            composite.Add(new DisposableAction(() => cancellation.Cancel()));
 
             // add to the pending list.
             Thread.Sleep(200);
@@ -85,7 +84,7 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(2, scheduleOnIntervalFired);
 
-            subscriptionFiber.Dispose();
+            composite.Dispose();
 
             // The regularInMs has passed after dispose.
             Thread.Sleep(500);

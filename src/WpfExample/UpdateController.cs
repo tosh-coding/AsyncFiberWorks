@@ -13,27 +13,25 @@ namespace WpfExample
     public class UpdateController
     {
         private readonly IFiber _fiber;
-        private readonly Subscriptions _subscriptions;
+        private readonly CompositeDisposable _disposables;
         private readonly IPublisher<DateTime> _pubDateTime;
         private bool _timerIsValid = false;
         private CancellationTokenSource _timerCancellation;
 
         public UpdateController()
         {
-            _subscriptions = new Subscriptions();
-
-            var disposables = _subscriptions.BeginSubscription();
+            _disposables = new CompositeDisposable();
 
             var fiber = AnotherThreadPool.Instance.CreateFiber();
             _fiber = fiber;
 
             var subscriberStartChannel = ChannelLocator.GetSubscriber<RoutedEventArgs>();
             var disposable = subscriberStartChannel.Subscribe(fiber, OnStart);
-            disposables.Add(disposable);
+            _disposables.Add(disposable);
 
             var subscriberOnWindowClosing = ChannelLocator.GetSubscriber<CancelEventArgs>();
             disposable = subscriberOnWindowClosing.Subscribe(fiber, OnWindowClosing);
-            disposables.Add(disposable);
+            _disposables.Add(disposable);
 
             _pubDateTime = ChannelLocator.GetPublisher<DateTime>();
         }
@@ -42,13 +40,10 @@ namespace WpfExample
         {
             if (_timerIsValid)
             {
-                _timerCancellation.Cancel();
-                _timerCancellation.Dispose();
-                _timerIsValid = false;
+                StopTimer();
             }
             else
             {
-                var subscriptionFiber = _subscriptions.BeginSubscription();
                 _timerCancellation = new CancellationTokenSource();
                 var token = _timerCancellation.Token;
                 _ = Task.Run(async () =>
@@ -64,6 +59,16 @@ namespace WpfExample
             }
         }
 
+        private void StopTimer()
+        {
+            if (_timerIsValid)
+            {
+                _timerCancellation.Cancel();
+                _timerCancellation.Dispose();
+                _timerIsValid = false;
+            }
+        }
+
         private void OnTimer()
         {
             _pubDateTime.Publish(DateTime.Now);
@@ -71,7 +76,8 @@ namespace WpfExample
 
         public void OnWindowClosing(CancelEventArgs e)
         {
-            _subscriptions.Dispose();
+            StopTimer();
+            _disposables.Dispose();
         }
     }
 }

@@ -41,11 +41,11 @@ namespace AsyncFiberWorksTests
             }
 
             var consumerList = new ConsumerThread[channelCount];
-            var subscriptionsList = new Subscriptions[channelCount];
+            var subscriptionsList = new CompositeDisposable[channelCount];
             for (var i = 0; i < consumerList.Length; i++)
             {
                 consumerList[i] = creator();
-                subscriptionsList[i] = new Subscriptions();
+                subscriptionsList[i] = new CompositeDisposable();
                 var prior = i - 1;
                 var isLast = i + 1 == consumerList.Length;
                 var target = !isLast ? channels[i] : null;
@@ -72,9 +72,8 @@ namespace AsyncFiberWorksTests
 
                     var consumer = consumerList[i];
                     var subscriptions = subscriptionsList[i];
-                    var subscriptionFiber = subscriptions.BeginSubscription();
                     var subscriptionChannel = channels[prior].Subscribe(consumer, cb);
-                    subscriptionFiber.Add(subscriptionChannel);
+                    subscriptions.Add(subscriptionChannel);
                 }
             }
 
