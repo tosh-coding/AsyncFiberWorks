@@ -138,6 +138,7 @@ namespace AsyncFiberWorksTests
             {
                 await Task.Delay(1000, cancellation.Token);
                 await fiber.SwitchTo();
+                throw new Exception("timeout");
             });
             subscriptionFiber1.Add(cancellation);
             queue.ExecuteOnlyPendingNow();
