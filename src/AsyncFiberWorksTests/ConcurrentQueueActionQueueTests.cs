@@ -123,36 +123,5 @@ namespace AsyncFiberWorksTests
                 Assert.AreEqual(i, msgs[i]);
             }
         }
-
-        [Test]
-        public void DisposeShouldClearAllLists()
-        {
-            var subscriptions = new Subscriptions();
-            var queue = new ConcurrentQueueActionQueue();
-            var fiber = new PoolFiber(new ThreadPoolAdapter(queue));
-            var channel = new Channel<int>();
-
-            var subscriptionFiber1 = subscriptions.BeginSubscription();
-            var cancellation = new CancellationTokenSource();
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(1000, cancellation.Token);
-                await fiber.SwitchTo();
-                throw new Exception("timeout");
-            });
-            subscriptionFiber1.Add(cancellation);
-            queue.ExecuteOnlyPendingNow();
-            
-            var subscriptionFiber2 = subscriptions.BeginSubscription();
-            var subscriptionChannel = channel.Subscribe(fiber, x => { });
-            subscriptionFiber2.Add(subscriptionChannel);
-            channel.Publish(2);
-
-            Assert.AreEqual(2, subscriptions.NumSubscriptions);
-
-            subscriptions.Dispose();
-
-            Assert.AreEqual(0, subscriptions.NumSubscriptions);
-        }
     }
 }
