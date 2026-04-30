@@ -180,6 +180,7 @@ See API Documentation here: https://tosh-coding.github.io/AsyncFiberWorks/api/
 Fiber is a mechanism for sequential processing. It is also called a task queue. Actions added to a fiber are executed sequentially.  `Action` and `Func<Task>` can be added. Multiple fibers can run on one or more threads.
 
   * _[PoolFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/PoolFiber.cs)_ - Fiber. ".NET ThreadPool" is used by default. User thread pools are also available.
+  * _[KeyedPoolFiber](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Fibers/KeyedPoolFiber.cs)_ - It groups multiple enqueue-only fibers. Instead of holding references to multiple PoolFiber instances, you can replace them with a single KeyedPoolFiber reference plus multiple integer keys.
 
 ## ThreadPools ##
 ThreadPool is a mechanism where multiple worker threads process a given task. Producer-Consumer pattern.  One or more threads become consumers and execute tasks taken from the task queue.
