@@ -228,10 +228,16 @@ namespace AsyncFiberWorks.Fibers
                 {
                     _enabledPause = true;
                 }
-                _executor.Execute(_eventArgs, action);
-                lock (_lock)
+                try
                 {
-                    _enabledPause = false;
+                    _executor.Execute(_eventArgs, action);
+                }
+                finally
+                {
+                    lock (_lock)
+                    {
+                        _enabledPause = false;
+                    }
                 }
             });
         }
