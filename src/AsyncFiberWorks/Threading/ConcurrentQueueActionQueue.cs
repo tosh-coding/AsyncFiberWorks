@@ -28,7 +28,7 @@ namespace AsyncFiberWorks.Threading
         /// <param name="executor"></param>
         public ConcurrentQueueActionQueue(IExecutor executor)
         {
-            _executor = executor;
+            _executor = executor ?? SimpleExecutor.Instance;
         }
 
         /// <summary>
