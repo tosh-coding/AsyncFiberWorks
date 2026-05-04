@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Threading
 {
@@ -10,10 +11,28 @@ namespace AsyncFiberWorks.Threading
     {
         private readonly object _lockObj = new object();
         private readonly BlockingCollection<Action> _queue = new BlockingCollection<Action>();
+        private readonly IExecutor _executorSingle;
 
         private bool _requestedToStop = false;
         private bool _canRunning = true;
         private bool _isDisposed = false;
+
+        /// <summary>
+        /// Create a queue with custom executor.
+        /// </summary>
+        /// <param name="executorSingle">The executor for each operation.</param>
+        public BlockingCollectionQueue(IExecutor executorSingle)
+        {
+            _executorSingle = executorSingle ?? SimpleExecutor.Instance;
+        }
+
+        /// <summary>
+        /// Create a queue with a simple executor.
+        /// </summary>
+        public BlockingCollectionQueue()
+            : this(SimpleExecutor.Instance)
+        {
+        }
 
         /// <summary>
         /// Enqueue an action.
@@ -36,10 +55,10 @@ namespace AsyncFiberWorks.Threading
             }
 
             Action action = _queue.Take();
-            action();
+            _executorSingle.Execute(action);
             while (_queue.TryTake(out action))
             {
-                action();
+                _executorSingle.Execute(action);
             }
 
             if (!_canRunning)
