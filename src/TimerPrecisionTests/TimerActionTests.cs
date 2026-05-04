@@ -15,28 +15,44 @@ namespace TimerPrecisionTests
             var timer = new IntervalThreadingTimer();
             var fiber = new PoolFiber();
             long counterOnTimer = 0;
-            Action actionOnTimer = () => { counterOnTimer++; };
+            var tickArrived = new AutoResetEvent(false);
+            Action actionOnTimer = () => { counterOnTimer++; tickArrived.Set(); };
             var cancellation = new CancellationTokenSource();
             int intervalMs = 300;
+            Action waitTickOrFail = () =>
+            {
+                if (!tickArrived.WaitOne(intervalMs * 2))
+                {
+                    Assert.Fail("Timeout waiting for tick.");
+                }
+            };
+            Action waitNoTickOrFail = () =>
+            {
+                if (tickArrived.WaitOne(intervalMs))
+                {
+                    Assert.Fail("Unexpected tick after cancel.");
+                }
+            };
             timer.ScheduleOnInterval(() => fiber.Enqueue(actionOnTimer), intervalMs / 2, intervalMs, cancellation.Token);
 
-            Thread.Sleep(intervalMs);
+            waitTickOrFail();
             Assert.AreEqual(1, counterOnTimer);
-            Thread.Sleep(intervalMs);
+            waitTickOrFail();
             Assert.AreEqual(2, counterOnTimer);
-            Thread.Sleep(intervalMs);
+            waitTickOrFail();
             Assert.AreEqual(3, counterOnTimer);
-            Thread.Sleep(intervalMs);
+            waitTickOrFail();
             Assert.AreEqual(4, counterOnTimer);
-            Thread.Sleep(intervalMs);
+            waitTickOrFail();
             Assert.AreEqual(5, counterOnTimer);
-            Thread.Sleep(intervalMs);
+            waitTickOrFail();
             Assert.AreEqual(6, counterOnTimer);
             cancellation.Cancel();
-            Thread.Sleep(intervalMs);
+            waitNoTickOrFail();
             Assert.AreEqual(6, counterOnTimer);
-            Thread.Sleep(intervalMs);
+            waitNoTickOrFail();
             Assert.AreEqual(6, counterOnTimer);
+            tickArrived.Dispose();
             timer.Dispose();
         }
 
