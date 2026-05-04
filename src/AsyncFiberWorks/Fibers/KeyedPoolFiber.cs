@@ -17,6 +17,8 @@ namespace AsyncFiberWorks.Fibers
         private readonly IThreadPool _pool;
         private readonly IActionExecutor _executor;
         private readonly Dictionary<int, FiberEntry> _fibers = new Dictionary<int, FiberEntry>();
+        private readonly int _cacheCount;
+        private readonly Stack<FiberEntry> _cachedFiberEntries = new Stack<FiberEntry>();
 
         private class FiberEntry
         {
@@ -87,17 +89,35 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         /// <param name="pool">Thread pool instance used to schedule fiber work. Must not be null.</param>
         /// <param name="executor">Optional executor used by created PoolFiber instances.</param>
-        public KeyedPoolFiber(IThreadPool pool, IActionExecutor executor = null)
+        /// <param name="cacheCount">Maximum number of idle fiber entries to cache for reuse.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="pool"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="cacheCount"/> is less than 0.</exception>
+        public KeyedPoolFiber(IThreadPool pool, IActionExecutor executor = null, int cacheCount = 0)
         {
+            if (cacheCount < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(cacheCount));
+            }
+
             _pool = pool ?? throw new ArgumentNullException(nameof(pool));
             _executor = executor;
+            _cacheCount = cacheCount;
         }
 
         /// <summary>
         /// Convenience constructor that uses the default thread pool.
         /// </summary>
         public KeyedPoolFiber()
-            : this(DefaultThreadPool.Instance, null)
+            : this(DefaultThreadPool.Instance, null, 0)
+        {
+        }
+
+        /// <summary>
+        /// Convenience constructor that uses the default thread pool and sets cache size.
+        /// </summary>
+        /// <param name="cacheCount">Maximum number of idle fiber entries to cache for reuse.</param>
+        public KeyedPoolFiber(int cacheCount)
+            : this(DefaultThreadPool.Instance, null, cacheCount)
         {
         }
 
@@ -111,11 +131,20 @@ namespace AsyncFiberWorks.Fibers
             {
                 if (!_fibers.TryGetValue(key, out var entry))
                 {
-                    entry = new FiberEntry
+                    if (_cachedFiberEntries.Count > 0)
                     {
-                        Fiber = new PoolFiber(_pool, _executor),
-                        Count = 0,
-                    };
+                        entry = _cachedFiberEntries.Pop();
+                        entry.Count = 0;
+                    }
+                    else
+                    {
+                        entry = new FiberEntry
+                        {
+                            Fiber = new PoolFiber(_pool, _executor),
+                            Count = 0,
+                        };
+                    }
+
                     _fibers[key] = entry;
                 }
                 entry.Count += 1;
@@ -125,7 +154,8 @@ namespace AsyncFiberWorks.Fibers
 
         /// <summary>
         /// Decrements the reference count for the fiber associated with <paramref name="key"/>.
-        /// If the count reaches zero the entry is removed from the dictionary so the fiber can be GC'd.
+        /// If the count reaches zero the entry is removed from the dictionary.
+        /// Removed entries are cached up to cache capacity for reuse.
         /// </summary>
         private void DecrementCount(int key)
         {
@@ -140,6 +170,11 @@ namespace AsyncFiberWorks.Fibers
                 if (entry.Count <= 0)
                 {
                     _fibers.Remove(key);
+
+                    if (_cacheCount > 0 && _cachedFiberEntries.Count < _cacheCount)
+                    {
+                        _cachedFiberEntries.Push(entry);
+                    }
                 }
             }
         }

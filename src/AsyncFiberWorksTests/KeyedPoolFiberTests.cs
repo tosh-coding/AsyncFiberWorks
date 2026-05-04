@@ -3,7 +3,9 @@ using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.Threading;
 using NUnit.Framework;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 
 namespace AsyncFiberWorksTests
@@ -61,12 +63,9 @@ namespace AsyncFiberWorksTests
 
             Thread.Sleep(500);
 
-            var fibersField = typeof(KeyedPoolFiber)
-                .GetField("_fibers", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var fibers = fibersField.GetValue(fiber) as System.Collections.IDictionary;
+            var fibers = GetFibersDictionary(fiber);
             Assert.AreEqual(0, fibers.Count);
         }
-
 
         [Test]
         public void TestCreateFiber()
@@ -117,6 +116,80 @@ namespace AsyncFiberWorksTests
             Assert.AreEqual(2, executed.Count);
             Assert.AreEqual(1, executed[0]);
             Assert.AreEqual(2, executed[1]);
+        }
+
+        [Test]
+        public void TestEntryCachedWhenCacheEnabled()
+        {
+            var fiber = new KeyedPoolFiber(cacheCount: 1);
+            var done = new ManualResetEventSlim(false);
+
+            fiber.EnqueueKeyed(1, () => done.Set());
+            Assert.IsTrue(done.Wait(TimeSpan.FromSeconds(5)));
+
+            Thread.Sleep(200);
+
+            var fibers = GetFibersDictionary(fiber);
+            Assert.AreEqual(0, fibers.Count);
+
+            var cache = GetCachedEntriesCollection(fiber);
+            Assert.AreEqual(1, cache.Count);
+        }
+
+        [Test]
+        public void TestCachedEntryIsReusedForAnotherKey()
+        {
+            var queue = new ConcurrentQueueActionQueue();
+            var threadPool = new ThreadPoolAdapter(queue);
+            var keyedFiber = new KeyedPoolFiber(threadPool, cacheCount: 1);
+
+            IFiberExecutionEventArgs capturedEventArgs = null;
+
+            keyedFiber.EnqueueKeyed(1, (e) =>
+            {
+                capturedEventArgs = e;
+                e.Pause();
+            });
+            queue.ExecuteNextBatch();
+
+            var entryForKey1 = GetFiberEntryForKey(keyedFiber, 1);
+            var fiberInstance1 = GetPoolFiberFromEntry(entryForKey1);
+            Assert.NotNull(fiberInstance1);
+            Assert.NotNull(capturedEventArgs);
+
+            capturedEventArgs.Resume();
+            queue.ExecuteNextBatch();
+
+            keyedFiber.EnqueueKeyed(2, () => { });
+
+            var entryForKey2 = GetFiberEntryForKey(keyedFiber, 2);
+            var fiberInstance2 = GetPoolFiberFromEntry(entryForKey2);
+
+            Assert.AreSame(fiberInstance1, fiberInstance2);
+        }
+
+        private static IDictionary GetFibersDictionary(KeyedPoolFiber fiber)
+        {
+            var fibersField = typeof(KeyedPoolFiber).GetField("_fibers", BindingFlags.NonPublic | BindingFlags.Instance);
+            return fibersField.GetValue(fiber) as IDictionary;
+        }
+
+        private static ICollection GetCachedEntriesCollection(KeyedPoolFiber fiber)
+        {
+            var cacheField = typeof(KeyedPoolFiber).GetField("_cachedFiberEntries", BindingFlags.NonPublic | BindingFlags.Instance);
+            return cacheField.GetValue(fiber) as ICollection;
+        }
+
+        private static object GetFiberEntryForKey(KeyedPoolFiber fiber, int key)
+        {
+            var fibers = GetFibersDictionary(fiber);
+            return fibers[key];
+        }
+
+        private static object GetPoolFiberFromEntry(object fiberEntry)
+        {
+            var fiberField = fiberEntry.GetType().GetField("Fiber", BindingFlags.Public | BindingFlags.Instance);
+            return fiberField.GetValue(fiberEntry);
         }
     }
 }
