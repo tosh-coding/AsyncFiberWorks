@@ -34,7 +34,7 @@ namespace AsyncFiberWorks.Procedures
         /// <param name="defaultContext">The default context to be used if not specified when subscribing. If null, PoolFiber will be used.</param>
         public FiberAndHandlerPairList(IActionExecutor executor, IFiber defaultContext = null)
         {
-            _executor = executor ?? SimpleExecutor.Instance;
+            _executor = executor ?? IgnoreExceptionExecutor.Instance;
             _defaultContext = defaultContext ?? new PoolFiber();
         }
 

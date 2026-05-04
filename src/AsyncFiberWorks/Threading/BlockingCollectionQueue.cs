@@ -23,14 +23,14 @@ namespace AsyncFiberWorks.Threading
         /// <param name="executorSingle">The executor for each operation.</param>
         public BlockingCollectionQueue(IExecutor executorSingle)
         {
-            _executorSingle = executorSingle ?? SimpleExecutor.Instance;
+            _executorSingle = executorSingle ?? IgnoreExceptionExecutor.Instance;
         }
 
         /// <summary>
         /// Create a queue with a simple executor.
         /// </summary>
         public BlockingCollectionQueue()
-            : this(SimpleExecutor.Instance)
+            : this(IgnoreExceptionExecutor.Instance)
         {
         }
 

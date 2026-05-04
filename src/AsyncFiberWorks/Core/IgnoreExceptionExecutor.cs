@@ -3,15 +3,15 @@
 namespace AsyncFiberWorks.Core
 {
     /// <summary>
-    /// Just simply execute an action.
+    /// Executes actions and ignores all thrown exceptions.
     /// </summary>
-    public class SimpleExecutor : IActionExecutor
+    public class IgnoreExceptionExecutor : IActionExecutor
     {
         /// <summary>
         /// Singleton instance.
-        /// SimpleExecutor has no members, so it can be shared.
+        /// IgnoreExceptionExecutor has no members, so it can be shared.
         /// </summary>
-        public static readonly SimpleExecutor Instance = new SimpleExecutor();
+        public static readonly IgnoreExceptionExecutor Instance = new IgnoreExceptionExecutor();
 
         ///<summary>
         /// Executes a single action. 
@@ -19,7 +19,13 @@ namespace AsyncFiberWorks.Core
         ///<param name="toExecute"></param>
         public void Execute(Action toExecute)
         {
-            toExecute();
+            try
+            {
+                toExecute();
+            }
+            catch (Exception)
+            {
+            }
         }
 
         /// <summary>
@@ -29,7 +35,13 @@ namespace AsyncFiberWorks.Core
         /// <param name="action">Action. Support pause.</param>
         public void Execute(IFiberExecutionEventArgs e, Action<IFiberExecutionEventArgs> action)
         {
-            action(e);
+            try
+            {
+                action(e);
+            }
+            catch (Exception)
+            {
+            }
         }
     }
 }

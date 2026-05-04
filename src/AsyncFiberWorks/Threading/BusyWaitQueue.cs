@@ -38,7 +38,7 @@ namespace AsyncFiberWorks.Threading
                 throw new ArgumentOutOfRangeException(nameof(initialCapacity));
             }
             _hookOfBatch = hookOfBatch;
-            _executorSingle = executorSingle ?? SimpleExecutor.Instance;
+            _executorSingle = executorSingle ?? IgnoreExceptionExecutor.Instance;
             _spinsBeforeTimeCheck = spinsBeforeTimeCheck;
             _msBeforeBlockingWait = msBeforeBlockingWait;
             _actions = new List<Action>(initialCapacity);
@@ -49,7 +49,7 @@ namespace AsyncFiberWorks.Threading
         /// BusyWaitQueue with a simple executor.
         ///</summary>
         public BusyWaitQueue(int spinsBeforeTimeCheck, int msBeforeBlockingWait)
-            : this(spinsBeforeTimeCheck, msBeforeBlockingWait, NoneHookOfBatch.Instance, SimpleExecutor.Instance)
+            : this(spinsBeforeTimeCheck, msBeforeBlockingWait, NoneHookOfBatch.Instance, IgnoreExceptionExecutor.Instance)
         {
         }
 

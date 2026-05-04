@@ -33,14 +33,14 @@ namespace AsyncFiberWorksTests
         [Test, Explicit]
         public void PointToPointPerfTestWithStructBoundedQueue()
         {
-            var queue = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
+            var queue = new BoundedQueue(new PerfExecutor(), IgnoreExceptionExecutor.Instance) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
             PointToPointPerfTestWithStructInternal(queue);
         }
 
         [Test, Explicit]
         public void PointToPointPerfTestWithStructBusyWaitQueue()
         {
-            var queue = new BusyWaitQueue(100000, 30000, new PerfExecutor(), SimpleExecutor.Instance);
+            var queue = new BusyWaitQueue(100000, 30000, new PerfExecutor(), IgnoreExceptionExecutor.Instance);
             PointToPointPerfTestWithStructInternal(queue);
         }
 
@@ -75,7 +75,7 @@ namespace AsyncFiberWorksTests
         [Test, Explicit]
         public void PointToPointPerfTestWithInt()
         {
-            var queue = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
+            var queue = new BoundedQueue(new PerfExecutor(), IgnoreExceptionExecutor.Instance) { MaxDepth = 10000, MaxEnqueueWaitTimeInMs = 1000 };
             using (var consumerThread = ConsumerThread.StartNew(queue))
             using (var composite = new CompositeDisposable())
             {
@@ -105,7 +105,7 @@ namespace AsyncFiberWorksTests
         [Test, Explicit]
         public void PointToPointPerfTestWithObject()
         {
-            var queue = new BoundedQueue(new PerfExecutor(), SimpleExecutor.Instance) { MaxDepth = 100000, MaxEnqueueWaitTimeInMs = 1000 };
+            var queue = new BoundedQueue(new PerfExecutor(), IgnoreExceptionExecutor.Instance) { MaxDepth = 100000, MaxEnqueueWaitTimeInMs = 1000 };
             using (var consumerThread = ConsumerThread.StartNew(queue))
             using (var composite = new CompositeDisposable())
             {

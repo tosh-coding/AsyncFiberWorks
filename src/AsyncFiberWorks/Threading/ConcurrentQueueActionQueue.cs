@@ -18,7 +18,7 @@ namespace AsyncFiberWorks.Threading
         /// Create a task queue with a simple executor.
         /// </summary>
         public ConcurrentQueueActionQueue()
-            : this(SimpleExecutor.Instance)
+            : this(IgnoreExceptionExecutor.Instance)
         {
         }
 
@@ -28,7 +28,7 @@ namespace AsyncFiberWorks.Threading
         /// <param name="executor"></param>
         public ConcurrentQueueActionQueue(IExecutor executor)
         {
-            _executor = executor ?? SimpleExecutor.Instance;
+            _executor = executor ?? IgnoreExceptionExecutor.Instance;
         }
 
         /// <summary>

@@ -73,7 +73,7 @@ namespace AsyncFiberWorks.Threading
 
             if (executor == null)
             {
-                executor = SimpleExecutor.Instance;
+                executor = IgnoreExceptionExecutor.Instance;
             }
             _poolName = poolName;
             _disposedConsumers = 0;

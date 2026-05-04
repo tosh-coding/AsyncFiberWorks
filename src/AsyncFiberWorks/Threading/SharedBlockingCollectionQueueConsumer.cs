@@ -43,7 +43,7 @@ namespace AsyncFiberWorks.Threading
                 throw new ArgumentNullException(nameof(threadName));
             }
             _actions = actions;
-            _executor = executor ?? SimpleExecutor.Instance;
+            _executor = executor ?? IgnoreExceptionExecutor.Instance;
             _callbackOnStop = callbackOnStop;
             _thread = new Thread(() => this.Run());
             _thread.Name = threadName;

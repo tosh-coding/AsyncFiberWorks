@@ -34,7 +34,7 @@ namespace AsyncFiberWorks.Threading
             }
             MaxDepth = -1;
             _hookOfBatch = hookOfBatch;
-            _executorSingle = executorSingle ?? SimpleExecutor.Instance;
+            _executorSingle = executorSingle ?? IgnoreExceptionExecutor.Instance;
             _actions = new List<Action>(initialCapacity);
             _toPass = new List<Action>(initialCapacity);
         }
@@ -43,7 +43,7 @@ namespace AsyncFiberWorks.Threading
         /// Creates a bounded queue with a simple executor.
         ///</summary>
         public BoundedQueue()
-            : this(NoneHookOfBatch.Instance, SimpleExecutor.Instance)
+            : this(NoneHookOfBatch.Instance, IgnoreExceptionExecutor.Instance)
         {
         }
 

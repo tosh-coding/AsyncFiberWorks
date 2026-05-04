@@ -10,6 +10,7 @@ namespace AsyncFiberWorksTests
     [TestFixture]
     public class BoundedQueueTests
     {
+#if false
         [Test]
         public void NoExceptionHandling()
         {
@@ -35,6 +36,7 @@ namespace AsyncFiberWorksTests
             }
             repo.VerifyAll();
         }
+#endif
         
         [Test]
         public void ShouldOnlyExecuteActionsQueuedWhileNotStopped()

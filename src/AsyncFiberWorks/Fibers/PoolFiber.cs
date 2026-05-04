@@ -43,7 +43,7 @@ namespace AsyncFiberWorks.Fibers
                 throw new ArgumentOutOfRangeException(nameof(initialCapacity));
             }
             _pool = pool;
-            _executor = executor ?? SimpleExecutor.Instance;
+            _executor = executor ?? IgnoreExceptionExecutor.Instance;
             _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume, _pool);
             _queue = new Queue<Action>(initialCapacity);
             _toPass = new Queue<Action>(initialCapacity);
