@@ -133,7 +133,7 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public void AsyncHandler()
+        public async Task AsyncHandler()
         {
             var channel = new Channel<int>();
 
@@ -158,11 +158,14 @@ namespace AsyncFiberWorksTests
             channel.Publish(20);
             channel.Publish(0);
 
-            Thread.Sleep(50);
+            var drainTask = Task.WhenAll(nodeList.Select(node => node.Fiber.EnqueueAsync(() => { })));
+            var completed = await Task.WhenAny(drainTask, Task.Delay(3000)).ConfigureAwait(false);
+            Assert.AreSame(drainTask, completed, "Timed out waiting for fibers to drain.");
+            await drainTask.ConfigureAwait(false);
 
             foreach (var node in nodeList)
             {
-                Assert.AreEqual(node.ReceivedMessages.Count, 2);
+                Assert.AreEqual(2, node.ReceivedMessages.Count);
                 Assert.AreEqual(20, node.ReceivedMessages[0]);
                 Assert.AreEqual(0, node.ReceivedMessages[1]);
             }
