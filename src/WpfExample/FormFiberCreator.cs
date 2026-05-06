@@ -13,11 +13,11 @@ namespace WpfExample
         /// Creates an instance.
         /// </summary>
         /// <param name="invoker"></param>
-        /// <param name="executor"></param>
+        /// <param name="exceptionHandler"></param>
         /// <returns></returns>
-        public static IFiber Create(ISynchronizeInvoke invoker, IActionExecutor executor = null)
+        public static IFiber Create(ISynchronizeInvoke invoker, IActionExceptionHandler exceptionHandler = null)
         {
-            return new PoolFiber(new FormAdapter(invoker), executor);
+            return new PoolFiber(new FormAdapter(invoker), exceptionHandler);
         }
     }
 }

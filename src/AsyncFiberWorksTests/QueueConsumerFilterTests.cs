@@ -43,8 +43,8 @@ namespace AsyncFiberWorksTests
         [Test]
         public void SingleConsumerWithException()
         {
-            var exec = new StubExecutor();
-            var one = new PoolFiber(new DefaultThreadPool(), exec);
+            var exceptionHandler = new StubExceptionHandler();
+            var one = new PoolFiber(new DefaultThreadPool(), exceptionHandler);
             var reset = new AutoResetEvent(false);
             using (var composite = new CompositeDisposable())
             {
@@ -63,7 +63,7 @@ namespace AsyncFiberWorksTests
                 channel.Publish(0);
                 channel.Publish(1);
                 Assert.IsTrue(reset.WaitOne(10000, false));
-                Assert.AreEqual(1, exec.failed.Count);
+                Assert.AreEqual(1, exceptionHandler.failed.Count);
             }
         }
 
@@ -108,25 +108,13 @@ namespace AsyncFiberWorksTests
         }
     }
 
-    public class StubExecutor : IActionExecutor
+    public class StubExceptionHandler : IActionExceptionHandler
     {
         public List<Exception> failed = new List<Exception>();
 
-        public void Execute(Action toExecute)
+        public void Handle(Exception exception)
         {
-            try
-            {
-                toExecute();
-            }
-            catch (Exception e)
-            {
-                failed.Add(e);
-            }
-        }
-
-        public void Execute(IFiberExecutionEventArgs e, Action<IFiberExecutionEventArgs> action)
-        {
-            throw new NotImplementedException();
+            failed.Add(exception);
         }
     }
 }

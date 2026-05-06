@@ -17,7 +17,7 @@ namespace AsyncFiberWorks.Procedures
         private readonly object _lock = new object();
         private readonly LinkedList<RegisteredAction> _actions = new LinkedList<RegisteredAction>();
         private readonly List<RegisteredAction> _copiedActions = new List<RegisteredAction>();
-        private readonly IActionExecutor _executor;
+        private readonly IActionExceptionHandler _exceptionHandler;
         private readonly IFiber _defaultContext;
         private bool _inInvoking = false;
         private int _nextIndex = 0;
@@ -25,13 +25,13 @@ namespace AsyncFiberWorks.Procedures
         private RegisteredAction _nextAction = null;
 
         /// <summary>
-        /// Create a list with specified executer.
+        /// Create a list with specified exception handler.
         /// </summary>
-        /// <param name="executor"></param>
+        /// <param name="exceptionHandler">The exception handler to be used. If null, exceptions are ignored.</param>
         /// <param name="defaultContext">The default context to be used if not specified when subscribing. If null, PoolFiber will be used.</param>
-        public FiberAndTaskPairList(IActionExecutor executor, IFiber defaultContext = null)
+        public FiberAndTaskPairList(IActionExceptionHandler exceptionHandler, IFiber defaultContext = null)
         {
-            _executor = executor ?? IgnoreExceptionExecutor.Instance;
+            _exceptionHandler = exceptionHandler;
             _defaultContext = defaultContext ?? new PoolFiber();
         }
 
@@ -206,7 +206,15 @@ namespace AsyncFiberWorks.Procedures
                     {
                         try
                         {
-                            _executor.Execute(_nextAction.SimpleAction);
+                            _nextAction.SimpleAction?.Invoke();
+                        }
+                        catch (Exception ex)
+                        {
+                            try
+                            {
+                                _exceptionHandler?.Handle(ex);
+                            }
+                            catch { }
                         }
                         finally
                         {
@@ -218,18 +226,23 @@ namespace AsyncFiberWorks.Procedures
                 {
                     _nextAction.Context.Enqueue((e) =>
                     {
-                        _executor.Execute(e, (arg) =>
+                        var eventArgs = new EnqueueNextActionEventArgs(e, enqueueNextAction);
+                        try
                         {
-                            var eventArgs = new EnqueueNextActionEventArgs(arg, enqueueNextAction);
+                            _nextAction.ActionFiberExecutionEventArgs(eventArgs);
+                        }
+                        catch (Exception ex)
+                        {
                             try
                             {
-                                _nextAction.ActionFiberExecutionEventArgs(eventArgs);
+                                _exceptionHandler?.Handle(ex);
                             }
-                            finally
-                            {
-                                eventArgs.CheckAndEnqueue();
-                            }
-                        });
+                            catch { }
+                        }
+                        finally
+                        {
+                            eventArgs.CheckAndEnqueue();
+                        }
                     });
                 }
                 else

@@ -12,7 +12,7 @@ namespace AsyncFiberWorks.Fibers
     {
         private readonly object _lock = new object();
         private readonly IThreadPool _pool;
-        private readonly IActionExecutor _executor;
+        private readonly IActionExceptionHandler _exceptionHandler;
         private readonly FiberExecutionEventArgs _eventArgs;
 
         private Queue<Action> _queue;
@@ -28,11 +28,11 @@ namespace AsyncFiberWorks.Fibers
         /// Create a pool fiber with the specified thread pool and specified executor.
         /// </summary>
         /// <param name="pool"></param>
-        /// <param name="executor"></param>
+        /// <param name="exceptionHandler">An exception handler. If null, exceptions are ignored.</param>
         /// <param name="initialCapacity"></param>
         /// <exception cref="ArgumentNullException">pool must be non-null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">initialCapacity must be greater than or equal to 1.</exception>
-        public PoolFiber(IThreadPool pool, IActionExecutor executor, int initialCapacity = 4)
+        public PoolFiber(IThreadPool pool, IActionExceptionHandler exceptionHandler, int initialCapacity = 4)
         {
             if (pool == null)
             {
@@ -43,7 +43,7 @@ namespace AsyncFiberWorks.Fibers
                 throw new ArgumentOutOfRangeException(nameof(initialCapacity));
             }
             _pool = pool;
-            _executor = executor ?? IgnoreExceptionExecutor.Instance;
+            _exceptionHandler = exceptionHandler;
             _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume, _pool);
             _queue = new Queue<Action>(initialCapacity);
             _toPass = new Queue<Action>(initialCapacity);
@@ -52,8 +52,9 @@ namespace AsyncFiberWorks.Fibers
         /// <summary>
         /// Create a pool fiber with the default thread pool.
         /// </summary>
-        public PoolFiber(IActionExecutor executor) 
-            : this(DefaultThreadPool.Instance, executor)
+        /// <param name="exceptionHandler">An exception handler. If null, exceptions are ignored.</param>
+        public PoolFiber(IActionExceptionHandler exceptionHandler) 
+            : this(DefaultThreadPool.Instance, exceptionHandler)
         {
         }
 
@@ -106,7 +107,18 @@ namespace AsyncFiberWorks.Fibers
                         }
                     }
                     Action action = toExecute.Dequeue();
-                    _executor.Execute(action);
+                    try
+                    {
+                        action?.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        try
+                        {
+                            _exceptionHandler?.Handle(ex);
+                        }
+                        catch { }
+                    }
                 }
                 lock (_lock)
                 {
@@ -230,7 +242,15 @@ namespace AsyncFiberWorks.Fibers
                 }
                 try
                 {
-                    _executor.Execute(_eventArgs, action);
+                    action?.Invoke(_eventArgs);
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        _exceptionHandler?.Handle(ex);
+                    }
+                    catch { }
                 }
                 finally
                 {

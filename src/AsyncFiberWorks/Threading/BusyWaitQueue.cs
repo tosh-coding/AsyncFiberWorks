@@ -13,7 +13,7 @@ namespace AsyncFiberWorks.Threading
     {
         private readonly object _lock = new object();
         private readonly IHookOfBatch _hookOfBatch;
-        private readonly IExecutor _executorSingle;
+        private readonly IActionExceptionHandler _exceptionHandler;
         private readonly int _spinsBeforeTimeCheck;
         private readonly int _msBeforeBlockingWait;
 
@@ -23,22 +23,22 @@ namespace AsyncFiberWorks.Threading
         private List<Action> _toPass;
 
         /// <summary>
-        /// BusyWaitQueue with custom executor.
+        /// Initializes a new instance of the queue with the specified exception handler.
         /// </summary>
         /// <param name="spinsBeforeTimeCheck"></param>
         /// <param name="msBeforeBlockingWait"></param>
         /// <param name="hookOfBatch"></param>
-        /// <param name="executorSingle">The executor for each operation.</param>
+        /// <param name="exceptionHandler">Handler used to process exceptions thrown by queued actions.</param>
         /// <param name="initialCapacity"></param>
         /// <exception cref="ArgumentOutOfRangeException">initialCapacity must be greater than or equal to 1.</exception>
-        public BusyWaitQueue(int spinsBeforeTimeCheck, int msBeforeBlockingWait, IHookOfBatch hookOfBatch, IExecutor executorSingle, int initialCapacity = 4)
+        public BusyWaitQueue(int spinsBeforeTimeCheck, int msBeforeBlockingWait, IHookOfBatch hookOfBatch, IActionExceptionHandler exceptionHandler, int initialCapacity = 4)
         {
             if (initialCapacity <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(initialCapacity));
             }
             _hookOfBatch = hookOfBatch;
-            _executorSingle = executorSingle ?? IgnoreExceptionExecutor.Instance;
+            _exceptionHandler = exceptionHandler;
             _spinsBeforeTimeCheck = spinsBeforeTimeCheck;
             _msBeforeBlockingWait = msBeforeBlockingWait;
             _actions = new List<Action>(initialCapacity);
@@ -46,10 +46,10 @@ namespace AsyncFiberWorks.Threading
         }
 
         ///<summary>
-        /// BusyWaitQueue with a simple executor.
+        /// Initializes a new instance of the queue without a custom exception handler.
         ///</summary>
         public BusyWaitQueue(int spinsBeforeTimeCheck, int msBeforeBlockingWait)
-            : this(spinsBeforeTimeCheck, msBeforeBlockingWait, NoneHookOfBatch.Instance, IgnoreExceptionExecutor.Instance)
+            : this(spinsBeforeTimeCheck, msBeforeBlockingWait, NoneHookOfBatch.Instance, null)
         {
         }
 
@@ -158,7 +158,18 @@ namespace AsyncFiberWorks.Threading
             _hookOfBatch.OnBeforeExecute(toExecute.Count);
             foreach (var action in toExecute)
             {
-                _executorSingle.Execute(action);
+                try
+                {
+                    action?.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        _exceptionHandler?.Handle(ex);
+                    }
+                    catch { }
+                }
             }
             _hookOfBatch.OnAfterExecute(toExecute.Count);
             return true;

@@ -10,33 +10,21 @@ namespace AsyncFiberWorksTests
     [TestFixture]
     public class BoundedQueueTests
     {
-#if false
         [Test]
-        public void NoExceptionHandling()
+        public void ExceptionHandling()
         {
-            var repo = new MockRepository();
-            var action = repo.StrictMock<Action>();
             var failure = new Exception();
-            action();
-            LastCall.Throw(failure);
+            var handler = new RecordingExceptionHandler();
+            var queue = new DefaultQueue(NoneHookOfBatch.Instance, handler);
 
-            repo.ReplayAll();
+            queue.Enqueue(() => { throw failure; });
 
-            var queue = new DefaultQueue();
-            queue.Enqueue(action);
+            var executed = queue.ExecuteNextBatch();
 
-            try
-            {
-                queue.ExecuteNextBatch();
-                Assert.Fail("Should throw Exception");
-            }
-            catch (Exception commFailure)
-            {
-                Assert.AreSame(failure, commFailure);
-            }
-            repo.VerifyAll();
+            Assert.IsTrue(executed);
+            Assert.AreEqual(1, handler.Count);
+            Assert.AreSame(failure, handler.LastException);
         }
-#endif
         
         [Test]
         public void ShouldOnlyExecuteActionsQueuedWhileNotStopped()
@@ -90,6 +78,18 @@ namespace AsyncFiberWorksTests
             {
                 Assert.AreEqual(2, failed.Depth);
                 Assert.AreEqual("Attempted to enqueue item into full queue: 2", failed.Message);
+            }
+        }
+
+        private class RecordingExceptionHandler : IActionExceptionHandler
+        {
+            public int Count { get; private set; }
+            public Exception LastException { get; private set; }
+
+            public void Handle(Exception exception)
+            {
+                Count++;
+                LastException = exception;
             }
         }
     }

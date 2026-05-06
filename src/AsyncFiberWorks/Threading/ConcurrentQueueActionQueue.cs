@@ -10,25 +10,25 @@ namespace AsyncFiberWorks.Threading
     public class ConcurrentQueueActionQueue : IDedicatedConsumerThreadWork
     {
         private readonly ConcurrentQueue<Action> _queue = new ConcurrentQueue<Action>();
-        private readonly IExecutor _executor;
+        private readonly IActionExceptionHandler _exceptionHandler;
 
         private bool _requestedToStop = false;
 
         /// <summary>
-        /// Create a task queue with a simple executor.
+        /// Initializes a new instance of the queue without a custom exception handler.
         /// </summary>
         public ConcurrentQueueActionQueue()
-            : this(IgnoreExceptionExecutor.Instance)
+            : this(null)
         {
         }
 
         /// <summary>
-        /// Create a task queue with the specified executor.
+        /// Initializes a new instance of the queue with the specified exception handler.
         /// </summary>
-        /// <param name="executor"></param>
-        public ConcurrentQueueActionQueue(IExecutor executor)
+        /// <param name="exceptionHandler">Handler used to process exceptions thrown by queued actions.</param>
+        public ConcurrentQueueActionQueue(IActionExceptionHandler exceptionHandler)
         {
-            _executor = executor ?? IgnoreExceptionExecutor.Instance;
+            _exceptionHandler = exceptionHandler;
         }
 
         /// <summary>
@@ -66,7 +66,18 @@ namespace AsyncFiberWorks.Threading
                 {
                     break;
                 }
-                _executor.Execute(toExecute);
+                try
+                {
+                    toExecute?.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        _exceptionHandler?.Handle(ex);
+                    }
+                    catch { }
+                }
             }
         }
 
@@ -82,7 +93,18 @@ namespace AsyncFiberWorks.Threading
                 {
                     break;
                 }
-                _executor.Execute(toExecute);
+                try
+                {
+                    toExecute?.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        _exceptionHandler?.Handle(ex);
+                    }
+                    catch { }
+                }
                 count -= 1;
                 if (count <= 0)
                 {

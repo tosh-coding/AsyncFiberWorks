@@ -12,7 +12,7 @@ namespace AsyncFiberWorks.Threading
     internal class SharedBlockingCollectionQueueConsumer
     {
         private readonly object _lock = new object();
-        private readonly IExecutor _executor;
+        private readonly IActionExceptionHandler _exceptionHandler;
         private readonly BlockingCollection<Action> _actions;
         private readonly Action _callbackOnStop;
         private readonly Thread _thread;
@@ -22,18 +22,18 @@ namespace AsyncFiberWorks.Threading
         private bool _disposed = false;
 
         /// <summary>
-        /// Create a consumer with custom executor
+        /// Initializes a new instance of the queue with the specified exception handler.
         /// </summary>
         /// <param name="actions"></param>
         /// <param name="callbackOnStop"></param>
-        /// <param name="executor"></param>
+        /// <param name="exceptionHandler">Handler used to process exceptions thrown by queued actions.</param>
         /// <param name="threadName"></param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
         public SharedBlockingCollectionQueueConsumer(
             BlockingCollection<Action> actions,
             Action callbackOnStop,
-            IExecutor executor,
+            IActionExceptionHandler exceptionHandler,
             string threadName,
             bool isBackground = true,
             ThreadPriority priority = ThreadPriority.Normal)
@@ -43,7 +43,7 @@ namespace AsyncFiberWorks.Threading
                 throw new ArgumentNullException(nameof(threadName));
             }
             _actions = actions;
-            _executor = executor ?? IgnoreExceptionExecutor.Instance;
+            _exceptionHandler = exceptionHandler;
             _callbackOnStop = callbackOnStop;
             _thread = new Thread(() => this.Run());
             _thread.Name = threadName;
@@ -108,11 +108,21 @@ namespace AsyncFiberWorks.Threading
                 }
 
                 var act = _actions.Take();
-                _executor.Execute(act);
-                while (_actions.TryTake(out act))
+                do
                 {
-                    _executor.Execute(act);
-                }
+                    try
+                    {
+                        act?.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        try
+                        {
+                            _exceptionHandler?.Handle(ex);
+                        }
+                        catch { }
+                    }
+                } while (_actions.TryTake(out act));
                 return true;
             }
         }

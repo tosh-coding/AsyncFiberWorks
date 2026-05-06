@@ -8,14 +8,14 @@ namespace AsyncFiberWorks.Fibers
     public static class FiberAndThreadPoolExtensions
     {
         /// <summary>
-        /// Create a pool fiber with the specified thread pool and specified executor.
+        /// Create a pool fiber with the specified thread pool and specified exception handler.
         /// </summary>
-        /// <param name="threadPool"></param>
-        /// <param name="executor"></param>
+        /// <param name="threadPool">Thread pool used to execute queued actions.</param>
+        /// <param name="exceptionHandler">Optional handler invoked when an action throws an exception.</param>
         /// <returns>Created fiber.</returns>
-        public static PoolFiber CreateFiber(this IThreadPool threadPool, IActionExecutor executor = null)
+        public static PoolFiber CreateFiber(this IThreadPool threadPool, IActionExceptionHandler exceptionHandler = null)
         {
-            return new PoolFiber(threadPool, executor);
+            return new PoolFiber(threadPool, exceptionHandler);
         }
     }
 }

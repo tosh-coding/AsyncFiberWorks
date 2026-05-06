@@ -58,9 +58,9 @@ namespace AsyncFiberWorks.Threading
         /// <param name="poolName"></param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
-        /// <param name="executor"></param>
+        /// <param name="exceptionHandler">Handler used to process exceptions thrown by queued actions. If null, exceptions are ignored.</param>
         /// <exception cref="ArgumentOutOfRangeException">The numberOfThread must be at least 1.</exception>
-        public UserThreadPool(int numberOfThread = 1, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal, IExecutor executor = null)
+        public UserThreadPool(int numberOfThread = 1, string poolName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal, IActionExceptionHandler exceptionHandler = null)
         {
             if (numberOfThread < 1)
             {
@@ -71,10 +71,6 @@ namespace AsyncFiberWorks.Threading
                 poolName = "UserThreadPool" + GetNextPoolId();
             }
 
-            if (executor == null)
-            {
-                executor = IgnoreExceptionExecutor.Instance;
-            }
             _poolName = poolName;
             _disposedConsumers = 0;
             _consumerList = new SharedBlockingCollectionQueueConsumer[numberOfThread];
@@ -96,7 +92,7 @@ namespace AsyncFiberWorks.Threading
                     {
                         _actions.Dispose();
                     }
-                }, executor, threadName, isBackground, priority);
+                }, exceptionHandler, threadName, isBackground, priority);
             }
             ExecutionState = ExecutionStateEnum.Created;
         }

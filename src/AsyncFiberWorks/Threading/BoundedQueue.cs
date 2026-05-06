@@ -12,7 +12,7 @@ namespace AsyncFiberWorks.Threading
     {
         private readonly object _lock = new object();
         private readonly IHookOfBatch _hookOfBatch;
-        private readonly IExecutor _executorSingle;
+        private readonly IActionExceptionHandler _exceptionHandler;
 
         private bool _running = true;
 
@@ -20,13 +20,13 @@ namespace AsyncFiberWorks.Threading
         private List<Action> _toPass;
 
         /// <summary>
-        /// Creates a bounded queue with a custom executor.
+        /// Initializes a new instance of the queue with the specified exception handler.
         /// </summary>
         /// <param name="hookOfBatch"></param>
-        /// <param name="executorSingle">The executor for each operation.</param>
+        /// <param name="exceptionHandler">Handler used to process exceptions thrown by queued actions.</param>
         /// <param name="initialCapacity"></param>
         /// <exception cref="ArgumentOutOfRangeException">initialCapacity must be greater than or equal to 1.</exception>
-        public BoundedQueue(IHookOfBatch hookOfBatch, IExecutor executorSingle, int initialCapacity = 4)
+        public BoundedQueue(IHookOfBatch hookOfBatch, IActionExceptionHandler exceptionHandler, int initialCapacity = 4)
         {
             if (initialCapacity <= 0)
             {
@@ -34,16 +34,16 @@ namespace AsyncFiberWorks.Threading
             }
             MaxDepth = -1;
             _hookOfBatch = hookOfBatch;
-            _executorSingle = executorSingle ?? IgnoreExceptionExecutor.Instance;
+            _exceptionHandler = exceptionHandler;
             _actions = new List<Action>(initialCapacity);
             _toPass = new List<Action>(initialCapacity);
         }
 
         ///<summary>
-        /// Creates a bounded queue with a simple executor.
+        /// Initializes a new instance of the queue without a custom exception handler.
         ///</summary>
         public BoundedQueue()
-            : this(NoneHookOfBatch.Instance, IgnoreExceptionExecutor.Instance)
+            : this(NoneHookOfBatch.Instance, null)
         {
         }
 
@@ -157,7 +157,18 @@ namespace AsyncFiberWorks.Threading
             _hookOfBatch.OnBeforeExecute(toExecute.Count);
             foreach (var action in toExecute)
             {
-                _executorSingle.Execute(action);
+                try
+                {
+                    action?.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        _exceptionHandler?.Handle(ex);
+                    }
+                    catch { }
+                }
             }
             _hookOfBatch.OnAfterExecute(toExecute.Count);
             return true;

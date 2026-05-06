@@ -11,26 +11,26 @@ namespace AsyncFiberWorks.Threading
     {
         private readonly object _lockObj = new object();
         private readonly BlockingCollection<Action> _queue = new BlockingCollection<Action>();
-        private readonly IExecutor _executorSingle;
+        private readonly IActionExceptionHandler _exceptionHandler;
 
         private bool _requestedToStop = false;
         private bool _canRunning = true;
         private bool _isDisposed = false;
 
         /// <summary>
-        /// Create a queue with custom executor.
+        /// Initializes a new instance of the queue with the specified exception handler.
         /// </summary>
-        /// <param name="executorSingle">The executor for each operation.</param>
-        public BlockingCollectionQueue(IExecutor executorSingle)
+        /// <param name="exceptionHandler">Handler used to process exceptions thrown by queued actions.</param>
+        public BlockingCollectionQueue(IActionExceptionHandler exceptionHandler)
         {
-            _executorSingle = executorSingle ?? IgnoreExceptionExecutor.Instance;
+            _exceptionHandler = exceptionHandler;
         }
 
         /// <summary>
-        /// Create a queue with a simple executor.
+        /// Initializes a new instance of the queue without a custom exception handler.
         /// </summary>
         public BlockingCollectionQueue()
-            : this(IgnoreExceptionExecutor.Instance)
+            : this(null)
         {
         }
 
@@ -55,11 +55,21 @@ namespace AsyncFiberWorks.Threading
             }
 
             Action action = _queue.Take();
-            _executorSingle.Execute(action);
-            while (_queue.TryTake(out action))
+            do
             {
-                _executorSingle.Execute(action);
-            }
+                try
+                {
+                    action?.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        _exceptionHandler?.Handle(ex);
+                    }
+                    catch { }
+                }
+            } while (_queue.TryTake(out action));
 
             if (!_canRunning)
             {

@@ -15,7 +15,7 @@ namespace AsyncFiberWorks.Fibers
     {
         private readonly object _lock = new object();
         private readonly IThreadPool _pool;
-        private readonly IActionExecutor _executor;
+        private readonly IActionExceptionHandler _exceptionHandler;
         private readonly Dictionary<int, FiberEntry> _fibers = new Dictionary<int, FiberEntry>();
         private readonly int _cacheCount;
         private readonly Stack<FiberEntry> _cachedFiberEntries = new Stack<FiberEntry>();
@@ -88,11 +88,11 @@ namespace AsyncFiberWorks.Fibers
         /// Constructs a keyed fiber manager that uses the specified thread pool.
         /// </summary>
         /// <param name="pool">Thread pool instance used to schedule fiber work. Must not be null.</param>
-        /// <param name="executor">Optional executor used by created PoolFiber instances.</param>
+        /// <param name="exceptionHandler">An exception handler used by created PoolFiber instances. If null, exceptions are ignored.</param>
         /// <param name="cacheCount">Maximum number of idle fiber entries to cache for reuse.</param>
         /// <exception cref="ArgumentNullException"><paramref name="pool"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="cacheCount"/> is less than 0.</exception>
-        public KeyedPoolFiber(IThreadPool pool, IActionExecutor executor = null, int cacheCount = 0)
+        public KeyedPoolFiber(IThreadPool pool, IActionExceptionHandler exceptionHandler = null, int cacheCount = 0)
         {
             if (cacheCount < 0)
             {
@@ -100,7 +100,7 @@ namespace AsyncFiberWorks.Fibers
             }
 
             _pool = pool ?? throw new ArgumentNullException(nameof(pool));
-            _executor = executor;
+            _exceptionHandler = exceptionHandler;
             _cacheCount = cacheCount;
         }
 
@@ -140,7 +140,7 @@ namespace AsyncFiberWorks.Fibers
                     {
                         entry = new FiberEntry
                         {
-                            Fiber = new PoolFiber(_pool, _executor),
+                            Fiber = new PoolFiber(_pool, _exceptionHandler),
                             Count = 0,
                         };
                     }

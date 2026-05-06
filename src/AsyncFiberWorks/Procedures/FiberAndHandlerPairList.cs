@@ -19,7 +19,7 @@ namespace AsyncFiberWorks.Procedures
         private readonly object _lock = new object();
         private readonly LinkedList<RegisteredHandler> _actions = new LinkedList<RegisteredHandler>();
         private readonly List<RegisteredHandler> _copiedActions = new List<RegisteredHandler>();
-        private readonly IActionExecutor _executor;
+        private readonly IActionExceptionHandler _exceptionHandler;
         private readonly ProcessedFlagEventArgs<TMessage> _processedEventArg = new ProcessedFlagEventArgs<TMessage>();
         private readonly IFiber _defaultContext;
         private bool _inInvoking = false;
@@ -28,13 +28,13 @@ namespace AsyncFiberWorks.Procedures
         private RegisteredHandler _nextAction = null;
 
         /// <summary>
-        /// Create a list with specified executer.
+        /// Create a list with specified exception handler.
         /// </summary>
-        /// <param name="executor"></param>
+        /// <param name="exceptionHandler">The exception handler to be used. If null, exceptions are ignored.</param>
         /// <param name="defaultContext">The default context to be used if not specified when subscribing. If null, PoolFiber will be used.</param>
-        public FiberAndHandlerPairList(IActionExecutor executor, IFiber defaultContext = null)
+        public FiberAndHandlerPairList(IActionExceptionHandler exceptionHandler, IFiber defaultContext = null)
         {
-            _executor = executor ?? IgnoreExceptionExecutor.Instance;
+            _exceptionHandler = exceptionHandler;
             _defaultContext = defaultContext ?? new PoolFiber();
         }
 
@@ -215,52 +215,62 @@ namespace AsyncFiberWorks.Procedures
                 {
                     _nextAction.Context.Enqueue(() =>
                     {
-                        _executor.Execute(() =>
+                        try
+                        {
+                            _processedEventArg.Processed = _nextAction.SimpleHandler(_processedEventArg.Arg);
+                        }
+                        catch (Exception e)
                         {
                             try
                             {
-                                _processedEventArg.Processed = _nextAction.SimpleHandler(_processedEventArg.Arg);
+                                _exceptionHandler?.Handle(e);
                             }
-                            finally
+                            catch { }
+                        }
+                        finally
+                        {
+                            if (!_processedEventArg.Processed)
                             {
-                                if (!_processedEventArg.Processed)
-                                {
-                                    enqueueNextAction();
-                                }
-                                else
-                                {
-                                    enqueueEndAction();
-                                }
+                                enqueueNextAction();
                             }
-                        });
+                            else
+                            {
+                                enqueueEndAction();
+                            }
+                        }
                     });
                 }
                 else if (_nextAction.HandlerType == HandlerType.EventArgHandler)
                 {
                     _nextAction.Context.Enqueue((e) =>
                     {
-                        _executor.Execute(e, (arg) =>
+                        var eventArgs = new FiberAndTaskPairList.EnqueueNextActionEventArgs(e, () =>
                         {
-                            var eventArgs = new FiberAndTaskPairList.EnqueueNextActionEventArgs(e, () =>
+                            if (!_processedEventArg.Processed)
                             {
-                                if (!_processedEventArg.Processed)
-                                {
-                                    enqueueNextAction();
-                                }
-                                else
-                                {
-                                    enqueueEndAction();
-                                }
-                            });
-                            try
-                            {
-                                _nextAction.EventArgHandler(eventArgs, _processedEventArg);
+                                enqueueNextAction();
                             }
-                            finally
+                            else
                             {
-                                eventArgs.CheckAndEnqueue();
+                                enqueueEndAction();
                             }
                         });
+                        try
+                        {
+                            _nextAction.EventArgHandler(eventArgs, _processedEventArg);
+                        }
+                        catch (Exception ex)
+                        {
+                            try
+                            {
+                                _exceptionHandler?.Handle(ex);
+                            }
+                            catch { }
+                        }
+                        finally
+                        {
+                            eventArgs.CheckAndEnqueue();
+                        }
                     });
                 }
                 else
