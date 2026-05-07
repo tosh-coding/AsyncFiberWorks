@@ -10,6 +10,7 @@ namespace AsyncFiberWorks.Core
         private Action _pause;
         private Action _resume;
         private IThreadPool _threadPool;
+        private IActionExceptionHandler _exceptionHandler;
 
         /// <summary>
         /// Constructor.
@@ -17,11 +18,13 @@ namespace AsyncFiberWorks.Core
         /// <param name="pause"></param>
         /// <param name="resume"></param>
         /// <param name="threadPool">The threads on the back side of the fiber.</param>
-        public FiberExecutionEventArgs(Action pause, Action resume, IThreadPool threadPool)
+        /// <param name="exceptionHandler">Handler used to report or process exceptions that occur during fiber execution.</param>
+        public FiberExecutionEventArgs(Action pause, Action resume, IThreadPool threadPool, IActionExceptionHandler exceptionHandler)
         {
             _pause = pause;
             _resume = resume;
             _threadPool = threadPool;
+            _exceptionHandler = exceptionHandler ?? DefaultActionExceptionHandler.Instance;
         }
 
         /// <summary>
@@ -48,6 +51,21 @@ namespace AsyncFiberWorks.Core
         public void Resume()
         {
             _resume();
+        }
+
+        /// <summary>
+        /// Notify the configured exception handler about an exception that occurred during fiber execution.
+        /// </summary>
+        /// <param name="exception">The exception to report.</param>
+        public void NotifyException(Exception exception)
+        {
+            try
+            {
+                _exceptionHandler?.Handle(exception);
+            }
+            catch
+            {
+            }
         }
     }
 }

@@ -57,6 +57,10 @@ namespace AsyncFiberWorks.Core
                 {
                     await runningTask.Invoke().ConfigureAwait(false);
                 }
+                catch (Exception ex)
+                {
+                    e.NotifyException(ex);
+                }
                 finally
                 {
                     e.Resume();
@@ -78,6 +82,10 @@ namespace AsyncFiberWorks.Core
                 try
                 {
                     action();
+                }
+                catch (Exception ex)
+                {
+                    e.NotifyException(ex);
                 }
                 finally
                 {

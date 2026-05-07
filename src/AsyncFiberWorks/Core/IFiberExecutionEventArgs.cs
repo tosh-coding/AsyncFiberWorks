@@ -23,5 +23,11 @@ namespace AsyncFiberWorks.Core
         /// Resumes consumption of a paused task queue.
         /// </summary>
         void Resume();
+
+        /// <summary>
+        /// Notify the configured exception handler about an exception that occurred during fiber execution.
+        /// </summary>
+        /// <param name="exception">The exception to report.</param>
+        void NotifyException(Exception exception);
     }
 }

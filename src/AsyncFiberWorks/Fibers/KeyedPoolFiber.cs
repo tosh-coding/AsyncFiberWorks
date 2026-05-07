@@ -82,6 +82,15 @@ namespace AsyncFiberWorks.Fibers
                     _onCompleted();
                 }
             }
+
+            /// <summary>
+            /// Notify the configured exception handler about an exception that occurred during fiber execution.
+            /// </summary>
+            /// <param name="exception">The exception to report.</param>
+            public void NotifyException(Exception exception)
+            {
+                _inner.NotifyException(exception);
+            }
         }
 
         /// <summary>

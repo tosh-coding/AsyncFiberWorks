@@ -44,7 +44,7 @@ namespace AsyncFiberWorks.Fibers
             }
             _pool = pool;
             _exceptionHandler = exceptionHandler;
-            _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume, _pool);
+            _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume, _pool, exceptionHandler);
             _queue = new Queue<Action>(initialCapacity);
             _toPass = new Queue<Action>(initialCapacity);
         }
