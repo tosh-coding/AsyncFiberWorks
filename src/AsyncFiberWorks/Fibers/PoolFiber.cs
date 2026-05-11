@@ -92,7 +92,7 @@ namespace AsyncFiberWorks.Fibers
             }
         }
 
-        private void Flush(object state)
+        private void Flush()
         {
             var toExecute = ClearActions();
             if (toExecute != null)
@@ -181,7 +181,7 @@ namespace AsyncFiberWorks.Fibers
                 else
                 {
                     // Wait flushPaused.
-                    _pool.Queue((_) => ResumeAction());
+                    _pool.Queue(ResumeAction);
                 }
             }
         }
@@ -224,7 +224,7 @@ namespace AsyncFiberWorks.Fibers
                     throw new InvalidOperationException("Resume was called twice.");
                 }
                 _resuming = true;
-                _pool.Queue((_) => ResumeAction());
+                _pool.Queue(ResumeAction);
             }
         }
 

@@ -13,7 +13,7 @@ namespace AsyncFiberWorks.Threading
     {
         private readonly object _lock = new object();
         private readonly IActionExceptionHandler _exceptionHandler;
-        private readonly BlockingCollection<Action> _actions;
+        private readonly BlockingCollection<(WaitCallback, object)> _actions;
         private readonly Action _callbackOnStop;
         private readonly Thread _thread;
         private readonly TaskCompletionSource<bool> _taskCompletionSource;
@@ -31,7 +31,7 @@ namespace AsyncFiberWorks.Threading
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
         public SharedBlockingCollectionQueueConsumer(
-            BlockingCollection<Action> actions,
+            BlockingCollection<(WaitCallback, object)> actions,
             Action callbackOnStop,
             IActionExceptionHandler exceptionHandler,
             string threadName,
@@ -81,7 +81,7 @@ namespace AsyncFiberWorks.Threading
                     return;
                 }
                 _running = false;
-                _actions.Add(() => { });
+                _actions.Add(((_) => { }, null));
             }
         }
 
@@ -100,7 +100,7 @@ namespace AsyncFiberWorks.Threading
                         if (!this._disposed)
                         {
                             this._disposed = true;
-                            _actions.Add(() => { });
+                            _actions.Add(((_) => { }, null));
                             _callbackOnStop?.Invoke();
                         }
                         return false;
@@ -112,7 +112,7 @@ namespace AsyncFiberWorks.Threading
                 {
                     try
                     {
-                        act?.Invoke();
+                        act.Item1?.Invoke(act.Item2);
                     }
                     catch (Exception ex)
                     {

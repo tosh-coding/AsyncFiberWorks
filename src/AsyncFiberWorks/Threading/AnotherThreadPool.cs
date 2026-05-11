@@ -40,8 +40,9 @@ namespace AsyncFiberWorks.Threading
         /// <summary>
         /// Enqueues action.
         /// </summary>
-        /// <param name="callback"></param>
-        public void Queue(WaitCallback callback)
+        /// <param name="callback">The callback method to be executed by a thread pool thread.</param>
+        /// <param name="state">An object containing information to be used by the callback method.</param>
+        public void Queue(WaitCallback callback, object state)
         {
             _userThreadPool.Queue((x) =>
             {
@@ -50,7 +51,7 @@ namespace AsyncFiberWorks.Threading
                     callback(x);
                 }
                 catch (Exception) { }
-            });
+            }, state);
         }
     }
 }

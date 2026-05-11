@@ -42,7 +42,7 @@ namespace AsyncFiberWorks.Core
         /// <param name="action">Enqueued action.</param>
         public void EnqueueToOriginThread(Action action)
         {
-            _threadPool.Queue((state) => action());
+            _threadPool.Queue(action);
         }
 
         /// <summary>

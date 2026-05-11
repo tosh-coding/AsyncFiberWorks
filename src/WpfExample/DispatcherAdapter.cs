@@ -16,9 +16,9 @@ namespace WpfExample
             _priority = priority;
         }
 
-        public void Queue(WaitCallback callback)
+        public void Queue(WaitCallback callback, object state = null)
         {
-            Action action = () => callback(null);
+            Action action = () => callback(state);
             _dispatcher.BeginInvoke(action, _priority);
         }
     }

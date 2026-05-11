@@ -14,9 +14,9 @@ namespace WpfExample
             _invoker = invoker;
         }
 
-        public void Queue(WaitCallback callback)
+        public void Queue(WaitCallback callback, object state)
         {
-            Action action = () => callback(null);
+            Action action = () => callback(state);
             _invoker.BeginInvoke(action, null);
         }
     }

@@ -17,7 +17,7 @@ namespace AsyncFiberWorks.Threading
 
         private readonly string _poolName;
         private readonly object _lock = new object();
-        private readonly BlockingCollection<Action> _actions = new BlockingCollection<Action>();
+        private readonly BlockingCollection<(WaitCallback, object)> _actions = new BlockingCollection<(WaitCallback, object)>();
         private readonly SharedBlockingCollectionQueueConsumer[] _consumerList;
 
         private long _executionStateLong;
@@ -131,19 +131,11 @@ namespace AsyncFiberWorks.Threading
         /// <summary>
         /// Enqueues action.
         /// </summary>
-        /// <param name="callback"></param>
-        public void Queue(WaitCallback callback)
+        /// <param name="callback">The callback method to be executed by a thread pool thread.</param>
+        /// <param name="state">An object containing information to be used by the callback method.</param>
+        public void Queue(WaitCallback callback, object state)
         {
-            Queue(() => callback(null));
-        }
-
-        /// <summary>
-        /// Enqueues action.
-        /// </summary>
-        /// <param name="action"></param>
-        public void Queue(Action action)
-        {
-            _actions.Add(action);
+            _actions.Add((callback, state));
         }
 
         /// <summary>

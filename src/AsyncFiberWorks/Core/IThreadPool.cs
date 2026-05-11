@@ -8,10 +8,10 @@ namespace AsyncFiberWorks.Core
     public interface IThreadPool
     {
         /// <summary>
-        /// Enqueue action to the thread pool for execution.
-        /// They are shared threads and should not be blocked.
+        /// Enqueue the action to a thread pool.
         /// </summary>
-        /// <param name="callback"></param>
-        void Queue(WaitCallback callback);
+        /// <param name="callback">The callback method to be executed by a thread pool thread.</param>
+        /// <param name="state">An object containing information to be used by the callback method. </param>
+        void Queue(WaitCallback callback, object state = null);
     }
 }

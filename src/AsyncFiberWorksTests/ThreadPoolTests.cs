@@ -61,7 +61,7 @@ namespace AsyncFiberWorksTests
 
             for (int i = 0; i < loopCount; i++)
             {
-                threadPool.Queue((_) =>
+                threadPool.Queue(() =>
                 {
                     Thread.Sleep(sleepMs);
                     lock (lockObj)

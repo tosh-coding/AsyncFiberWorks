@@ -14,16 +14,17 @@ namespace AsyncFiberWorks.Threading
         /// Enqueue an action. Then returns a task to wait for the completion of the action.
         /// </summary>
         /// <param name="threadPool">A thread pool.</param>
-        /// <param name="callback"></param>
+        /// <param name="callback">The callback method to be executed by a thread pool thread.</param>
+        /// <param name="state">An object containing information to be used by the callback method.</param>
         /// <returns>A task that waits until a given action is finished.</returns>
-        public static async Task QueueAsync(this IThreadPool threadPool, WaitCallback callback)
+        public static async Task QueueAsync(this IThreadPool threadPool, WaitCallback callback, object state = null)
         {
             var tcs = new TaskCompletionSource<byte>(TaskCreationOptions.RunContinuationsAsynchronously);
-            threadPool.Queue((_) =>
+            threadPool.Queue((x) =>
             {
                 try
                 {
-                    callback(null);
+                    callback(x);
                 }
                 catch (Exception ex)
                 {
@@ -31,7 +32,7 @@ namespace AsyncFiberWorks.Threading
                     return;
                 }
                 tcs.SetResult(0);
-            });
+            }, state);
             await tcs.Task.ConfigureAwait(false);
         }
 
@@ -43,7 +44,7 @@ namespace AsyncFiberWorks.Threading
         /// <returns>A task that waits until a given action is finished.</returns>
         public static async Task QueueAsync(this IThreadPool threadPool, Action action)
         {
-            await threadPool.QueueAsync((_) => action()).ConfigureAwait(false);
+            await threadPool.QueueAsync((x) => ((Action)x)?.Invoke(), action).ConfigureAwait(false);
         }
 
         /// <summary>

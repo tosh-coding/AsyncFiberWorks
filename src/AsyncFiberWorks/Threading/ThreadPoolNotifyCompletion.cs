@@ -40,7 +40,7 @@ namespace AsyncFiberWorks.Threading
         /// <param name="action"></param>
         public void OnCompleted(Action action)
         {
-            _threadPool.Queue((_) => action());
+            _threadPool.Queue(action);
         }
 
         /// <summary>
