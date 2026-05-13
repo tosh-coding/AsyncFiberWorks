@@ -37,13 +37,6 @@ namespace AsyncFiberWorksTests
             PointToPointPerfTestWithStructInternal(queue);
         }
 
-        [Test, Explicit]
-        public void PointToPointPerfTestWithStructBusyWaitQueue()
-        {
-            var queue = new BusyWaitQueue(100000, 30000, new PerfExecutor(), null);
-            PointToPointPerfTestWithStructInternal(queue);
-        }
-
         private static void PointToPointPerfTestWithStructInternal(IDedicatedConsumerThreadWork queue)
         {
             using (var consumerThread = ConsumerThread.StartNew(queue))
