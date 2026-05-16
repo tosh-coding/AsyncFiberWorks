@@ -15,8 +15,8 @@ namespace AsyncFiberWorks.Fibers
         private readonly IActionExceptionHandler _exceptionHandler;
         private readonly FiberExecutionEventArgs _eventArgs;
 
-        private Queue<Action> _queue;
-        private Queue<Action> _toPass;
+        private Queue<(Action<object>, object)> _queue;
+        private Queue<(Action<object>, object)> _toPass;
 
         private bool _flushPending;
         private bool _enabledPause;
@@ -45,8 +45,8 @@ namespace AsyncFiberWorks.Fibers
             _pool = pool;
             _exceptionHandler = exceptionHandler;
             _eventArgs = new FiberExecutionEventArgs(this.Pause, this.Resume, _pool, exceptionHandler);
-            _queue = new Queue<Action>(initialCapacity);
-            _toPass = new Queue<Action>(initialCapacity);
+            _queue = new Queue<(Action<object>, object)>(initialCapacity);
+            _toPass = new Queue<(Action<object>, object)>(initialCapacity);
         }
 
         /// <summary>
@@ -76,14 +76,15 @@ namespace AsyncFiberWorks.Fibers
         }
 
         /// <summary>
-        /// Enqueue a single action.
+        /// Enqueue a single action. It is executed sequentially.
         /// </summary>
-        /// <param name="action"></param>
-        public void Enqueue(Action action)
+        /// <param name="action">Action to be executed.</param>
+        /// <param name="state">An object containing information to be used by the action. </param>
+        public void Enqueue(Action<object> action, object state)
         {
             lock (_lock)
             {
-                _queue.Enqueue(action);
+                _queue.Enqueue((action, state));
                 if (!_flushPending)
                 {
                     _pool.Queue(Flush);
@@ -106,10 +107,10 @@ namespace AsyncFiberWorks.Fibers
                             break;
                         }
                     }
-                    Action action = toExecute.Dequeue();
+                    var tuple = toExecute.Dequeue();
                     try
                     {
-                        action?.Invoke();
+                        tuple.Item1?.Invoke(tuple.Item2);
                     }
                     catch (Exception ex)
                     {
@@ -145,7 +146,7 @@ namespace AsyncFiberWorks.Fibers
             }
         }
 
-        private Queue<Action> ClearActions()
+        private Queue<(Action<object>, object)> ClearActions()
         {
             lock (_lock)
             {
@@ -158,9 +159,16 @@ namespace AsyncFiberWorks.Fibers
                     _flushPending = false;
                     return null;
                 }
-                QueueUtil.Swap(ref _queue, ref _toPass);
+                Swap(ref _queue, ref _toPass);
                 return _toPass;
             }
+        }
+
+        private static void Swap(ref Queue<(Action<object>, object)> a, ref Queue<(Action<object>, object)> b)
+        {
+            var tmp = a;
+            a = b;
+            b = tmp;
         }
 
         private void ResumeAction()

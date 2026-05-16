@@ -126,12 +126,16 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
-        /// Enqueue a single action.
+        /// Enqueue a single action. It is executed sequentially.
         /// </summary>
-        /// <param name="action"></param>
-        public void Enqueue(Action action)
+        /// <param name="action">Action to be executed.</param>
+        /// <param name="state">An object containing information to be used by the action. </param>
+        public void Enqueue(Action<object> action, object state)
         {
-            _queue.Enqueue(action);
+            _queue.Enqueue((x) =>
+            {
+                action?.Invoke(x);
+            }, state);
         }
     }
 }

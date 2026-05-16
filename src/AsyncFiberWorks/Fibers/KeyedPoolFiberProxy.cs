@@ -29,9 +29,10 @@ namespace AsyncFiberWorks.Fibers
         /// The action will be executed serially with other actions for the same key.
         /// </summary>
         /// <param name="action">Action to execute.</param>
-        public void Enqueue(Action action)
+        /// <param name="state">An object containing information to be used by the action. </param>
+        public void Enqueue(Action<object> action, object state)
         {
-            _owner.EnqueueKeyed(_key, action);
+            _owner.EnqueueKeyed(_key, action, state);
         }
 
         /// <summary>

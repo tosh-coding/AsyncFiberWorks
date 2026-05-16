@@ -194,20 +194,37 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         /// <param name="key">Key identifying the fiber.</param>
         /// <param name="action">Action to execute on the keyed fiber.</param>
-        public void EnqueueKeyed(int key, Action action)
+        /// <param name="state">An object containing information to be used by the action. </param>
+        public void EnqueueKeyed(int key, Action<object> action, object state)
         {
             var fiber = GetOrCreateFiber(key);
             fiber.Enqueue(() =>
             {
                 try
                 {
-                    action();
+                    action?.Invoke(state);
                 }
                 finally
                 {
                     DecrementCount(key);
                 }
             });
+        }
+
+        /// <summary>
+        /// Enqueues an action to the fiber associated with <paramref name="key"/>.
+        /// The fiber will execute actions serially for that key.
+        /// </summary>
+        /// <param name="key">Key identifying the fiber.</param>
+        /// <param name="action">Action to execute on the keyed fiber.</param>
+        public void EnqueueKeyed(int key, Action action)
+        {
+            this.EnqueueKeyed(key, ExecuteAction, action);
+        }
+
+        static void ExecuteAction(object state)
+        {
+            ((Action)state)?.Invoke();
         }
 
         /// <summary>
