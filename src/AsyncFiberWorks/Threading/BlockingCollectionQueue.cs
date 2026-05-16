@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using AsyncFiberWorks.Core;
 
 namespace AsyncFiberWorks.Threading
@@ -10,7 +11,7 @@ namespace AsyncFiberWorks.Threading
     public class BlockingCollectionQueue : IDedicatedConsumerThreadWork
     {
         private readonly object _lockObj = new object();
-        private readonly BlockingCollection<Action> _queue = new BlockingCollection<Action>();
+        private readonly BlockingCollection<(WaitCallback, object)> _queue = new BlockingCollection<(WaitCallback, object)>();
         private readonly IActionExceptionHandler _exceptionHandler;
 
         private bool _requestedToStop = false;
@@ -37,10 +38,11 @@ namespace AsyncFiberWorks.Threading
         /// <summary>
         /// Enqueue an action.
         /// </summary>
-        /// <param name="action"></param>
-        public void Enqueue(Action action)
+        /// <param name="action">Action to be executed.</param>
+        /// <param name="state">An object containing information to be used by the action. </param>
+        public void Enqueue(WaitCallback action, object state)
         {
-            _queue.Add(action);
+            _queue.Add((action, state));
         }
 
         /// <summary>
@@ -54,12 +56,12 @@ namespace AsyncFiberWorks.Threading
                 return false;
             }
 
-            Action action = _queue.Take();
+            var action = _queue.Take();
             do
             {
                 try
                 {
-                    action?.Invoke();
+                    action.Item1?.Invoke(action.Item2);
                 }
                 catch (Exception ex)
                 {
@@ -94,9 +96,9 @@ namespace AsyncFiberWorks.Threading
                 _requestedToStop = true;
             }
 
-            Enqueue(() => {
+            Enqueue((_) => {
                 _canRunning = false;
-            });
+            }, null);
         }
     }
 }

@@ -34,7 +34,7 @@ namespace AsyncFiberWorks.Threading
         /// <param name="state">An object containing information to be used by the callback method.</param>
         public void Queue(WaitCallback callback, object state)
         {
-            _queue.Enqueue(() => callback(state));
+            _queue.Enqueue(callback, state);
         }
 
         /// <summary>

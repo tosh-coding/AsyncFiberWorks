@@ -1,6 +1,7 @@
 ﻿using AsyncFiberWorks.Core;
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace AsyncFiberWorks.Threading
 {
@@ -9,7 +10,7 @@ namespace AsyncFiberWorks.Threading
     /// </summary>
     public class ConcurrentQueueActionQueue : IDedicatedConsumerThreadWork
     {
-        private readonly ConcurrentQueue<Action> _queue = new ConcurrentQueue<Action>();
+        private readonly ConcurrentQueue<(WaitCallback, object)> _queue = new ConcurrentQueue<(WaitCallback, object)>();
         private readonly IActionExceptionHandler _exceptionHandler;
 
         private bool _requestedToStop = false;
@@ -34,10 +35,11 @@ namespace AsyncFiberWorks.Threading
         /// <summary>
         /// Enqueue a single action.
         /// </summary>
-        /// <param name="action"></param>
-        public void Enqueue(Action action)
+        /// <param name="action">Action to be executed.</param>
+        /// <param name="state">An object containing information to be used by the action. </param>
+        public void Enqueue(WaitCallback action, object state)
         {
-            _queue.Enqueue(action);
+            _queue.Enqueue((action, state));
         }
 
         /// <summary>
@@ -68,7 +70,7 @@ namespace AsyncFiberWorks.Threading
                 }
                 try
                 {
-                    toExecute?.Invoke();
+                    toExecute.Item1?.Invoke(toExecute.Item2);
                 }
                 catch (Exception ex)
                 {
@@ -95,7 +97,7 @@ namespace AsyncFiberWorks.Threading
                 }
                 try
                 {
-                    toExecute?.Invoke();
+                    toExecute.Item1?.Invoke(toExecute.Item2);
                 }
                 catch (Exception ex)
                 {

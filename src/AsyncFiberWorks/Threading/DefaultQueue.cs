@@ -16,8 +16,8 @@ namespace AsyncFiberWorks.Threading
 
         private bool _running = true;
 
-        private List<Action> _actions;
-        private List<Action> _toPass;
+        private List<(WaitCallback, object)> _actions;
+        private List<(WaitCallback, object)> _toPass;
 
         /// <summary>
         /// Initializes a new instance of the queue with the specified exception handler.
@@ -34,8 +34,8 @@ namespace AsyncFiberWorks.Threading
             }
             _hookOfBatch = hookOfBatch;
             _exceptionHandler = exceptionHandler;
-            _actions = new List<Action>(initialCapacity);
-            _toPass = new List<Action>(initialCapacity);
+            _actions = new List<(WaitCallback, object)>(initialCapacity);
+            _toPass = new List<(WaitCallback, object)>(initialCapacity);
         }
 
         ///<summary>
@@ -49,12 +49,13 @@ namespace AsyncFiberWorks.Threading
         /// <summary>
         /// Enqueue action.
         /// </summary>
-        /// <param name="action"></param>
-        public void Enqueue(Action action)
+        /// <param name="action">Action to be executed.</param>
+        /// <param name="state">An object containing information to be used by the action. </param>
+        public void Enqueue(WaitCallback action, object state)
         {
             lock (_lock)
             {
-                _actions.Add(action);
+                _actions.Add((action, state));
                 Monitor.PulseAll(_lock);
             }
         }
@@ -75,18 +76,25 @@ namespace AsyncFiberWorks.Threading
             }
         }
 
-        private List<Action> DequeueAll()
+        private List<(WaitCallback, object)> DequeueAll()
         {
             lock (_lock)
             {
                 if (ReadyToDequeue())
                 {
-                    ListUtil.Swap(ref _actions, ref _toPass);
+                    Swap(ref _actions, ref _toPass);
                     _actions.Clear();
                     return _toPass;
                 }
                 return null;
             }
+        }
+
+        private static void Swap(ref List<(WaitCallback, object)> a, ref List<(WaitCallback, object)> b)
+        {
+            var tmp = a;
+            a = b;
+            b = tmp;
         }
 
         private bool ReadyToDequeue()
@@ -114,7 +122,7 @@ namespace AsyncFiberWorks.Threading
             {
                 try
                 {
-                    action?.Invoke();
+                    action.Item1?.Invoke(action.Item2);
                 }
                 catch (Exception ex)
                 {
