@@ -39,7 +39,11 @@ namespace AsyncFiberWorks.PubSub
         public IDisposable Subscribe(TKey key, IExecutionContext executionContext, Action<TMessage> receive)
         {
             var channel = GetOrCreateMessageHandlerList(key);
-            return channel.AddHandler((msg) => executionContext.Enqueue(() => receive(msg)));
+            Action<object> cachedAction = (state) =>
+            {
+                receive((TMessage)state);
+            };
+            return channel.AddHandler((msg) => executionContext.Enqueue(cachedAction, msg));
         }
 
         /// <summary>
@@ -52,7 +56,11 @@ namespace AsyncFiberWorks.PubSub
         public IDisposable Subscribe(TKey key, IFiber executionContext, Action<IFiberExecutionEventArgs, TMessage> receive)
         {
             var channel = GetOrCreateMessageHandlerList(key);
-            return channel.AddHandler((msg) => executionContext.Enqueue((e) => receive(e, msg)));
+            Action<IFiberExecutionEventArgs, object> cachedAction = (e, state) =>
+            {
+                receive(e, (TMessage)state);
+            };
+            return channel.AddHandler((msg) => executionContext.Enqueue(cachedAction, msg));
         }
 
         /// <summary>

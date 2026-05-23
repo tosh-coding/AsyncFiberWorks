@@ -29,7 +29,7 @@ namespace AsyncFiberWorks.Fibers
         /// The action will be executed serially with other actions for the same key.
         /// </summary>
         /// <param name="action">Action to execute.</param>
-        /// <param name="state">An object containing information to be used by the action. </param>
+        /// <param name="state">An object containing information to be used by the action.</param>
         public void Enqueue(Action<object> action, object state)
         {
             _owner.EnqueueKeyed(_key, action, state);
@@ -40,9 +40,10 @@ namespace AsyncFiberWorks.Fibers
         /// The owner will decrement internal counters when the action completes.
         /// </summary>
         /// <param name="action">Action that accepts execution event arguments.</param>
-        public void Enqueue(Action<IFiberExecutionEventArgs> action)
+        /// <param name="state">An object containing information to be used by the action.</param>
+        public void Enqueue(Action<IFiberExecutionEventArgs, object> action, object state)
         {
-            _owner.EnqueueKeyed(_key, action);
+            _owner.EnqueueKeyed(_key, action, state);
         }
     }
 }

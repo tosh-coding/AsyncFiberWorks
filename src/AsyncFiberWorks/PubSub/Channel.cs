@@ -32,8 +32,12 @@ namespace AsyncFiberWorks.PubSub
         /// <returns>Unsubscriber.</returns>
         public IDisposable Subscribe(IFiber executionContext, Action<IFiberExecutionEventArgs, T> receive)
         {
+            Action<IFiberExecutionEventArgs, object> cachedAction = (e, msg) =>
+            {
+                receive(e, (T)msg);
+            };
             return this._channel.AddHandler(
-                (msg) => executionContext.Enqueue((e) => receive(e, msg)));
+                (msg) => executionContext.Enqueue(cachedAction, msg));
         }
 
         /// <summary>

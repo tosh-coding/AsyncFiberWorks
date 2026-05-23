@@ -232,21 +232,52 @@ namespace AsyncFiberWorks.Fibers
         /// </summary>
         /// <param name="key">Key identifying the fiber.</param>
         /// <param name="action">Action that accepts <see cref="IFiberExecutionEventArgs"/>.</param>
+        /// <param name="state">An object containing information to be used by the action.</param>
+        public void EnqueueKeyed(int key, Action<IFiberExecutionEventArgs, object> action, object state)
+        {
+            var fiber = GetOrCreateFiber(key);
+            fiber.Enqueue(ExecuteEnqueueKeyedWithState, (this, key, action, state));
+        }
+
+        private static void ExecuteEnqueueKeyedWithState(IFiberExecutionEventArgs ev, object st)
+        {
+            (var self, var stKey, var stAction, var stState) =
+                ((KeyedPoolFiber, int, Action<IFiberExecutionEventArgs, object>, object))st;
+            var wrapped = new CompletionAwareFiberExecutionEventArgs(ev, () => self.DecrementCount(stKey));
+            try
+            {
+                stAction(wrapped, stState);
+            }
+            finally
+            {
+                wrapped.CompleteIfNotPaused();
+            }
+        }
+
+        /// <summary>
+        /// Enqueues an action that receives fiber execution event args to the fiber associated with <paramref name="key"/>.
+        /// </summary>
+        /// <param name="key">Key identifying the fiber.</param>
+        /// <param name="action">Action that accepts <see cref="IFiberExecutionEventArgs"/>.</param>
         public void EnqueueKeyed(int key, Action<IFiberExecutionEventArgs> action)
         {
             var fiber = GetOrCreateFiber(key);
-            fiber.Enqueue((e) =>
+            fiber.Enqueue(ExecuteEnqueueKeyed, (this, key, action));
+        }
+
+        private static void ExecuteEnqueueKeyed(IFiberExecutionEventArgs ev, object st)
+        {
+            (var self, var stKey, var stAction) =
+                ((KeyedPoolFiber, int, Action<IFiberExecutionEventArgs>))st;
+            var wrapped = new CompletionAwareFiberExecutionEventArgs(ev, () => self.DecrementCount(stKey));
+            try
             {
-                var wrapped = new CompletionAwareFiberExecutionEventArgs(e, () => DecrementCount(key));
-                try
-                {
-                    action(wrapped);
-                }
-                finally
-                {
-                    wrapped.CompleteIfNotPaused();
-                }
-            });
+                stAction(wrapped);
+            }
+            finally
+            {
+                wrapped.CompleteIfNotPaused();
+            }
         }
 
         /// <summary>

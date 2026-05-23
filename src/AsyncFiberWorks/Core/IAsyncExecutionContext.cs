@@ -11,6 +11,7 @@ namespace AsyncFiberWorks.Core
         /// Enqueue a single action. It is executed sequentially.
         /// </summary>
         /// <param name="action">Action to be executed.</param>
-        void Enqueue(Action<IFiberExecutionEventArgs> action);
+        /// <param name="state">An object containing information to be used by the action.</param>
+        void Enqueue(Action<IFiberExecutionEventArgs, object> action, object state);
     }
 }

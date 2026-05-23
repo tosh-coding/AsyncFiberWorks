@@ -240,34 +240,38 @@ namespace AsyncFiberWorks.Fibers
         /// Enqueue a single action. It is executed sequentially.
         /// </summary>
         /// <param name="action">Action to be executed.</param>
-        public void Enqueue(Action<IFiberExecutionEventArgs> action)
+        /// <param name="state">An object containing information to be used by the action.</param>
+        public void Enqueue(Action<IFiberExecutionEventArgs, object> action, object state)
         {
-            this.Enqueue(() =>
+            this.Enqueue(ExecuteActionWithEventArgs, (action, state));
+        }
+
+        private void ExecuteActionWithEventArgs(object state)
+        {
+            var tuple = ((Action<IFiberExecutionEventArgs, object>, object))state;
+            lock (_lock)
+            {
+                _enabledPause = true;
+            }
+            try
+            {
+                tuple.Item1?.Invoke(_eventArgs, tuple.Item2);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    _exceptionHandler?.Handle(ex);
+                }
+                catch { }
+            }
+            finally
             {
                 lock (_lock)
                 {
-                    _enabledPause = true;
+                    _enabledPause = false;
                 }
-                try
-                {
-                    action?.Invoke(_eventArgs);
-                }
-                catch (Exception ex)
-                {
-                    try
-                    {
-                        _exceptionHandler?.Handle(ex);
-                    }
-                    catch { }
-                }
-                finally
-                {
-                    lock (_lock)
-                    {
-                        _enabledPause = false;
-                    }
-                }
-            });
+            }
         }
     }
 }
