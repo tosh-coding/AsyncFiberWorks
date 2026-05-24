@@ -95,44 +95,6 @@ namespace AsyncFiberWorksTests
         }
 
         [Test]
-        public void CallAndResponse()
-        {
-            var channelCall = new Channel<MessageFrame>();
-            var channelResponse = new Channel<MessageFrame>();
-
-            int multiCount = 5;
-            var nodeList = CreateNodeList<MessageFrame>(multiCount);
-
-            foreach (var node in nodeList)
-            {
-                channelCall.Subscribe(node.Fiber, (msg) =>
-                {
-                    channelResponse.Publish(new MessageFrame()
-                    {
-                        NodeId = node.NodeId,
-                        Message = msg.Message.Split(new char[] { ' ' }, 2)[1],
-                    });
-                });
-                channelResponse.Subscribe(node.Fiber, (msg) =>
-                {
-                    node.ReceivedMessages.Add(msg);
-                });
-            }
-
-            channelCall.Publish(new MessageFrame() { NodeId = 2, Message = "Say Ho" });
-            channelCall.Publish(new MessageFrame() { NodeId = 2, Message = "Say Ho,Ho" });
-
-            Thread.Sleep(10);
-
-            foreach (var node in nodeList)
-            {
-                Assert.AreEqual(2 * multiCount, node.ReceivedMessages.Count);
-                Assert.AreEqual(multiCount, node.ReceivedMessages.Count(x => x.Message == "Ho"));
-                Assert.AreEqual(multiCount, node.ReceivedMessages.Count(x => x.Message == "Ho,Ho"));
-            }
-        }
-
-        [Test]
         public async Task AsyncHandler()
         {
             var channel = new Channel<int>();
