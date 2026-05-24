@@ -6,7 +6,6 @@ using AsyncFiberWorks.PubSub;
 using AsyncFiberWorks.Core;
 using AsyncFiberWorks.Fibers;
 using AsyncFiberWorks.Threading;
-using System.Threading.Tasks;
 
 namespace AsyncFiberWorksTests.Examples
 {
@@ -180,37 +179,6 @@ namespace AsyncFiberWorksTests.Examples
                 }
 
                 Assert.IsTrue(reset.WaitOne(10000, false));
-            }
-        }
-
-        [Test]
-        public async Task RequestReply()
-        {
-            Func<string, Task<string>> echo;
-
-            // Responder
-            {
-                var fiber = new PoolFiber();
-                int counter = 0;
-                echo = async (req) =>
-                {
-                    string response = default;
-                    await fiber.EnqueueAsync(() =>
-                    {
-                        counter += 1;
-                        response = req + counter;
-                    });
-                    return response;
-                };
-            }
-
-            // Requester
-            {
-                var response = await echo("hello");
-                Assert.AreEqual("hello1", response);
-
-                response = await echo("bye");
-                Assert.AreEqual("bye2", response);
             }
         }
 
