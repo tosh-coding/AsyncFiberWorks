@@ -215,6 +215,43 @@ namespace AsyncFiberWorksTests.Examples
         }
 
         [Test]
+        public void PubSubWithLastFilter()
+        {
+            var channel = new Channel<int>();
+
+            using (var threadPool = UserThreadPool.StartNew())
+            using (var composite = new CompositeDisposable())
+            {
+                // Subscribe
+                var fiber = threadPool.CreateFiber();
+                var resetEvent = new ManualResetEvent(false);
+                var total = 0;
+                Action<int> handler = delegate (int msg)
+                {
+                    total += msg;
+                    if (msg == 10000)
+                    {
+                        resetEvent.Set();
+                    }
+                };
+                var filter = new LastFilter<int>(10, fiber, handler);
+                var d = channel.Subscribe(fiber, filter.Receive);
+                composite.Add(filter, d);
+
+                // Publish
+                channel.Publish(1);
+                channel.Publish(10);
+                Thread.Sleep(30);
+                channel.Publish(100);
+                channel.Publish(1000);
+                channel.Publish(10000);
+
+                Assert.IsTrue(resetEvent.WaitOne(10000, false));
+                Assert.AreEqual(10 + 10000, total);
+            }
+        }
+
+        [Test]
         public void KeyedPubSub()
         {
             var publisher = ChannelLocator.GetPublisher<Guid, string>();
