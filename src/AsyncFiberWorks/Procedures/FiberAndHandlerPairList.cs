@@ -244,7 +244,7 @@ namespace AsyncFiberWorks.Procedures
                 {
                     _nextAction.Context.Enqueue((e) =>
                     {
-                        var eventArgs = new FiberAndTaskPairList.EnqueueNextActionEventArgs(e, () =>
+                        var eventArgs = new EnqueueNextActionEventArgs(e, () =>
                         {
                             if (!_processedEventArg.Processed)
                             {
@@ -297,6 +297,104 @@ namespace AsyncFiberWorks.Procedures
         {
             SimpleHandler,
             EventArgHandler
+        }
+
+        /// <summary>
+        /// Calling enqueueNextAction.
+        /// </summary>
+        internal class EnqueueNextActionEventArgs : IFiberExecutionEventArgs
+        {
+            private readonly object _lock = new object();
+            private readonly IFiberExecutionEventArgs _originEventArgs;
+            private readonly Action _enqueueNextAction;
+            private bool _enqueuedNextAction = false;
+            private bool _paused = false;
+
+            /// <summary>
+            /// Create a instance.
+            /// </summary>
+            /// <param name="originEventArgs"></param>
+            /// <param name="enqueueNextAction"></param>
+            public EnqueueNextActionEventArgs(IFiberExecutionEventArgs originEventArgs, Action enqueueNextAction)
+            {
+                _originEventArgs = originEventArgs;
+                _enqueueNextAction = enqueueNextAction;
+            }
+
+            /// <summary>
+            /// Pauses the consumption of the task queue.
+            /// This is only called during an Execute in the fiber.
+            /// </summary>
+            public void Pause()
+            {
+                _originEventArgs.Pause();
+                lock (_lock)
+                {
+                    if (!_enqueuedNextAction)
+                    {
+                        _paused = true;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Enqueue to the threads on the back side of the fiber.
+            /// </summary>
+            /// <param name="action">Enqueued action.</param>
+            public void EnqueueToOriginThread(Action action)
+            {
+                _originEventArgs.EnqueueToOriginThread(action);
+            }
+
+            /// <summary>
+            /// Resumes consumption of a paused task queue.
+            /// </summary>
+            public void Resume()
+            {
+                _originEventArgs.Resume();
+                bool needEnqueue = false;
+                lock (_lock)
+                {
+                    if (!_enqueuedNextAction)
+                    {
+                        _enqueuedNextAction = true;
+                        needEnqueue = true;
+                    }
+                }
+                if (needEnqueue)
+                {
+                    _enqueueNextAction();
+                }
+            }
+
+            /// <summary>
+            /// Enqueue if not Pause.
+            /// </summary>
+            public void CheckAndEnqueue()
+            {
+                bool needEnqueue = false;
+                lock (_lock)
+                {
+                    if ((!_enqueuedNextAction) && (!_paused))
+                    {
+                        _enqueuedNextAction = true;
+                        needEnqueue = true;
+                    }
+                }
+                if (needEnqueue)
+                {
+                    _enqueueNextAction();
+                }
+            }
+
+            /// <summary>
+            /// Notify the configured exception handler about an exception that occurred during fiber execution.
+            /// </summary>
+            /// <param name="exception">The exception to report.</param>
+            public void NotifyException(Exception exception)
+            {
+                _originEventArgs.NotifyException(exception);
+            }
         }
     }
 }

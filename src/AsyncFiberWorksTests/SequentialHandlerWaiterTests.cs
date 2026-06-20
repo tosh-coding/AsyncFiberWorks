@@ -7,88 +7,8 @@ using System.Threading.Tasks;
 namespace AsyncFiberWorksTests
 {
     [TestFixture]
-    public class SequentialTaskWaiterTests
+    public class SequentialHandlerWaiterTests
     {
-        [Test]
-        public async Task TestWait()
-        {
-            var taskList = new FiberAndTaskPairList();
-            int resultCounter = 0;
-            var lockObj = new object();
-
-            Func<int, Task> func = async (maxCount) =>
-            {
-                using (var activator = taskList.CreateWaiter())
-                {
-                    int counter = 0;
-                    while (counter < maxCount)
-                    {
-                        await activator.ExecutionStarted();
-                        lock (lockObj)
-                        {
-                            resultCounter += 1;
-                        }
-                        counter += 1;
-                    }
-                }
-            };
-
-            var task1 = func(3);
-            var task2 = func(6);
-
-            for (int i = 0; i < 10; i++)
-            {
-                await taskList.InvokeSequentialAsync();
-            }
-
-            await Task.WhenAll(task1, task2);
-            Assert.AreEqual(3 + 6, resultCounter);
-        }
-
-        [Test]
-        public async Task TestCancellation()
-        {
-            var taskList = new FiberAndTaskPairList();
-            int resultCounter = 0;
-            int exceptionCounter = 0;
-            var lockObj = new object();
-            var cts = new CancellationTokenSource();
-            var cancellationToken = cts.Token;
-
-            var func = new Func<Task>(async () =>
-            {
-                using (var activator = taskList.CreateWaiter(cancellationToken))
-                {
-                    try
-                    {
-                        while (true)
-                        {
-                            await activator.ExecutionStarted();
-                            lock (lockObj)
-                            {
-                                resultCounter += 1;
-                            }
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        exceptionCounter += 1;
-                    }
-                }
-            });
-
-            var task1 = func();
-
-            await taskList.InvokeSequentialAsync();
-            await taskList.InvokeSequentialAsync();
-            await taskList.InvokeSequentialAsync();
-            cts.Cancel();
-
-            await task1;
-            Assert.AreEqual(3, resultCounter);
-            Assert.AreEqual(1, exceptionCounter);
-        }
-
         [Test]
         public async Task TestWaitingOfT()
         {

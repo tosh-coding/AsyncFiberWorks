@@ -167,7 +167,7 @@ namespace AsyncFiberWorks.Procedures
                     }
                     else
                     {
-                        throw new ObjectDisposedException(nameof(SequentialTaskWaiter));
+                        throw new ObjectDisposedException(nameof(SequentialHandlerWaiter<T>));
                     }
                 }
             }
