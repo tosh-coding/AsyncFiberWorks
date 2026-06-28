@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AsyncFiberWorks.Threading;
+using System;
 using System.Threading.Tasks;
 
 namespace AsyncFiberWorks.Core
@@ -40,7 +41,14 @@ namespace AsyncFiberWorks.Core
                 }
                 tcs.SetResult(0);
             }));
-            await tcs.Task.ConfigureAwait(false);
+            try
+            {
+                await tcs.Task.ConfigureAwait(false);
+            }
+            finally
+            {
+                await DefaultThreadPool.Instance.SwitchTo();
+            }
         }
 
         /// <summary>
@@ -74,7 +82,7 @@ namespace AsyncFiberWorks.Core
         /// <param name="e">Fiber pause operation interface.</param>
         /// <param name="action">Enqueued action.</param>
         /// <returns>A task that waits for enqueued actions to complete.</returns>
-        public static Task EnqueueToOriginThreadAsync(this IFiberExecutionEventArgs e, Action action)
+        public static async Task EnqueueToOriginThreadAsync(this IFiberExecutionEventArgs e, Action action)
         {
             var tcs = new TaskCompletionSource<byte>(TaskCreationOptions.RunContinuationsAsynchronously);
             e.EnqueueToOriginThread(() =>
@@ -92,7 +100,14 @@ namespace AsyncFiberWorks.Core
                     tcs.TrySetResult(0);
                 }
             });
-            return tcs.Task;
+            try
+            {
+                await tcs.Task.ConfigureAwait(false);
+            }
+            finally
+            {
+                await DefaultThreadPool.Instance.SwitchTo();
+            }
         }
 
         /// <summary>
@@ -117,7 +132,14 @@ namespace AsyncFiberWorks.Core
                 }
                 tcs.SetResult(0);
             });
-            await tcs.Task.ConfigureAwait(false);
+            try
+            {
+                await tcs.Task.ConfigureAwait(false);
+            }
+            finally
+            {
+                await DefaultThreadPool.Instance.SwitchTo();
+            }
         }
     }
 }
