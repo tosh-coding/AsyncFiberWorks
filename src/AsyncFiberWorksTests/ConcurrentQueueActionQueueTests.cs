@@ -36,7 +36,7 @@ namespace AsyncFiberWorksTests
             fiber.Enqueue(command1);
             fiber.Enqueue(command2);
 
-            queue.ExecuteAll();
+            queue.ExecuteNextBatch();
             Assert.AreEqual(new[] { fired1, fired2, fired3 }, actionMarkers.ToArray());
         }
 
@@ -74,13 +74,13 @@ namespace AsyncFiberWorksTests
 
             // Both firstInMs have passed.
             Thread.Sleep(300);
-            queue.ExecuteOnlyPendingNow();
+            queue.ExecuteNextBatch();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(1, scheduleOnIntervalFired);
 
             // The regularInMs has passed.
             Thread.Sleep(400);
-            queue.ExecuteOnlyPendingNow();
+            queue.ExecuteNextBatch();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(2, scheduleOnIntervalFired);
 
@@ -88,7 +88,7 @@ namespace AsyncFiberWorksTests
 
             // The regularInMs has passed after dispose.
             Thread.Sleep(500);
-            queue.ExecuteOnlyPendingNow();
+            queue.ExecuteNextBatch();
             Assert.AreEqual(1, scheduleFired);
             Assert.AreEqual(2, scheduleOnIntervalFired);
         }
@@ -115,7 +115,7 @@ namespace AsyncFiberWorksTests
             });
 
             channel.Publish(0);
-            queue.ExecuteAll();
+            queue.ExecuteNextBatch();
 
             Assert.AreEqual(count, msgs.Count);
             for (var i = 0; i < msgs.Count; i++)

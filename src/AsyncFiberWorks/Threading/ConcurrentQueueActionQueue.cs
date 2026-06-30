@@ -53,66 +53,27 @@ namespace AsyncFiberWorks.Threading
             {
                 return false;
             }
-            ExecuteAll();
+
+            while (true)
+            {
+                if (!_queue.TryDequeue(out var toExecute))
+                {
+                    break;
+                }
+                try
+                {
+                    toExecute.Item1?.Invoke(toExecute.Item2);
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        _exceptionHandler?.Handle(ex);
+                    }
+                    catch { }
+                }
+            }
             return true;
-        }
-
-        /// <summary>
-        /// Execute until there are no more pending actions.
-        /// </summary>
-        public void ExecuteAll()
-        {
-            while (true)
-            {
-                if (!_queue.TryDequeue(out var toExecute))
-                {
-                    break;
-                }
-                try
-                {
-                    toExecute.Item1?.Invoke(toExecute.Item2);
-                }
-                catch (Exception ex)
-                {
-                    try
-                    {
-                        _exceptionHandler?.Handle(ex);
-                    }
-                    catch { }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Execute only what is pending now.
-        /// </summary>
-        public void ExecuteOnlyPendingNow()
-        {
-            int count = _queue.Count;
-            while (true)
-            {
-                if (!_queue.TryDequeue(out var toExecute))
-                {
-                    break;
-                }
-                try
-                {
-                    toExecute.Item1?.Invoke(toExecute.Item2);
-                }
-                catch (Exception ex)
-                {
-                    try
-                    {
-                        _exceptionHandler?.Handle(ex);
-                    }
-                    catch { }
-                }
-                count -= 1;
-                if (count <= 0)
-                {
-                    break;
-                }
-            }
         }
 
         /// <summary>
