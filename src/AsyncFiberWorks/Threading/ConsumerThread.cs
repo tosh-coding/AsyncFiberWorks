@@ -15,23 +15,18 @@ namespace AsyncFiberWorks.Threading
 
         private readonly Thread _thread;
         private readonly TaskCompletionSource<bool> _taskCompletionSource;
-        private readonly IDedicatedConsumerThreadWork _queue;
+        private readonly DefaultQueue _queue;
 
         /// <summary>
         /// Create a consumer thread.
         /// </summary>
-        /// <param name="queue">Queue to receive tasks to be executed by the thread. If null, some kind of queue is used.</param>
         /// <param name="threadName">Thread name. If null, auto naming.</param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
         /// <returns></returns>
-        public static ConsumerThread StartNew(IDedicatedConsumerThreadWork queue = null, string threadName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public static ConsumerThread StartNew(string threadName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
-            if (queue == null)
-            {
-                queue = new DefaultQueue();
-            }
-            var thread = new ConsumerThread(queue, threadName, isBackground, priority);
+            var thread = new ConsumerThread(threadName, isBackground, priority);
             thread.Start();
             return thread;
         }
@@ -39,12 +34,12 @@ namespace AsyncFiberWorks.Threading
         /// <summary>
         /// Create a consumer thread with the specified queue.
         /// </summary>
-        /// <param name="queue">Queue to receive tasks to be executed by the thread.</param>
         /// <param name="threadName">Thread name. If null, auto naming.</param>
         /// <param name="isBackground"></param>
         /// <param name="priority"></param>
-        public ConsumerThread(IDedicatedConsumerThreadWork queue, string threadName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
+        public ConsumerThread(string threadName = null, bool isBackground = true, ThreadPriority priority = ThreadPriority.Normal)
         {
+            var queue = new DefaultQueue();
             if (queue == null)
             {
                 throw new ArgumentNullException(nameof(queue));

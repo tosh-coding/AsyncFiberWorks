@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Task queue for consumer threads. Internally using ConcurrentQueue class.
     /// </summary>
-    public class ConcurrentQueueActionQueue : IDedicatedConsumerThreadWork
+    public class ConcurrentQueueActionQueue : IDedicatedConsumerThreadWorkQueue
     {
         private readonly ConcurrentQueue<(WaitCallback, object)> _queue = new ConcurrentQueue<(WaitCallback, object)>();
         private readonly IActionExceptionHandler _exceptionHandler;

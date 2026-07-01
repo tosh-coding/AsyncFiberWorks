@@ -224,7 +224,7 @@ namespace AsyncFiberWorksTests.Examples
         public void DoDemonstration()
         {
             // We create a source to generate the quadratics.
-            var sinkQueue = ConsumerThread.StartNew(null, "sink");
+            var sinkQueue = ConsumerThread.StartNew("sink");
             var subscriptions = new CompositeDisposable();
 
             // We create and store a reference to 10 solvers,
@@ -237,7 +237,7 @@ namespace AsyncFiberWorksTests.Examples
 
             for (var i = 0; i < quadraticChannels.Length; i++)
             {
-                var consumer = ConsumerThread.StartNew(null, "solver " + (i + 1));
+                var consumer = ConsumerThread.StartNew("solver " + (i + 1));
                 var fiberSubscriptions = new CompositeDisposable();
                 quadraticChannels[i] = new Channel<Quadratic>();
                 solvers.Add(new QuadraticSolver(consumer, quadraticChannels[i], solvedChannel, fiberSubscriptions));

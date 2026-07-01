@@ -84,8 +84,7 @@ namespace AsyncFiberWorksTests
         public void EnqueueKeyed_WithPause_ShouldNotRunNextActionUntilResume()
         {
             var queue = new ConcurrentQueueActionQueue();
-            var threadPool = new ThreadPoolAdapter(queue);
-            var keyedFiber = new KeyedPoolFiber(threadPool);
+            var keyedFiber = new KeyedPoolFiber(new ThreadPoolAdapter(queue));
 
             var executed = new List<int>();
             IFiberExecutionEventArgs capturedEventArgs = null;
@@ -140,8 +139,7 @@ namespace AsyncFiberWorksTests
         public void TestCachedEntryIsReusedForAnotherKey()
         {
             var queue = new ConcurrentQueueActionQueue();
-            var threadPool = new ThreadPoolAdapter(queue);
-            var keyedFiber = new KeyedPoolFiber(threadPool, cacheCount: 1);
+            var keyedFiber = new KeyedPoolFiber(new ThreadPoolAdapter(queue), cacheCount: 1);
 
             IFiberExecutionEventArgs capturedEventArgs = null;
 

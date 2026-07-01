@@ -8,7 +8,7 @@ namespace AsyncFiberWorks.Threading
     /// <summary>
     /// Queue for consumer threads. Internally using BlockingCollection class.
     /// </summary>
-    public class BlockingCollectionQueue : IDedicatedConsumerThreadWork
+    public class BlockingCollectionQueue : IDedicatedConsumerThreadWorkQueue
     {
         private readonly object _lockObj = new object();
         private readonly BlockingCollection<(WaitCallback, object)> _queue = new BlockingCollection<(WaitCallback, object)>();
@@ -46,10 +46,19 @@ namespace AsyncFiberWorks.Threading
         }
 
         /// <summary>
+        /// Start consumption. Continue until stopped.
+        /// Make the current thread available as an IThreadPool.
+        /// </summary>
+        public void Run()
+        {
+            while (this.ExecuteNextBatch()) { }
+        }
+
+        /// <summary>
         /// Perform pending actions.
         /// </summary>
         /// <returns>Still in operation. False if already stopped.</returns>
-        public bool ExecuteNextBatch()
+        bool ExecuteNextBatch()
         {
             if (_isDisposed)
             {
