@@ -46,12 +46,11 @@ namespace AsyncFiberWorks.Threading
         /// Perform pending actions.
         /// Non-blocking. Returns immediately if there is no task.
         /// </summary>
-        /// <returns>Still in operation. False if already stopped.</returns>
-        public bool ExecuteNextBatch()
+        public void ExecuteNextBatch()
         {
             if (_requestedToStop)
             {
-                return false;
+                return;
             }
 
             while (true)
@@ -73,7 +72,6 @@ namespace AsyncFiberWorks.Threading
                     catch { }
                 }
             }
-            return true;
         }
 
         /// <summary>
