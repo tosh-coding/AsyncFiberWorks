@@ -6,7 +6,7 @@ using AsyncFiberWorks.Core;
 namespace AsyncFiberWorks.Threading
 {
     /// <summary>
-    /// Queue for consumer threads. Internally using BlockingCollection class.
+    /// A task queue that performs manual pumping with blocking.
     /// </summary>
     public class BlockingCollectionQueue : IDedicatedConsumerThreadWorkQueue
     {
@@ -47,7 +47,6 @@ namespace AsyncFiberWorks.Threading
 
         /// <summary>
         /// Start consumption. Continue until stopped.
-        /// Make the current thread available as an IThreadPool.
         /// </summary>
         public void Run()
         {

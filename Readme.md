@@ -79,7 +79,7 @@ class Program
     static void Main(string[] args)
     {
         // Create a task queue.
-        var mainThreadLoop = new ThreadPoolAdapter();
+        var mainThreadLoop = new BlockingCollectionQueue();
 
         // Starts an asynchronous operation. Pass the task queue.
         RunAsync(mainThreadLoop);
@@ -89,7 +89,7 @@ class Program
         mainThreadLoop.Run();
     }
 
-    static async void RunAsync(ThreadPoolAdapter mainThreadLoop)
+    static async void RunAsync(BlockingCollectionQueue mainThreadLoop)
     {
         ...
         // Enqueue actions to the main thread loop.

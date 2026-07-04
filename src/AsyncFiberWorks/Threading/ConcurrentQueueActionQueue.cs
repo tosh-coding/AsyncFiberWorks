@@ -6,7 +6,7 @@ using System.Threading;
 namespace AsyncFiberWorks.Threading
 {
     /// <summary>
-    /// Task queue for consumer threads. Internally using ConcurrentQueue class.
+    /// A task queue that supports immediate manual pumping.
     /// </summary>
     public class ConcurrentQueueActionQueue : IDedicatedConsumerThreadWorkQueue
     {
