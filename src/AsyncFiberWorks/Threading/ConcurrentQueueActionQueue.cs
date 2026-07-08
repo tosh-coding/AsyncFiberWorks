@@ -13,8 +13,6 @@ namespace AsyncFiberWorks.Threading
         private readonly ConcurrentQueue<(WaitCallback, object)> _queue = new ConcurrentQueue<(WaitCallback, object)>();
         private readonly IActionExceptionHandler _exceptionHandler;
 
-        private bool _requestedToStop = false;
-
         /// <summary>
         /// Initializes a new instance of the queue without a custom exception handler.
         /// </summary>
@@ -48,11 +46,6 @@ namespace AsyncFiberWorks.Threading
         /// </summary>
         public void ExecuteNextBatch()
         {
-            if (_requestedToStop)
-            {
-                return;
-            }
-
             while (true)
             {
                 if (!_queue.TryDequeue(out var toExecute))
@@ -72,14 +65,6 @@ namespace AsyncFiberWorks.Threading
                     catch { }
                 }
             }
-        }
-
-        /// <summary>
-        /// Stop consumption.
-        /// </summary>
-        public void Stop()
-        {
-            _requestedToStop = true;
         }
     }
 }
