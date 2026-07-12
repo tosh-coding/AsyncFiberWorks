@@ -50,7 +50,7 @@ namespace AsyncFiberWorksTests
         [Test]
         public void SwitchToFiber()
         {
-            var mainThread = new BlockingCollectionQueue();
+            var mainThread = new BlockingConsumer();
             var t = SwitchToFiberAsync(mainThread);
             try
             {
@@ -62,7 +62,7 @@ namespace AsyncFiberWorksTests
             t.Wait();
         }
 
-        public async Task SwitchToFiberAsync(BlockingCollectionQueue mainThread)
+        public async Task SwitchToFiberAsync(BlockingConsumer mainThread)
         {
             await Task.Yield();
 
@@ -166,7 +166,7 @@ namespace AsyncFiberWorksTests
             Assert.Greater(idListOfUserPoolB1.Intersect(idListOfUserPoolB2).Count(), 0);
 
             // Stop the consumer thread.
-            mainThread.Stop();
+            _ = mainThread.StopAsync();
         }
     }
 }

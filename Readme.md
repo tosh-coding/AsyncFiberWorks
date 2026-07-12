@@ -79,7 +79,7 @@ class Program
     static void Main(string[] args)
     {
         // Create a task queue.
-        var mainThreadLoop = new BlockingCollectionQueue();
+        var mainThreadLoop = new BlockingConsumer();
 
         // Starts an asynchronous operation. Pass the task queue.
         RunAsync(mainThreadLoop);
@@ -89,7 +89,7 @@ class Program
         mainThreadLoop.Run();
     }
 
-    static async void RunAsync(BlockingCollectionQueue mainThreadLoop)
+    static async void RunAsync(BlockingConsumer mainThreadLoop)
     {
         ...
         // Enqueue actions to the main thread loop.
@@ -109,7 +109,7 @@ class Program
 
         ...
         // Stop the task queue loop of the main thread .
-        mainThreadLoop.Stop();
+        _ = mainThreadLoop.StopAsync();
     }
 ```
 
