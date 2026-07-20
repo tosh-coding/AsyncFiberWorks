@@ -255,5 +255,36 @@ namespace AsyncFiberWorksTests
             Assert.IsTrue(t2.IsCompleted);
             Assert.IsTrue(t2.IsCanceled);
         }
+
+        [Test]
+        public void YieldOfBlockingConsumerYieldable()
+        {
+            var queue = new BlockingConsumerYieldable();
+            bool isEnd = false;
+            int counter = 0;
+            _ = Task.Run(async () =>
+            {
+                counter += 1;
+                await queue.Yield().ConfigureAwait(false);
+                counter += 2;
+                await queue.Yield().ConfigureAwait(false);
+                counter += 3;
+                await queue.Yield().ConfigureAwait(false);
+                counter += 4;
+                await queue.Yield().ConfigureAwait(false);
+                counter += 5;
+                await queue.Yield().ConfigureAwait(false);
+                counter += 6;
+                isEnd = true;
+                await queue.Yield().ConfigureAwait(false);
+            });
+
+            while (!isEnd)
+            {
+                queue.RunUntilYield();
+                counter *= 10;
+            }
+            Assert.AreEqual(1234560, counter);
+        }
     }
 }
