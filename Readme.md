@@ -143,6 +143,8 @@ async void SomeTaskAsync(CancellationToken token)
 }
 ```
 
+You can also build upon the game objects of an existing game engine. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/Examples/GameObjectExamples.cs).
+
 ## Coroutines ##
 
 `await` is useful when implementing coroutines with complex state transitions. While `await` typically utilizes a worker thread of the `.NET` ThreadPool class, you can also perform operations on a specific fiber using `IFiber.SwitchTo()`, `IFiber.EnqueueAsync()`, and `IFiber.EnqueueTaskAsync()`. These methods can also be used to run multiple coroutines on the main thread.
@@ -189,6 +191,12 @@ ThreadPool is a mechanism where multiple worker threads process a given task. Pr
  * _[UserThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/UserThreadPool.cs)_ - Another thread pool implementation, using the Thread class to create a thread pool.  If you need to use blocking functions, you should use the user thread pool. This does not disturb the .NET ThreadPool.
  * _[AnotherThreadPool](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/AnotherThreadPool.cs)_ - Convenience wrapper for UserThreadPool.  There are two worker threads.
  * _[ThreadPoolAdapter](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/ThreadPoolAdapter.cs)_ - A thread pool that uses a single existing thread as a worker thread.  Convenient to combine with the main thread.
+
+## Consumers ##
+Consumer is a mechanism for utilizing existing threads as the foundation for a task queue. It can be used to implement fibers on the main thread or to implement coroutines.
+
+ * _[BlockingConsumer](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/BlockingConsumer.cs)_ - A task queue that performs manual pumping with blocking.
+ * _[BlockingConsumerYieldable](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Threading/BlockingConsumerYieldable.cs)_ -  A thread-safe queue that allows a dedicated consumer thread to process queued actions and can be yielded to stop processing.
 
 ## PubSub ##
 These are mechanisms for loosely coupling messaging within a process.
