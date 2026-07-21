@@ -211,12 +211,6 @@ By replacing existing messaging code with code that uses these Pub/Sub interface
  * _[ISubscriber{TKey, TMessage}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/ISubscriber_TKey_TMessage.cs)_ - This is a message subscription interface. When subscribing, you can receive messages from the same type of IPublisher.  The difference with ISubscriber{T} is that it allows you to specify different channel instances for the same message type using different keys.
  * _[Channel](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/PubSub/Channel.cs)_ - This is the implementation class for IPublisher and ISubscriber. Forward published messages to all subscribers.  [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/ChannelTests.cs).
 
-## Procedures ##
-These are mechanisms for sequential processing when using multiple fibers. Call all tasks in the order in which they were registered. Wait for the calls to complete one by one before proceeding. Different fibers can be specified for each action. Can be performed repeatedly.
-
- * _[FiberAndHandlerPairList{TMessage}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/FiberAndHandlerPairList.cs)_ - List of fiber and handler pairs. Can be used for event handling. Can be used repeatedly. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/FiberAndTaskPairListTests.cs#L93).
- * _[ISequentialHandlerWaiter{T}](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorks/Procedures/ISequentialHandlerWaiter.cs)_ - This allows you to wait for the execution timing of FiberAndHandlerPairList. It can be created by `FiberAndHandlerPairList<TMessage>.CreateWaiter()`. [Example](https://github.com/tosh-coding/AsyncFiberWorks/blob/main/src/AsyncFiberWorksTests/SequentialTaskWaiterTests.cs#L186).
-
 # Proper use #
 
 ## Drivers of task queue loop ##
