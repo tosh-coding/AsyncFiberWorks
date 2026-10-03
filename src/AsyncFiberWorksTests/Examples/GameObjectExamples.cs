@@ -74,19 +74,19 @@ namespace AsyncFiberWorksTests.Examples
             public GameObjectWithTask()
             {
                 this.Fiber = new PoolFiber(new ThreadPoolAdapter(ActionQueue));
-                LongTask = AnTask();
+                this.LongTask = AnTask();
             }
 
             public void Update()
             {
-                ActionQueue.ExecuteNextBatch();
+                this.ActionQueue.ExecuteNextBatch();
             }
 
             async Task AnTask()
             {
                 await Task.Delay(10).ConfigureAwait(false);
                 this.ThreadId1 = Thread.CurrentThread.ManagedThreadId;
-                await Fiber.EnqueueAsync(() =>
+                await this.Fiber.EnqueueAsync(() =>
                 {
                     this.ThreadId2 = Thread.CurrentThread.ManagedThreadId;
                 }).ConfigureAwait(false);
@@ -103,7 +103,7 @@ namespace AsyncFiberWorksTests.Examples
             for (int i = 0; i < 3; i++)
             {
                 gameObject.Update();
-                counterSnapshot.Add(gameObject._counter);
+                counterSnapshot.Add(gameObject.Counter);
             }
 
             Assert.AreEqual(3, counterSnapshot.Count);
@@ -117,41 +117,118 @@ namespace AsyncFiberWorksTests.Examples
             public string Name { get; set; }
             readonly BlockingConsumerYieldable ActionQueue = new BlockingConsumerYieldable();
             public Task LongTask;
-            public long _counter = 0;
+            public long Counter = 0;
 
             public GameObjectMainLoop()
             {
-                LongTask = MainLoopAsync();
+                this.LongTask = MainLoopAsync();
             }
 
             public void Update()
             {
-                ActionQueue.RunUntilYield();
+                this.ActionQueue.RunUntilYield();
             }
 
             async Task MainLoopAsync()
             {
-                _counter = 0;
-                await ActionQueue.Yield().ConfigureAwait(false);
+                Counter = 0;
+                await this.ActionQueue.Yield().ConfigureAwait(false);
                 do
                 {
-                    _counter += 1;
-                    await ActionQueue.Yield().ConfigureAwait(false);
-                } while (_counter < 10);
-                _counter += 1;
+                    this.Counter += 1;
+                    await this.ActionQueue.Yield().ConfigureAwait(false);
+                } while (this.Counter < 10);
+                this.Counter += 1;
             }
         }
 
         [Test]
         public void CoroutineTest()
         {
-            int numCoroutines = 2;
             int numYields = 5;
             var gameObjectList = new List<GameObjectCoroutine>
             {
-                new GameObjectCoroutine(name: "Player", numCoroutines, numYields),
-                new GameObjectCoroutine(name: "Enemy", numCoroutines, numYields),
-                new GameObjectCoroutine(name: "NPC", numCoroutines, numYields),
+                new GameObjectCoroutine(name: "Player", numYields),
+                new GameObjectCoroutine(name: "Enemy", numYields),
+                new GameObjectCoroutine(name: "NPC", numYields),
+            };
+            var counterSnapshotList = new List<List<long>>(gameObjectList.Count);
+            for (int i = 0; i < gameObjectList.Count; i++)
+            {
+                counterSnapshotList.Add(new List<long>());
+            }
+
+            while (true)
+            {
+                for (int j = 0; j < gameObjectList.Count; j++)
+                {
+                    gameObjectList[j].Update();
+                    counterSnapshotList[j].Add(gameObjectList[j].Counter);
+                }
+                if (gameObjectList.Sum(x => x.IsEnd ? 1 : 0) == gameObjectList.Count)
+                {
+                    break;
+                }
+            }
+
+            for (int j = 0; j < gameObjectList.Count; j++)
+            {
+                var snapshots = counterSnapshotList[j];
+                Assert.AreEqual(numYields, snapshots.Count);
+                for (int y = 0; y < numYields; y++)
+                {
+                    Assert.AreEqual(y + 1, snapshots[y]);
+                }
+            }
+        }
+
+        public class GameObjectCoroutine
+        {
+            public string Name { get; private set; }
+            readonly BlockingConsumerYieldable ActionQueue;
+            public Task LongTask;
+            public long Counter;
+            public bool IsEnd;
+            public int NumYields { get; private set; }
+
+            public GameObjectCoroutine(string name, int numYields)
+            {
+                this.Name = name;
+                this.NumYields = numYields;
+                this.ActionQueue = new BlockingConsumerYieldable();
+                this.Counter = 0;
+                this.LongTask = MainLoopAsync(this.ActionQueue);
+            }
+
+            public void Update()
+            {
+                this.ActionQueue.RunUntilYield();
+                this.IsEnd = this.LongTask.IsCompleted;
+            }
+
+            async Task MainLoopAsync(BlockingConsumerYieldable queue)
+            {
+                this.Counter = 0;
+                await queue.Yield().ConfigureAwait(false);
+                do
+                {
+                    this.Counter += 1;
+                    await queue.Yield().ConfigureAwait(false);
+                } while (Counter < (this.NumYields - 1));
+                this.Counter += 1;
+            }
+        }
+
+        [Test]
+        public void MultipleCoroutineTest()
+        {
+            int numCoroutines = 2;
+            int numYields = 5;
+            var gameObjectList = new List<GameObjectMultipleCoroutine>
+            {
+                new GameObjectMultipleCoroutine(name: "Player", numCoroutines, numYields),
+                new GameObjectMultipleCoroutine(name: "Enemy", numCoroutines, numYields),
+                new GameObjectMultipleCoroutine(name: "NPC", numCoroutines, numYields),
             };
             var counterSnapshotList = new List<List<long[]>>(gameObjectList.Count);
             for (int i = 0; i < gameObjectList.Count; i++)
@@ -163,9 +240,9 @@ namespace AsyncFiberWorksTests.Examples
                 for (int j = 0; j < gameObjectList.Count; j++)
                 {
                     gameObjectList[j].Update();
-                    counterSnapshotList[j].Add(gameObjectList[j]._counter.Select(x => (long)x).ToArray());
+                    counterSnapshotList[j].Add(gameObjectList[j].Counter.Select(x => (long)x).ToArray());
                 }
-                if (gameObjectList.Sum(x => x.isEnd ? 1 : 0) == gameObjectList.Count)
+                if (gameObjectList.Sum(x => x.IsEnd ? 1 : 0) == gameObjectList.Count)
                 {
                     break;
                 }
@@ -185,52 +262,52 @@ namespace AsyncFiberWorksTests.Examples
             }
         }
 
-        public class GameObjectCoroutine
+        public class GameObjectMultipleCoroutine
         {
             public string Name { get; private set; }
             readonly List<BlockingConsumerYieldable> ActionQueueList;
             public List<Task> LongTaskList;
-            public List<long> _counter = new List<long>();
-            public bool isEnd;
+            public List<long> Counter = new List<long>();
+            public bool IsEnd;
             public int NumCoroutines { get; private set; }
             public int NumYields { get; private set; }
 
-            public GameObjectCoroutine(string name, int numCoroutines, int numYields)
+            public GameObjectMultipleCoroutine(string name, int numCoroutines, int numYields)
             {
                 this.Name = name;
                 this.NumCoroutines = numCoroutines;
                 this.NumYields = numYields;
                 this.ActionQueueList = new List<BlockingConsumerYieldable>(numCoroutines);
-                _counter = new List<long>(numCoroutines);
+                this.Counter = new List<long>(numCoroutines);
                 this.LongTaskList = new List<Task>(numCoroutines);
                 for (int i = 0; i < numCoroutines; i++)
                 {
-                    ActionQueueList.Add(new BlockingConsumerYieldable());
-                    _counter.Add(0);
-                    var t = MainLoopAsync(ActionQueueList[i], i);
-                    LongTaskList.Add(t);
+                    this.ActionQueueList.Add(new BlockingConsumerYieldable());
+                    this.Counter.Add(0);
+                    var t = MainLoopAsync(this.ActionQueueList[i], i);
+                    this.LongTaskList.Add(t);
                 }
             }
 
             public void Update()
             {
-                for (int i = 0; i < ActionQueueList.Count; i++)
+                for (int i = 0; i < this.ActionQueueList.Count; i++)
                 {
-                    ActionQueueList[i].RunUntilYield();
+                    this.ActionQueueList[i].RunUntilYield();
                 }
-                isEnd = LongTaskList.Count(x => x.IsCompleted) == LongTaskList.Count;
+                this.IsEnd = this.LongTaskList.Count(x => x.IsCompleted) == this.LongTaskList.Count;
             }
 
             async Task MainLoopAsync(BlockingConsumerYieldable queue, int index)
             {
-                _counter[index] = 0;
+                this.Counter[index] = 0;
                 await queue.Yield().ConfigureAwait(false);
                 do
                 {
-                    _counter[index] += 1;
+                    this.Counter[index] += 1;
                     await queue.Yield().ConfigureAwait(false);
-                } while (_counter[index] < (this.NumYields - 1));
-                _counter[index] += 1;
+                } while (this.Counter[index] < (this.NumYields - 1));
+                this.Counter[index] += 1;
             }
         }
     }
